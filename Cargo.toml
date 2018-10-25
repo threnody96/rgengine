@@ -1,0 +1,9 @@
+[package]
+name = "rgengine"
+version = "0.1.0"
+authors = ["Imota Eru <threnody96@gmail.com>"]
+
+[lib]
+name = "rgengine"
+
+[dependencies]
