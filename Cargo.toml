@@ -3,7 +3,10 @@ name = "rgengine"
 version = "0.1.0"
 authors = ["Imota Eru <threnody96@gmail.com>"]
 
-[lib]
-name = "rgengine"
-
 [dependencies]
+
+[dependencies.sdl2]
+version = "0.32"
+default-features = false
+features = ["image", "ttf", "unsafe_textures"]
+
