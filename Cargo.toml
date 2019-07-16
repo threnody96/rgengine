@@ -4,9 +4,11 @@ version = "0.1.0"
 authors = ["Imota Eru <threnody96@gmail.com>"]
 
 [dependencies]
+image = "^0.21"
+ggez = "0.5.0-rc.2"
+rust-crypto = "^0.2"
+base64 = "0.9.2"
 
-[dependencies.sdl2]
-version = "0.32"
-default-features = false
-features = ["image", "ttf", "unsafe_textures"]
-
+[dependencies.rusqlite]
+version = "0.13.0"
+features = ["bundled"]

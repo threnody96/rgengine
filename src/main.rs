@@ -1,50 +1,66 @@
-extern crate sdl2; 
+extern crate image; 
+extern crate ggez;
+extern crate crypto;
+extern crate rusqlite;
+extern crate base64;
 
-use sdl2::pixels::Color;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use std::time::Duration;
+mod resource;
+mod util;
 
-mod component;
-mod virtual_canvas;
-use self::virtual_canvas::VirtualCanvas;
-use sdl2::rect::Point;
+use ggez::{
+    Context,
+    GameResult,
+    graphics,
+    event
+};
 
-pub fn main() {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
- 
-    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
-        .position_centered()
-        .build()
-        .unwrap();
+use std::fs::File;
+use std::io::Read;
 
-    let mut component = VirtualCanvas::new(Point::new(0, 0), 30, 30).unwrap();
-    component.render().unwrap();
- 
-    let mut canvas = window.into_canvas().build().unwrap();
- 
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
-    canvas.clear();
-    canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut i = 0;
-    'running: loop {
-        i = (i + 1) % 255;
-        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
-        canvas.clear();
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
-                _ => {}
+struct MainState {
+    image: graphics::Image
+}
+
+impl MainState {
+    
+    fn new(ctx: &mut Context) -> GameResult<MainState> {
+        let mut file = File::open("hoge.png")?;
+        let mut buf = Vec::new();
+        let _ = file.read_to_end(&mut buf)?;
+        let a = image::load_from_memory(buf.as_slice())?;
+        let b = a.to_rgba();
+        let mut c = Vec::new();
+        b.pixels()
+            .into_iter()
+            .for_each(|item| c.extend(item.data.to_vec()));
+        let image = graphics::Image::from_rgba8(ctx, b.width() as u16, b.height() as u16, c.as_slice())?;
+        Ok(
+            MainState {
+                image: image
             }
-        }
-        // The rest of the game loop goes here...
-
-        canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        )
     }
+
+}
+
+impl event::EventHandler for MainState {
+
+    fn update(&mut self, _ctx: &mut Context) -> GameResult {
+        Ok(())
+    }
+
+    fn draw(&mut self, ctx: &mut Context) -> GameResult {
+        graphics::clear(ctx, graphics::BLACK);
+        graphics::draw(ctx, &self.image, graphics::DrawParam::default())?;
+        graphics::present(ctx)?;
+        Ok(())
+    }
+
+}
+
+pub fn main() -> GameResult {
+    let cb = ggez::ContextBuilder::new("drawing", "ggez");
+    let (ctx, events_loop) = &mut cb.build()?;
+    let state = &mut MainState::new(ctx)?;
+    event::run(ctx, events_loop, state)
 }
