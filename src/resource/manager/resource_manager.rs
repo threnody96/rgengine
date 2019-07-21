@@ -8,12 +8,12 @@ use ggez::graphics::Image;
 pub struct ResourceManager {
     plaindata_cache: RefCell<HashMap<String, Rc<Vec<u8>>>>,
     image_cache: RefCell<HashMap<String, Rc<Image>>>,
-    storage: Box<Storage>,
+    storage: Box<dyn Storage>,
 }
 
 impl ResourceManager {
 
-    pub fn new(storage: Box<Storage>) -> Self {
+    pub fn new(storage: Box<dyn Storage>) -> Self {
         Self {
             plaindata_cache: RefCell::new(HashMap::new()),
             image_cache: RefCell::new(HashMap::new()),

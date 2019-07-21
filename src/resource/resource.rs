@@ -7,15 +7,15 @@ use ::resource::manager::ResourceManager;
 use ::resource::storage::Storage;
 
 pub struct Resource {
-    managers: HashMap<String, Box<ResourceManager>>
+    managers: HashMap<String, ResourceManager>
 }
 
 impl Resource {
 
-    pub fn new(storages: Vec<Box<Storage>>) -> Self {
-        let mut map: HashMap<String, Box<ResourceManager>> = HashMap::new();
+    pub fn new(storages: Vec<Box<dyn Storage>>) -> Self {
+        let mut map: HashMap<String, ResourceManager> = HashMap::new();
         for storage in storages {
-            map.insert((*storage).name(), Box::new(ResourceManager::new(storage)));
+            map.insert((*storage).name(), ResourceManager::new(storage));
         }
         Self { managers: map }
     }
@@ -30,7 +30,7 @@ impl Resource {
         unwrap(manager.load_plaindata(path))
     }
 
-    fn manager(&self, name: &str) -> Result<&Box<ResourceManager>, String> {
+    fn manager(&self, name: &str) -> Result<&ResourceManager, String> {
         self.managers.get(name).ok_or(format!("unknown manager: {}", name))
     }
 

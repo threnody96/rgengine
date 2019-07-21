@@ -1,6 +1,6 @@
 use std::path::PathBuf;
-use rusqlite::Connection;
-use base64::decode;
+use rusqlite::{ NO_PARAMS, Connection };
+use base64::{ encode, decode };
 use crypto::{ symmetriccipher, buffer, aes, blockmodes };
 use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
 use ::resource::storage::Storage;
@@ -80,9 +80,9 @@ impl SQLiteStorage {
         unwrap(conn.execute(&(format!("create table {} (
                       id     INTEGER PRIMARY KEY,
                       path   TEXT NOT NULL,
-                      data   BLOB
-                      )", &TABLE_NAME)), &[]));
-        unwrap(conn.execute(&(format!("create unique index uindex_path on {}(path)", &TABLE_NAME)), &[]));
+                      data   TEXT NOT NULL
+                      )", &TABLE_NAME)), NO_PARAMS));
+        unwrap(conn.execute(&(format!("create unique index uindex_path on {}(path)", &TABLE_NAME)), NO_PARAMS));
         conn.close().unwrap();
     }
 
@@ -96,10 +96,11 @@ impl Storage for SQLiteStorage {
 
 
     fn load(&self, path: &str) -> Result<Vec<u8>, String> {
-        let query_result: Result<Vec<u8>, _> = self.con.query_row("select data from storage where path = ?1", &[&path], |r| r.get(0));
+        let query_result: Result<String, _> = self.con.query_row("select data from storage where path = ?1", &[&path], |r| r.get(0));
         match query_result {
             Ok(val) => {
-                Ok(Self::decrypt(val.as_slice(), &self.key[0 .. 32], &self.key[32 .. 48])?)
+                let data = decode(&val).map_err(|e| e.to_string())?;
+                Ok(Self::decrypt(data.as_slice(), &self.key[0 .. 32], &self.key[32 .. 48])?)
             },
             Err(_) => { Err(format!("Failed to read the file: {}", &path)) }
         }
@@ -110,7 +111,7 @@ impl Storage for SQLiteStorage {
         match dir {
             None => {
                 let mut stmt = unwrap(self.con.prepare(&format!("select path from {}", &TABLE_NAME)));
-                let path_iter = unwrap(stmt.query_map(&[], |row| row.get(0)));
+                let path_iter = unwrap(stmt.query_map(NO_PARAMS, |row| row.get(0)));
                 for path in path_iter { files.push(path.unwrap()); }
             },
             Some(d) => {
@@ -126,7 +127,7 @@ impl Storage for SQLiteStorage {
         let encrypted_data = Self::encrypt(data.as_slice(), &self.key[0 .. 32], &self.key[32 .. 48]).map_err(|_| "encrypt failed".to_owned())?;
         self.con.execute(
             &(format!("insert into {} (path, data) values (?1, ?2)", &TABLE_NAME)),
-            &[&path, &encrypted_data]
+            &[&path, encode(&encrypted_data).as_str()]
         ).map(|_| ()).map_err(|_| "save failed".to_owned())
     }
 
