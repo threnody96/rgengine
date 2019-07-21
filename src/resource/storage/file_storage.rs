@@ -20,15 +20,15 @@ impl FileStorage {
         s
     }
 
-    pub fn generate_path(&self, path: Option<String>) -> PathBuf {
+    pub fn generate_path(&self, path: Option<&str>) -> PathBuf {
         let mut storage_dir = exe_dir();
         storage_dir.push(&self.dir);
         if path.is_none() { return storage_dir; }
-        storage_dir.push(path.unwrap());
+        storage_dir.push(path.unwrap().to_owned());
         storage_dir
     }
 
-    fn search(&self, current_dir: Option<String>) -> Result<Vec<String>, String> {
+    fn search(&self, current_dir: Option<&str>) -> Result<Vec<String>, String> {
         let mut result: Vec<String> = Vec::new();
         let dir_name = current_dir.clone().map(|d| format!("{}{}", d, SEPARATOR)).unwrap_or("".to_owned());
         let dir = self.generate_path(current_dir);
@@ -38,7 +38,7 @@ impl FileStorage {
             if path.is_file() {
                 result.push(format!("{}{}", dir_name, name));
             } else {
-                result.extend(unwrap(self.search(Some(format!("{}{}", dir_name, name)))));
+                result.extend(unwrap(self.search(Some(format!("{}{}", dir_name, name).as_str()))));
             }
         }
         Ok(result)
@@ -52,16 +52,16 @@ impl Storage for FileStorage {
         self.name.clone()
     }
 
-    fn load(&self, path: String) -> Result<Vec<u8>, String> {
+    fn load(&self, path: &str) -> Result<Vec<u8>, String> {
         let pbuf = self.generate_path(Some(path));
         load_file(&pbuf)
     }
 
-    fn list(&self, dir: Option<String>) -> Result<Vec<String>, String> {
+    fn list(&self, dir: Option<&str>) -> Result<Vec<String>, String> {
         self.search(dir)
     }
 
-    fn save(&self, path: String, data: &Vec<u8>) -> Result<(), String> {
+    fn save(&self, path: &str, data: &Vec<u8>) -> Result<(), String> {
         let real_path = self.generate_path(Some(path));
         let p = real_path.to_str().unwrap();
         let mut f = BufWriter::new(fs::File::create(p).unwrap());

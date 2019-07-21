@@ -95,7 +95,7 @@ impl Storage for SQLiteStorage {
     }
 
 
-    fn load(&self, path: String) -> Result<Vec<u8>, String> {
+    fn load(&self, path: &str) -> Result<Vec<u8>, String> {
         let query_result: Result<Vec<u8>, _> = self.con.query_row("select data from storage where path = ?1", &[&path], |r| r.get(0));
         match query_result {
             Ok(val) => {
@@ -105,7 +105,7 @@ impl Storage for SQLiteStorage {
         }
     }
 
-    fn list(&self, dir: Option<String>) -> Result<Vec<String>, String> {
+    fn list(&self, dir: Option<&str>) -> Result<Vec<String>, String> {
         let mut files: Vec<String> = Vec::new();
         match dir {
             None => {
@@ -122,7 +122,7 @@ impl Storage for SQLiteStorage {
         Ok(files)
     }
 
-    fn save(&self, path: String, data: &Vec<u8>) -> Result<(), String> {
+    fn save(&self, path: &str, data: &Vec<u8>) -> Result<(), String> {
         let encrypted_data = Self::encrypt(data.as_slice(), &self.key[0 .. 32], &self.key[32 .. 48]).map_err(|_| "encrypt failed".to_owned())?;
         self.con.execute(
             &(format!("insert into {} (path, data) values (?1, ?2)", &TABLE_NAME)),

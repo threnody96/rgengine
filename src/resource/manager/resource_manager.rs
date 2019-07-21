@@ -33,7 +33,7 @@ impl ResourceManager {
     pub fn load_plaindata(&self, path: &str) -> Result<Rc<Vec<u8>>, String> {
         let cache_data = self.load_by_plaindata_cache(path);
         if cache_data.is_some() { return Ok(cache_data.unwrap()); }
-        let resource = Rc::new((*self.storage).load(path.to_owned())?);
+        let resource = Rc::new((*self.storage).load(path)?);
         self.cache_plaindata(path, resource.clone());
         Ok(resource)
     }

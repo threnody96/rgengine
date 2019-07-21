@@ -4,6 +4,7 @@ use ggez::Context;
 use ggez::graphics::Image;
 use ::util::unwrap;
 use ::resource::manager::ResourceManager;
+use ::resource::storage::Storage;
 
 pub struct Resource {
     managers: HashMap<String, Box<ResourceManager>>
@@ -11,8 +12,12 @@ pub struct Resource {
 
 impl Resource {
 
-    pub fn new(managers: HashMap<String, Box<ResourceManager>>) -> Self {
-        Self { managers: managers }
+    pub fn new(storages: Vec<Box<Storage>>) -> Self {
+        let mut map: HashMap<String, Box<ResourceManager>> = HashMap::new();
+        for storage in storages {
+            map.insert((*storage).name(), Box::new(ResourceManager::new(storage)));
+        }
+        Self { managers: map }
     }
 
     pub fn load_image(&self, ctx: &mut Context, name: &str, path: &str) -> Rc<Image> {
