@@ -6,3 +6,5 @@ extern crate base64;
 
 pub mod resource;
 pub mod util;
+pub mod component;
+pub mod controller;
