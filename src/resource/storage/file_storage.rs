@@ -9,20 +9,19 @@ const SEPARATOR: char = '/';
 
 pub struct FileStorage {
     name: String,
-    dir: String,
 }
 
 impl FileStorage {
 
-    pub fn new(name: String, dir: String) -> Self {
-        let s = Self { name: name, dir: dir.clone() };
-        if !s.generate_path(None).exists() { panic!(format!("dir not found: {}", dir)); }
+    pub fn new(name: String) -> Self {
+        let s = Self { name: name.clone() };
+        if !s.generate_path(None).exists() { panic!(format!("dir not found: {}", name)); }
         s
     }
 
     pub fn generate_path(&self, path: Option<&str>) -> PathBuf {
         let mut storage_dir = exe_dir();
-        storage_dir.push(&self.dir);
+        storage_dir.push(&self.name);
         if path.is_none() { return storage_dir; }
         storage_dir.push(path.unwrap().to_owned());
         storage_dir
