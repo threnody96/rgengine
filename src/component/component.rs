@@ -3,20 +3,15 @@ use ggez::graphics::{ BLACK, clear, present };
 use ggez::event::{ EventHandler, run, KeyCode, KeyMods, Button };
 use ggez::input::gamepad::GamepadId;
 use ::component::GameBody;
-use ::controller::Input;
 
 pub struct GameComponent {
-    input: Input,
-    body: Box<dyn GameBody>,
+    body: Box<dyn GameBody>
 }
 
 impl GameComponent {
 
-    pub fn new(body: Box<dyn GameBody>, input: Input) -> Self {
-        Self {
-            input: input,
-            body: body,
-        }
+    pub fn new(body: Box<dyn GameBody>) -> Self {
+        Self { body: body }
     }
 
     pub fn run(&mut self, game_id: &'static str, author: &'static str) -> GameResult {
@@ -30,7 +25,7 @@ impl GameComponent {
 impl EventHandler for GameComponent {
 
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        (*self.body).update(ctx, &self.input)
+        (*self.body).update(ctx)
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
@@ -41,19 +36,19 @@ impl EventHandler for GameComponent {
     }
 
     fn key_down_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
-        self.input.update_keyboard_keydown(&keycode, _repeat);
+        self.body.input().update_keyboard_keydown(&keycode, _repeat);
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods) {
-        self.input.update_keyboard_keyup(&keycode);
+        self.body.input().update_keyboard_keyup(&keycode);
     }
 
     fn gamepad_button_down_event(&mut self, _ctx: &mut Context, _btn: Button, _id: GamepadId) {
-        self.input.update_gamepad_keydown(&_id, &_btn);
+        self.body.input().update_gamepad_keydown(&_id, &_btn);
     }
 
     fn gamepad_button_up_event(&mut self, _ctx: &mut Context, _btn: Button, _id: GamepadId) {
-        self.input.update_gamepad_keyup(&_id, &_btn);
+        self.body.input().update_gamepad_keyup(&_id, &_btn);
     }
 
 }

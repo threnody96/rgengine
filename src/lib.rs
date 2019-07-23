@@ -1,3 +1,7 @@
+extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
+extern crate serde;
 extern crate image; 
 extern crate ggez;
 extern crate crypto;

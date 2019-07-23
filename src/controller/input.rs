@@ -22,12 +22,12 @@ impl Input {
         }
     }
 
-    pub fn get_key<B>(&self, key: &B, repeat: bool) -> bool
+    pub fn get_key<B>(&self, key: B, repeat: bool) -> bool
     where B: ToString
     {
-        if self.keyboard.get_key(key, repeat) { return true; }
+        if self.keyboard.get_key(&key, repeat) { return true; }
         for (_id, gamepad) in &self.gamepad {
-            if gamepad.get_key(key, repeat) { return true; }
+            if gamepad.get_key(&key, repeat) { return true; }
         }
         false
     }

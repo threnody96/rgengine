@@ -1,17 +1,24 @@
 use std::rc::Rc;
 use std::collections::HashMap;
+use std::borrow::Borrow;
 use ggez::Context;
 use ggez::audio::{ SoundData };
 use ggez::graphics::{ Font, Image };
+use serde_json::value::Value;
+use serde::de::DeserializeOwned;
 use ::util::unwrap;
-use ::resource::manager::{ ImageManager, FontManager, PlaindataManager, SoundManager, ResourceManager };
+use ::resource::manager::{
+    TextManager, ImageManager, FontManager, PlaindataManager, SoundManager, ResourceManager, JsonManager
+};
 use ::resource::storage::Storage;
 
 pub struct Resource {
     plaindata: PlaindataManager,
+    text: TextManager,
     image: ImageManager,
     font: FontManager,
     sound: SoundManager,
+    json: JsonManager,
     storages: HashMap<String, Box<dyn Storage>>
 }
 
@@ -19,16 +26,32 @@ impl Resource {
 
     pub fn new(storages: Vec<Box<dyn Storage>>) -> Self {
         let mut map: HashMap<String, Box<dyn Storage>> = HashMap::new();
-        for storage in storages {
-            map.insert((*storage).name(), storage);
-        }
+        for storage in storages { map.insert((*storage).name(), storage); }
         Self {
             plaindata: PlaindataManager::new(),
+            text: TextManager::new(),
             image: ImageManager::new(),
             font: FontManager::new(),
             sound: SoundManager::new(),
+            json: JsonManager::new(),
             storages: map
         }
+    }
+
+    pub fn load_struct<T>(&self, ctx: &mut Context, name: &str, path: &str) -> T
+    where T: DeserializeOwned
+    {
+        let json = self.load_json(ctx, name, path);
+        let borrowed: &Value = json.borrow();
+        unwrap(serde_json::from_value(borrowed.clone()))
+    }
+
+    pub fn load_json(&self, ctx: &mut Context, name: &str, path: &str) -> Rc<Value> {
+        self.json.load(ctx, self.storage(name), path)
+    }
+
+    pub fn load_text(&self, ctx: &mut Context, name: &str, path: &str) -> Rc<String> {
+        self.text.load(ctx, self.storage(name), path)
     }
 
     pub fn load_sound(&self, ctx: &mut Context, name: &str, path: &str) -> Rc<SoundData> {
