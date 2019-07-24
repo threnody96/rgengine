@@ -23,7 +23,7 @@ impl Variable {
         unwrap(serde_json::from_value(v.clone()).map_err(|e| e.to_string()))
     }
 
-    pub fn set<T>(&self, index: u64, val: &T)
+    pub fn set<T>(&self, index: u64, val: T)
     where T: Serialize
     {
         let mut map = self.map.borrow_mut();

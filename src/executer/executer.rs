@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use ggez::{ GameResult, Context, ContextBuilder };
 use ggez::graphics::{ BLACK, clear, present };
 use ggez::event::{ EventHandler, run, KeyCode, KeyMods, Button };
@@ -7,7 +8,7 @@ use ::resource::Resource;
 
 pub struct GameExecuter {
     scene: Box<dyn Component>,
-    rsc: Resource
+    rsc: Rc<Resource>
 }
 
 impl GameExecuter {
@@ -15,7 +16,7 @@ impl GameExecuter {
     pub fn new(scene: Box<dyn Component>, rsc: Resource) -> Self {
         Self {
             scene: scene,
-            rsc: rsc
+            rsc: Rc::new(rsc)
         }
     }
 
@@ -34,12 +35,12 @@ impl GameExecuter {
 impl EventHandler for GameExecuter {
 
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        (*self.scene).update(ctx)
+        (*self.scene).update(ctx, self.rsc.clone())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         clear(ctx, BLACK);
-        let result = (*self.scene).draw(ctx)?;
+        let result = (*self.scene).draw(ctx, self.rsc.clone())?;
         present(ctx)?;
         Ok(result)
     }
