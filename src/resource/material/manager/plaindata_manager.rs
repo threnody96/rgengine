@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use ggez::Context;
-use ::resource::manager::ResourceManager;
+use ::resource::material::manager::MaterialManager;
 
 pub struct PlaindataManager {
     cache: RefCell<HashMap<String, Rc<Vec<u8>>>>
@@ -16,7 +16,7 @@ impl PlaindataManager {
 
 }
 
-impl ResourceManager<Vec<u8>> for PlaindataManager {
+impl MaterialManager<Vec<u8>> for PlaindataManager {
 
     fn generate(&self, _ctx: &mut Context, data: Vec<u8>) -> Result<Vec<u8>, String> {
         Ok(data)

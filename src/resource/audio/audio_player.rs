@@ -5,18 +5,18 @@ use std::borrow::Borrow;
 use ggez::Context;
 use ggez::audio::{ Source, SoundData, SoundSource };
 use ::util::unwrap;
-use ::resource::Resource;
+use ::resource::material::Material;
 
 pub struct AudioPlayer {
-    resource: Rc<Resource>,
+    material: Rc<Material>,
     channel: RefCell<HashMap<String, Source>>
 }
 
 impl AudioPlayer {
 
-    pub fn new(resource: Rc<Resource>) -> Self {
+    pub fn new(material: Rc<Material>) -> Self {
         Self {
-            resource: resource,
+            material: material,
             channel: RefCell::new(HashMap::new())
         }
     }
@@ -24,7 +24,7 @@ impl AudioPlayer {
     pub fn play<T>(&self, ctx: &mut Context, channel_key: T, name: &str, path: &str)
     where T: ToString + Clone
     {
-        let data = self.resource().load_sound(ctx, name, path);
+        let data = self.material().load_sound(ctx, name, path);
         self.play_data(ctx, channel_key, data);
     }
 
@@ -39,7 +39,7 @@ impl AudioPlayer {
     }
 
     pub fn play_once(&self, ctx: &mut Context, name: &str, path: &str) {
-        let data = self.resource().load_sound(ctx, name, path);
+        let data = self.material().load_sound(ctx, name, path);
         self.play_data_once(ctx, data);
     }
 
@@ -83,8 +83,8 @@ impl AudioPlayer {
         unwrap(Source::from_data(ctx, borrowed.clone()))
     }
 
-    fn resource(&self) -> &Resource {
-        self.resource.borrow()
+    fn material(&self) -> &Material {
+        self.material.borrow()
     }
 
 }

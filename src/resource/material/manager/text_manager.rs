@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use ggez::Context;
-use ::resource::manager::ResourceManager;
+use ::resource::material::manager::MaterialManager;
 
 pub struct TextManager {
     cache: RefCell<HashMap<String, Rc<String>>>
@@ -16,7 +16,7 @@ impl TextManager {
 
 }
 
-impl ResourceManager<String> for TextManager {
+impl MaterialManager<String> for TextManager {
 
     fn generate(&self, _ctx: &mut Context, data: Vec<u8>) -> Result<String, String> {
         String::from_utf8(data).map(|e| e.to_owned()).map_err(|e| e.to_string())

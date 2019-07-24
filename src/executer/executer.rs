@@ -2,17 +2,25 @@ use ggez::{ GameResult, Context, ContextBuilder };
 use ggez::graphics::{ BLACK, clear, present };
 use ggez::event::{ EventHandler, run, KeyCode, KeyMods, Button };
 use ggez::input::gamepad::GamepadId;
-use ::executer::GameBody;
 use ::component::Component;
+use ::resource::Resource;
 
-pub struct GameExecuter<T> where T: GameBody + Component {
-    body: T
+pub struct GameExecuter {
+    scene: Box<dyn Component>,
+    rsc: Resource
 }
 
-impl <T> GameExecuter<T> where T: GameBody + Component {
+impl GameExecuter {
 
-    pub fn new(body: T) -> Self {
-        Self { body: body }
+    pub fn new(scene: Box<dyn Component>, rsc: Resource) -> Self {
+        Self {
+            scene: scene,
+            rsc: rsc
+        }
+    }
+
+    pub fn update_scene(&mut self, scene: Box<dyn Component>) {
+        self.scene = scene;
     }
 
     pub fn run(&mut self, game_id: &'static str, author: &'static str) -> GameResult {
@@ -23,33 +31,33 @@ impl <T> GameExecuter<T> where T: GameBody + Component {
 
 }
 
-impl <T> EventHandler for GameExecuter<T> where T: GameBody + Component {
+impl EventHandler for GameExecuter {
 
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        self.body.update(ctx)
+        (*self.scene).update(ctx)
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         clear(ctx, BLACK);
-        let result = self.body.draw(ctx)?;
+        let result = (*self.scene).draw(ctx)?;
         present(ctx)?;
         Ok(result)
     }
 
     fn key_down_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
-        self.body.input().update_keyboard_keydown(&keycode, _repeat);
+        self.rsc.input().update_keyboard_keydown(&keycode, _repeat);
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods) {
-        self.body.input().update_keyboard_keyup(&keycode);
+        self.rsc.input().update_keyboard_keyup(&keycode);
     }
 
     fn gamepad_button_down_event(&mut self, _ctx: &mut Context, _btn: Button, _id: GamepadId) {
-        self.body.input().update_gamepad_keydown(&_id, &_btn);
+        self.rsc.input().update_gamepad_keydown(&_id, &_btn);
     }
 
     fn gamepad_button_up_event(&mut self, _ctx: &mut Context, _btn: Button, _id: GamepadId) {
-        self.body.input().update_gamepad_keyup(&_id, &_btn);
+        self.rsc.input().update_gamepad_keyup(&_id, &_btn);
     }
 
 }

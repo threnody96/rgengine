@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use ggez::Context;
 use ggez::graphics::{ Image };
-use ::resource::manager::ResourceManager;
+use ::resource::material::manager::MaterialManager;
 
 pub struct ImageManager {
     cache: RefCell<HashMap<String, Rc<Image>>>
@@ -17,7 +17,7 @@ impl ImageManager {
 
 }
 
-impl ResourceManager<Image> for ImageManager {
+impl MaterialManager<Image> for ImageManager {
 
     fn generate(&self, ctx: &mut Context, data: Vec<u8>) -> Result<Image, String> {
         let i = image::load_from_memory(data.as_slice()).map_err(|e| e.to_string())?;

@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use ggez::Context;
 use serde_json::value::Value;
-use ::resource::manager::ResourceManager;
+use ::resource::material::manager::MaterialManager;
 
 pub struct JsonManager {
     cache: RefCell<HashMap<String, Rc<Value>>>
@@ -17,7 +17,7 @@ impl JsonManager {
 
 }
 
-impl ResourceManager<Value> for JsonManager {
+impl MaterialManager<Value> for JsonManager {
 
     fn generate(&self, _ctx: &mut Context, data: Vec<u8>) -> Result<Value, String> {
         let json = String::from_utf8(data).map_err(|e| e.to_string())?;

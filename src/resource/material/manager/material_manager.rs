@@ -2,10 +2,10 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use ggez::Context;
-use ::resource::storage::Storage;
+use ::resource::material::storage::Storage;
 use ::util::unwrap;
 
-pub trait ResourceManager<T> {
+pub trait MaterialManager<T> {
 
     fn load(&self, ctx: &mut Context, storage: &Box<dyn Storage>, path: &str) -> Rc<T> {
         let fullpath = format!("{}/{}", storage.name(), path);

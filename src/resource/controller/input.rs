@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use ::controller::{ Keyboard, Gamepad };
 use ggez::input::gamepad::GamepadId;
 use ggez::input::keyboard::KeyCode;
 use ggez::event::{ Button };
+use ::resource::controller::{ Keyboard, Gamepad };
 
 pub struct Input {
     keyboard: Keyboard,

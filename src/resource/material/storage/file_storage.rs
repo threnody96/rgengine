@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::fs::{ read_dir };
 use std::io::{ BufWriter, Write };
-use ::resource::storage::Storage;
+use ::resource::material::storage::Storage;
 use ::util::{ exe_dir, load_file, unwrap };
 
 const SEPARATOR: char = '/';

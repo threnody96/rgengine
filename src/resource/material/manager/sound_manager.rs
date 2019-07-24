@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use ggez::Context;
 use ggez::audio::{ SoundData };
-use ::resource::manager::ResourceManager;
+use ::resource::material::manager::MaterialManager;
 
 pub struct SoundManager {
     cache: RefCell<HashMap<String, Rc<SoundData>>>
@@ -17,7 +17,7 @@ impl SoundManager {
 
 }
 
-impl ResourceManager<SoundData> for SoundManager {
+impl MaterialManager<SoundData> for SoundManager {
 
     fn generate(&self, _ctx: &mut Context, data: Vec<u8>) -> Result<SoundData, String> {
         Ok(SoundData::from_bytes(data.as_slice()))

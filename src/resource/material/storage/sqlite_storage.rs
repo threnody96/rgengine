@@ -3,7 +3,7 @@ use rusqlite::{ NO_PARAMS, Connection };
 use base64::{ encode, decode };
 use crypto::{ symmetriccipher, buffer, aes, blockmodes };
 use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
-use ::resource::storage::Storage;
+use ::resource::material::storage::Storage;
 use ::util::unwrap;
 
 const TABLE_NAME: &str = "storage";
