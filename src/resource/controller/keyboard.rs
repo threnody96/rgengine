@@ -25,16 +25,17 @@ impl Keyboard {
     pub fn get_key<K>(&self, vkey: &K, repeat: bool) -> bool
     where K: ToString
     {
-        let map = if repeat { self.repeat_map.borrow() } else { self.pushed_map.borrow() };
-        let r = map.get(vkey.to_string().as_str()).cloned();
-        r.is_some() && r.unwrap()
+        let v = vkey.to_string();
+        let pushed = if repeat { self.is_repeat(&v) } else { self.is_pushed(&v) };
+        self.update_pushed_map(&v, false);
+        pushed
     }
 
-    pub fn keydown(&self, keycode: &KeyCode, repeat: bool) {
+    pub fn keydown(&self, keycode: &KeyCode) {
         match self.get_virtual_key(keycode) {
             None => { },
             Some(vkey) => {
-                self.update_pushed_map(&vkey, !repeat);
+                self.update_pushed_map(&vkey, !self.is_repeat(&vkey) && !self.is_pushed(&vkey));
                 self.update_repeat_map(&vkey, true);
             }
         }
@@ -48,6 +49,18 @@ impl Keyboard {
                 self.update_repeat_map(&vkey, false);
             }
         }
+    }
+
+    fn is_pushed(&self, vkey: &str) -> bool {
+        let map = self.pushed_map.borrow();
+        let p = map.get(vkey).cloned();
+        p.is_some() && p.unwrap()
+    }
+
+    fn is_repeat(&self, vkey: &str) -> bool {
+        let map = self.repeat_map.borrow();
+        let p = map.get(vkey).cloned();
+        p.is_some() && p.unwrap()
     }
 
     fn update_pushed_map(&self, vkey: &str, state: bool) {

@@ -25,12 +25,9 @@ impl Gamepad {
     pub fn get_key<B>(&self, bkey: &B, repeat: bool) -> bool
     where B: ToString
     {
-        let pushed = {
-            let map = if repeat { self.repeat_map.borrow() } else { self.pushed_map.borrow() };
-            let r = map.get(bkey.to_string().as_str()).cloned();
-            r.is_some() && r.unwrap()
-        };
-        if pushed { self.pushed_map.borrow_mut().insert(bkey.to_string(), false); }
+        let v = bkey.to_string();
+        let pushed = if repeat { self.is_repeat(&v) } else { self.is_pushed(&v) };
+        self.update_pushed_map(&v, false);
         pushed
     }
 
@@ -38,7 +35,7 @@ impl Gamepad {
         match self.get_virtual_button(button) {
             None => { },
             Some(vbutton) => {
-                self.update_pushed_map(&vbutton, true);
+                self.update_pushed_map(&vbutton, !self.is_repeat(&vbutton) && !self.is_pushed(&vbutton));
                 self.update_repeat_map(&vbutton, true);
             }
         }
@@ -52,6 +49,18 @@ impl Gamepad {
                 self.update_repeat_map(&vbutton, false);
             }
         }
+    }
+
+    fn is_pushed(&self, vbutton: &str) -> bool {
+        let map = self.pushed_map.borrow();
+        let p = map.get(vbutton).cloned();
+        p.is_some() && p.unwrap()
+    }
+
+    fn is_repeat(&self, vbutton: &str) -> bool {
+        let map = self.repeat_map.borrow();
+        let p = map.get(vbutton).cloned();
+        p.is_some() && p.unwrap()
     }
 
     fn update_pushed_map(&self, vbutton: &str, state: bool) {

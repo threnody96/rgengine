@@ -1,15 +1,14 @@
 use std::rc::Rc;
-use std::borrow::Borrow;
 use ::resource::audio::AudioPlayer;
 use ::resource::controller::Input;
 use ::resource::material::Material;
 use ::resource::state::Variable;
 
 pub struct Resource {
-    audio: Rc<AudioPlayer>,
-    input: Rc<Input>,
-    material: Rc<Material>,
-    variable: Rc<Variable>,
+    pub audio: Rc<AudioPlayer>,
+    pub input: Rc<Input>,
+    pub material: Rc<Material>,
+    pub variable: Rc<Variable>,
 }
 
 impl Resource {
@@ -23,13 +22,5 @@ impl Resource {
             variable: Rc::new(Variable::new()),
         }
     }
-
-    pub fn audio(&self) -> &AudioPlayer { self.audio.borrow() }
-
-    pub fn input(&self) -> &Input { self.input.borrow() }
-
-    pub fn material(&self) -> &Material { self.material.borrow() }
-
-    pub fn variable(&self) -> &Variable { self.variable.borrow() }
 
 }

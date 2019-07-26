@@ -13,21 +13,19 @@ pub struct GameExecuter {
 
 impl GameExecuter {
 
-    pub fn new(scene: Box<dyn Component>, rsc: Resource) -> Self {
-        Self {
-            scene: scene,
-            rsc: Rc::new(rsc)
-        }
-    }
-
     pub fn update_scene(&mut self, scene: Box<dyn Component>) {
         self.scene = scene;
     }
 
-    pub fn run(&mut self, game_id: &'static str, author: &'static str) -> GameResult {
+    pub fn run(game_id: &'static str, author: &'static str, rsc: Resource, scene: Box<dyn FnOnce(&mut Context, Rc<Resource>) -> Box<dyn Component>>) -> GameResult {
+        let r = Rc::new(rsc);
         let cb = ContextBuilder::new(game_id, author);
         let (ctx, events_loop) = &mut cb.build()?;
-        run(ctx, events_loop, self)
+        let mut executer = Self {
+            scene: scene(ctx, r.clone()),
+            rsc: r.clone()
+        };
+        run(ctx, events_loop, &mut executer)
     }
 
 }
@@ -46,19 +44,19 @@ impl EventHandler for GameExecuter {
     }
 
     fn key_down_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
-        self.rsc.input().update_keyboard_keydown(&keycode, _repeat);
+        self.rsc.input.update_keyboard_keydown(&keycode);
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods) {
-        self.rsc.input().update_keyboard_keyup(&keycode);
+        self.rsc.input.update_keyboard_keyup(&keycode);
     }
 
     fn gamepad_button_down_event(&mut self, _ctx: &mut Context, _btn: Button, _id: GamepadId) {
-        self.rsc.input().update_gamepad_keydown(&_id, &_btn);
+        self.rsc.input.update_gamepad_keydown(&_id, &_btn);
     }
 
     fn gamepad_button_up_event(&mut self, _ctx: &mut Context, _btn: Button, _id: GamepadId) {
-        self.rsc.input().update_gamepad_keyup(&_id, &_btn);
+        self.rsc.input.update_gamepad_keyup(&_id, &_btn);
     }
 
 }

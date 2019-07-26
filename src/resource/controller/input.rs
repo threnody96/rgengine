@@ -32,8 +32,8 @@ impl Input {
         false
     }
 
-    pub fn update_keyboard_keydown(&self, keycode: &KeyCode, repeat: bool) {
-        self.keyboard.keydown(keycode, repeat);
+    pub fn update_keyboard_keydown(&self, keycode: &KeyCode) {
+        self.keyboard.keydown(keycode);
     }
 
     pub fn update_keyboard_keyup(&self, keycode: &KeyCode) {
