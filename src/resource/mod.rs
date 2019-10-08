@@ -1,7 +1,9 @@
-pub mod audio;
-pub mod controller;
-pub mod material;
-pub mod state;
-mod resource;
+mod file_resource;
+mod encrypt_resource;
 
-pub use self::resource::Resource;
+#[cfg(build_mode = "release")]
+pub type Resource = self::encrypt_resource::EncryptStorage;
+
+#[cfg(not(build_mode = "release"))]
+pub type Resource = self::file_resource::FileStorage;
+
