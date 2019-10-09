@@ -1,21 +1,15 @@
-use ::application::{ AppDelegate, Director };
+use ::application::{ AppDelegate };
 
-pub struct Application<T> where T: AppDelegate {
-    delegate: T,
-    director: Director
+pub struct Application {
+    delegate: Box<dyn AppDelegate>,
 }
 
-impl <T> Application<T> where T: AppDelegate {
+impl Application {
 
-    pub fn new(delegate: T) -> Self {
+    pub fn new(delegate: Box<dyn AppDelegate>) -> Self {
         Self {
             delegate: delegate,
-            director: Director::new()
         }
-    }
-
-    pub fn run(&self) -> Result<(), String> {
-        Ok(())
     }
 
 }

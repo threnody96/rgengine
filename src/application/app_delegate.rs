@@ -9,3 +9,4 @@ pub trait AppDelegate {
     fn application_will_enter_foreground(&self) { }
 
 }
+
