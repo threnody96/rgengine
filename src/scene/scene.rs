@@ -1,7 +1,7 @@
-use ::scene::{ Node };
+use ::scene::node::{ Layer };
 
 pub struct Scene {
-    children: Vec<Box<dyn Node>>
+    children: Vec<Layer>
 }
 
 impl Scene {
@@ -10,10 +10,6 @@ impl Scene {
         Self {
             children: Vec::new()
         }
-    }
-
-    pub fn add_child(&mut self, node: Box<dyn Node>) {
-        self.children.push(node);
     }
 
 }

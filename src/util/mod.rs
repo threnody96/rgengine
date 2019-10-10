@@ -3,6 +3,10 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::io::{BufReader, Read, Write, stdout};
 
+mod coordinate;
+pub use self::coordinate::*;
+
+#[derive(Eq, PartialEq)]
 pub enum BuildMode {
     Release,
     Development
