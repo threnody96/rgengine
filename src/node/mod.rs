@@ -46,7 +46,7 @@ impl Node {
         })
     }
 
-    fn add_child(&self, delegate: Rc<dyn NodeDelegate>) {
+    pub fn add_child(&self, delegate: Rc<dyn NodeDelegate>) {
         let mut children = self.children.borrow_mut();
         children.push(delegate.id());
         delegate.node().add_referer(self.id.clone());
@@ -63,7 +63,12 @@ impl Node {
     }
 
     fn destroy(&self) {
-        for referer_id in self.referers.borrow().clone() {
+        let children = { self.children.borrow().clone() };
+        let referers = { self.referers.borrow().clone() };
+        for child_id in children {
+            Node::get_by_id(child_id).destroy();
+        }
+        for referer_id in referers {
             Node::get_by_id(referer_id).delete_child(self.id.clone());
         }
         ::DIRECTOR.with(|d| {
@@ -94,8 +99,11 @@ pub trait NodeDelegate {
     }
 
     fn add_child(&self, delegate: Rc<dyn NodeDelegate>) {
-        self.node().add_child(delegate.clone());
+        delegate.check_add_child();
+        self.node().add_child(delegate);
     }
+
+    fn check_add_child(&self) { }
 
     fn destroy(&self) {
         self.node().destroy();

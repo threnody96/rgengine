@@ -1,4 +1,5 @@
 pub mod node;
+pub mod application;
 
 use std::rc::Rc;
 use std::any::Any;
