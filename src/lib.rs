@@ -8,10 +8,12 @@ extern crate crypto;
 extern crate rusqlite;
 extern crate base64;
 
+pub mod director;
 pub mod resource;
 pub mod util;
 pub mod application;
 pub mod node;
-// pub mod executer;
-// pub mod component;
 
+thread_local! {
+    pub static DIRECTOR: ::director::Director = ::director::Director::new();
+}
