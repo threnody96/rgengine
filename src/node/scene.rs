@@ -1,11 +1,11 @@
 use std::rc::Rc;
 use std::any::Any;
-use ::node::{ Node, NodeDelegate, Layer };
+use ::node::{ Node, NodeDelegate, Layer, NodeOption };
 
 pub trait Scene: NodeDelegate {
 
-    fn add_layer(&self, delegate: Rc<Layer>) {
-        self.node().add_child(delegate);
+    fn add_layer(&self, delegate: Rc<Layer>, option: NodeOption) {
+        self.node().add_child(delegate, option);
     }
 
 }
@@ -14,7 +14,7 @@ impl <T> NodeDelegate for T where T: Scene {
 
     fn render_self(&self) { }
 
-    fn add_child(&self, delegate: Rc<dyn NodeDelegate>) {
+    fn add_child(&self, delegate: Rc<dyn NodeDelegate>, option: NodeOption) {
         panic!("Scene には add_child ではなく add_layer メソッドを使ってください");
     }
 
@@ -24,6 +24,3 @@ impl <T> NodeDelegate for T where T: Scene {
 
 }
 
-pub struct BlankScene { }
-
-impl Scene for BlankScene { }

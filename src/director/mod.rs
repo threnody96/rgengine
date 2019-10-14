@@ -4,18 +4,26 @@ pub mod application;
 use std::rc::Rc;
 use std::any::Any;
 use self::node::{ NodeEntry, NodeDirector };
-use ::node::{ Node, NodeDelegate };
+use self::application::{ ApplicationDerector };
+use ::node::{ Node, NodeDelegate, Scene };
+use ::application::AppDelegate;
 
 pub struct Director {
-    node: NodeDirector
+    node: NodeDirector,
+    application: ApplicationDerector
 }
 
 impl Director {
 
     pub fn new() -> Self {
         Self {
-            node: NodeDirector::new()
+            node: NodeDirector::new(),
+            application: ApplicationDerector::new()
         }
+    }
+
+    pub fn set_scene(&self, scene: Rc<dyn Scene>) {
+        self.application.set_scene(scene);
     }
 
     pub fn register_node<T>(&self, node: Rc<Node>, delegate: Rc<T>) where T: NodeDelegate + Any {
