@@ -27,4 +27,8 @@ impl ApplicationDerector {
         self.scene.replace(Some(scene));
     }
 
+    pub fn set_visible_size(&self, size: Size) {
+        self.application.set_visible_size(size);
+    }
+
 }

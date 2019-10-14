@@ -7,6 +7,7 @@ use self::node::{ NodeEntry, NodeDirector };
 use self::application::{ ApplicationDerector };
 use ::node::{ Node, NodeDelegate, Scene };
 use ::application::AppDelegate;
+use ::util::{ Size };
 
 pub struct Director {
     node: NodeDirector,
@@ -24,6 +25,10 @@ impl Director {
 
     pub fn set_scene(&self, scene: Rc<dyn Scene>) {
         self.application.set_scene(scene);
+    }
+
+    pub fn set_visible_size(&self, size: Size) {
+        self.application.set_visible_size(size);
     }
 
     pub fn register_node<T>(&self, node: Rc<Node>, delegate: Rc<T>) where T: NodeDelegate + Any {
