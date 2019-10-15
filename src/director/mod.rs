@@ -6,7 +6,7 @@ use std::any::Any;
 use self::node::{ NodeEntry, NodeDirector };
 use self::application::{ ApplicationDerector };
 use ::node::{ Node, NodeDelegate, Scene };
-use ::application::AppDelegate;
+use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
 use ::util::{ Size };
 
 pub struct Director {
@@ -23,12 +23,28 @@ impl Director {
         }
     }
 
+    pub fn run_with_scene(&self, app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+        self.application.run_with_scene(app_delegate, scene);
+    }
+
     pub fn set_scene(&self, scene: Rc<dyn Scene>) {
         self.application.set_scene(scene);
     }
 
+    pub fn get_visible_size(&self) -> Size {
+        self.application.get_visible_size()
+    }
+
     pub fn set_visible_size(&self, size: Size) {
         self.application.set_visible_size(size);
+    }
+
+    pub fn get_resolution_size(&self) -> ResolutionSize {
+        self.application.get_resolution_size()
+    }
+
+    pub fn set_resolution_size(&self, size: Size, policy: ResolutionPolicy) {
+        self.application.set_resolution_size(size, policy);
     }
 
     pub fn register_node<T>(&self, node: Rc<Node>, delegate: Rc<T>) where T: NodeDelegate + Any {
