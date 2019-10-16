@@ -10,7 +10,7 @@ pub struct ApplicationDerector {
     delegate: RefCell<Option<Rc<dyn AppDelegate>>>,
     resolution_size: RefCell<Option<ResolutionSize>>,
     visible_size: RefCell<Option<Size>>,
-    display_stats: bool
+    display_stats: RefCell<bool>
 }
 
 impl ApplicationDerector {
@@ -21,18 +21,21 @@ impl ApplicationDerector {
             delegate: RefCell::new(None),
             visible_size: RefCell::new(None),
             resolution_size: RefCell::new(None),
-            display_stats: build_mode() == BuildMode::Development,
+            display_stats: RefCell::new(build_mode() == BuildMode::Development),
         }
     }
 
     pub fn run_with_scene(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
-        self.set_scene(scene);
-        self.set_delegate(delegate.clone());
+        self.init(delegate, scene);
         self.run();
     }
 
     pub fn set_scene(&self, scene: Rc<dyn Scene>) {
         self.scene.replace(Some(scene));
+    }
+
+    pub fn get_scene(&self) -> Rc<dyn Scene> {
+        self.scene.borrow().clone().unwrap()
     }
 
     pub fn set_delegate(&self, delegate: Rc<dyn AppDelegate>) {
@@ -66,20 +69,30 @@ impl ApplicationDerector {
         }));
     }
 
+    pub fn set_display_stats(&self, display_stats: bool) {
+        self.display_stats.replace(display_stats);
+    }
+
+    pub fn get_display_stats(&self) -> bool {
+        self.display_stats.borrow().clone()
+    }
+
     fn run(&self) {
         let delegate = self.delegate.borrow().clone().unwrap();
-        let size = Size {
-            width: delegate.window_mode().width,
-            height: delegate.window_mode().height
-        };
-        self.set_visible_size(size.clone());
-        self.set_resolution_size(size, ResolutionPolicy::ShowAll);
         let (mut ctx, mut event_loop) = self.build();
         let mut game = Game::new(&mut ctx, delegate);
         match run(&mut ctx, &mut event_loop, &mut game) {
             Ok(_) => { },
             Err(e) => { panic!(format!("初期化に失敗しました: {}", e)); }
         }
+    }
+
+    fn init(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+        let size = delegate.window_size();
+        self.set_scene(scene);
+        self.set_delegate(delegate);
+        self.set_visible_size(size.clone());
+        self.set_resolution_size(size, ResolutionPolicy::ShowAll);
     }
 
     fn build(&self) -> (Context, EventsLoop) {

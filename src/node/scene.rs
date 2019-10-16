@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::any::Any;
 use ::node::{ Node, NodeDelegate, Layer, NodeOption };
+use ggez::{ Context };
 
 pub trait Scene: NodeDelegate {
 
@@ -12,7 +13,9 @@ pub trait Scene: NodeDelegate {
 
 impl <T> NodeDelegate for T where T: Scene {
 
-    fn render_self(&self) { }
+    fn update(&self) { }
+
+    fn render_self(&self, ctx: &mut Context) { }
 
     fn add_child(&self, delegate: Rc<dyn NodeDelegate>, option: NodeOption) {
         panic!("Scene には add_child ではなく add_layer メソッドを使ってください");

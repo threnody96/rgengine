@@ -27,6 +27,10 @@ impl Director {
         self.application.run_with_scene(app_delegate, scene);
     }
 
+    pub fn get_scene(&self) -> Rc<dyn Scene> {
+        self.application.get_scene()
+    }
+
     pub fn set_scene(&self, scene: Rc<dyn Scene>) {
         self.application.set_scene(scene);
     }
@@ -45,6 +49,14 @@ impl Director {
 
     pub fn set_resolution_size(&self, size: Size, policy: ResolutionPolicy) {
         self.application.set_resolution_size(size, policy);
+    }
+
+    pub fn get_display_stats(&self) -> bool {
+        self.application.get_display_stats()
+    }
+
+    pub fn set_display_stats(&self, display_stats: bool) {
+        self.application.set_display_stats(display_stats);
     }
 
     pub fn register_node<T>(&self, node: Rc<Node>, delegate: Rc<T>) where T: NodeDelegate + Any {

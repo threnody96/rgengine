@@ -1,10 +1,13 @@
 use ::node::{ NodeDelegate };
+use ggez::{ Context };
 
 pub struct Layer {}
 
 impl NodeDelegate for Layer {
 
-    fn render_self(&self) {
+    fn update(&self) { }
+
+    fn render_self(&self, ctx: &mut Context) {
         println!("Layer");
     }
 

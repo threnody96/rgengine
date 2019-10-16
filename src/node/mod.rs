@@ -9,6 +9,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::cmp::Ordering;
+use ggez::{ Context };
 
 pub struct NodeOption {
     z_index: i32,
@@ -124,13 +125,15 @@ impl Node {
 
 pub trait NodeDelegate {
 
-    fn render_self(&self);
+    fn update(&self);
 
-    fn render(&self) {
-        self.render_self();
+    fn render_self(&self, ctx: &mut Context);
+
+    fn render(&self, ctx: &mut Context) {
+        self.render_self(ctx);
         let children = self.node().children.borrow().clone();
         for child in children {
-            Node::get_delegate_by_id(child.id).render();
+            Node::get_delegate_by_id(child.id).render(ctx);
         }
     }
 
