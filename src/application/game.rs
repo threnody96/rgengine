@@ -25,7 +25,7 @@ impl Game {
 
     fn draw_debug_message(&self, ctx: &mut Context) -> GameResult<()> {
         if ::DIRECTOR.with(|d| !d.get_display_stats()) { return Ok(()); }
-        let fps_display = Text::new(format!("FPS: {}", fps(ctx)));
+        let fps_display = Text::new(format!("FPS: {}", fps(ctx).round() as u32));
         draw(
             ctx,
             &fps_display,

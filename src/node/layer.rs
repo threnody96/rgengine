@@ -7,7 +7,7 @@ impl NodeDelegate for Layer {
 
     fn update(&self) { }
 
-    fn render_self(&self, ctx: &mut Context) {
+    fn render(&self, ctx: &mut Context) {
         println!("Layer");
     }
 

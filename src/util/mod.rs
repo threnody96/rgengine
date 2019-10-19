@@ -1,7 +1,10 @@
 use std::env;
 use std::path::PathBuf;
 use std::fs::File;
+use std::rc::Rc;
 use std::io::{BufReader, Read, Write, stdout};
+use ::application::{ AppDelegate };
+use ::node::{ Scene };
 
 mod coordinate;
 pub use self::coordinate::*;
@@ -57,4 +60,8 @@ pub fn load_file(path: &PathBuf) -> Result<Vec<u8>, String> {
     let mut result: Vec<u8> = vec![];
     while let Some(Ok(b)) = bytes.next() { result.push(b); }
     Ok(result)
+}
+
+pub fn run_with_scene(app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+    ::DIRECTOR.with(|d| d.run_with_scene(app_delegate, scene) )
 }

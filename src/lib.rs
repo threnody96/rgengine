@@ -3,7 +3,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate serde;
 extern crate image; 
-extern crate ggez;
+pub extern crate ggez;
 extern crate crypto;
 extern crate rusqlite;
 extern crate base64;

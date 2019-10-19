@@ -15,7 +15,7 @@ impl <T> NodeDelegate for T where T: Scene {
 
     fn update(&self) { }
 
-    fn render_self(&self, ctx: &mut Context) { }
+    fn render(&self, ctx: &mut Context) { }
 
     fn add_child(&self, delegate: Rc<dyn NodeDelegate>, option: NodeOption) {
         panic!("Scene には add_child ではなく add_layer メソッドを使ってください");

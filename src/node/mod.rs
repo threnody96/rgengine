@@ -125,12 +125,20 @@ impl Node {
 
 pub trait NodeDelegate {
 
-    fn update(&self);
+    fn update(&self) { }
 
-    fn render_self(&self, ctx: &mut Context);
+    fn update_all(&self) {
+        self.update();
+        let children = self.node().children.borrow().clone();
+        for child in children {
+            Node::get_delegate_by_id(child.id).update();
+        }
+    }
 
-    fn render(&self, ctx: &mut Context) {
-        self.render_self(ctx);
+    fn render(&self, ctx: &mut Context) { }
+
+    fn render_all(&self, ctx: &mut Context) {
+        self.render(ctx);
         let children = self.node().children.borrow().clone();
         for child in children {
             Node::get_delegate_by_id(child.id).render(ctx);
