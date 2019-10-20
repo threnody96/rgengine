@@ -3,11 +3,12 @@ pub mod application;
 
 use std::rc::Rc;
 use std::any::Any;
-use self::node::{ NodeEntry, NodeDirector };
+use self::node::{ NodeDirector };
 use self::application::{ ApplicationDerector };
-use ::node::{ Node, NodeDelegate, Scene };
+use ::node::{ Node, NodeDelegate, Scene, NodeId, NodeLike };
 use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
 use ::util::{ Size };
+use ggez::{ Context };
 
 pub struct Director {
     node: NodeDirector,
@@ -59,20 +60,28 @@ impl Director {
         self.application.set_display_stats(display_stats);
     }
 
-    pub fn register_node<T>(&self, node: Rc<Node>, delegate: Rc<T>) where T: NodeDelegate + Any {
-        self.node.register_node(node, delegate);
+    pub fn register_node<T>(&self, node: Rc<Node<T>>) where T: NodeDelegate + Any {
+        self.node.register_node(node);
     }
 
-    pub fn get_node(&self, id: String) -> Rc<Node> {
+    pub fn get_node<T>(&self, id: NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
         self.node.get_node(id)
     }
 
-    pub fn get_node_delegate(&self, id: String) -> Rc<dyn NodeDelegate> {
-        self.node.get_delegate(id)
+    pub fn get_nodelike(&self, id: NodeId) -> Option<Rc<dyn NodeLike>> {
+        self.node.get_nodelike(id)
     }
 
-    pub fn destroy_node(&self, id: String) {
-        self.node.destroy_node(id);
+    pub fn update_node(&self, id: NodeId) {
+        self.node.update(id);
+    }
+
+    pub fn render_node(&self, id: NodeId, ctx: &mut Context) {
+        self.node.render(id, ctx);
+    }
+
+    pub fn destroy_node(&self, id: NodeId) {
+        self.node.destroy(id);
     }
 
 }

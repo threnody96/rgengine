@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use ::application::{ AppDelegate };
 use ::node::{ Scene };
-use ::util::{ Point, Size };
+use ::util::{ Point, Size, director };
 use ggez::{ Context, GameResult };
 use ggez::event::{ EventHandler };
 use ggez::timer::{ check_update_time, fps };
@@ -20,11 +20,11 @@ impl Game {
     }
 
     fn get_scene(&self) -> Rc<dyn Scene> {
-        ::DIRECTOR.with(|d| d.get_scene() )
+        director(|d| d.get_scene())
     }
 
     fn draw_debug_message(&self, ctx: &mut Context) -> GameResult<()> {
-        if ::DIRECTOR.with(|d| !d.get_display_stats()) { return Ok(()); }
+        if director(|d| !d.get_display_stats()) { return Ok(()); }
         let fps_display = Text::new(format!("FPS: {}", fps(ctx).round() as u32));
         draw(
             ctx,
@@ -53,7 +53,7 @@ impl EventHandler for Game {
     }
 
     fn resize_event(&mut self, _ctx: &mut Context, width: f32, height: f32) {
-        ::DIRECTOR.with(|d| {
+        director(|d| {
             d.set_visible_size(Size {
                 width: width,
                 height: height
