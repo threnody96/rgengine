@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::any::Any;
-use ::node::{ Node, NodeDelegate, Layer, AddChildOption };
+use ::node::{ Node, NodeDelegate, Layer, AddChildOption, NodeLike };
 use ggez::{ Context };
 
 pub trait Scene: NodeDelegate {
@@ -8,6 +8,10 @@ pub trait Scene: NodeDelegate {
     fn add_layer(&self, node: Rc<Node<Layer>>, option: AddChildOption) {
         self.add_child(node, option);
     }
+
+}
+
+pub trait SceneLike: NodeLike {
 
 }
 
@@ -27,3 +31,6 @@ impl <T> NodeDelegate for T where T: Scene {
 
 }
 
+impl <T> SceneLike for Node<T> where T: Scene + Any {
+
+}

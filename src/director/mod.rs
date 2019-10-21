@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::any::Any;
 use self::node::{ NodeDirector };
 use self::application::{ ApplicationDerector };
-use ::node::{ Node, NodeDelegate, Scene, NodeId, NodeLike };
+use ::node::{ Node, NodeDelegate, SceneLike, NodeId, NodeLike };
 use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
 use ::util::{ Size };
 use ggez::{ Context };
@@ -24,15 +24,15 @@ impl Director {
         }
     }
 
-    pub fn run_with_scene(&self, app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+    pub fn run_with_scene(&self, app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
         self.application.run_with_scene(app_delegate, scene);
     }
 
-    pub fn get_scene(&self) -> Rc<dyn Scene> {
+    pub fn get_scene(&self) -> Rc<dyn SceneLike> {
         self.application.get_scene()
     }
 
-    pub fn set_scene(&self, scene: Rc<dyn Scene>) {
+    pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
         self.application.set_scene(scene);
     }
 

@@ -2,17 +2,18 @@ use std::rc::Rc;
 use std::ops::Deref;
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
 use ::util::{ director };
 use ggez::{ Context };
 
-pub struct Node<T> where T: NodeDelegate {
+pub struct Node<T> where T: NodeDelegate + Any {
     delegate: T,
     parents: RefCell<Vec<NodeId>>,
     children: RefCell<Vec<NodeChild>>
 }
 
-impl <T> Deref for Node<T> where T: NodeDelegate {
+impl <T> Deref for Node<T> where T: NodeDelegate + Any {
 
     type Target = T;
 
@@ -22,7 +23,7 @@ impl <T> Deref for Node<T> where T: NodeDelegate {
 
 }
 
-impl <T> NodeLike for Node<T> where T: NodeDelegate {
+impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn id(&self) -> NodeId {
         self.delegate.id()
@@ -84,11 +85,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate {
 
 }
 
-impl <T> Node<T> where T: NodeDelegate {
+impl <T> Node<T> where T: NodeDelegate + Any {
 
-    pub fn create(delegate: T) -> Rc<Self> {
-        let s = Rc::new(Self::new(delegate));
-        s
+    pub fn create<C>(callback: C) -> Rc<Self> where C: Fn() -> T {
+        director(|d| {
+            let s = Rc::new(Self::new(callback()));
+            d.register_node(s.clone());
+            s
+        })
     }
 
     fn new(delegate: T) -> Self {

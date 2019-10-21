@@ -1,7 +1,7 @@
-use ::node::{ NodeDelegate };
+use ::node::{ NodeId, NodeDelegate };
 use ggez::{ Context };
 
-pub struct Layer {}
+pub struct Layer { }
 
 impl NodeDelegate for Layer {
 
@@ -12,3 +12,4 @@ impl NodeDelegate for Layer {
     }
 
 }
+

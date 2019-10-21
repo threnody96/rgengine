@@ -1,12 +1,12 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use ::application::{ AppDelegate, ResolutionSize, ResolutionPolicy, Game };
-use ::node::{ Node, Scene };
+use ::node::{ Node, SceneLike, NodeLike };
 use ::util::{ BuildMode, build_mode, Size, Point };
 use ggez::{ Context, ContextBuilder, event::run, event::EventsLoop };
 
 pub struct ApplicationDerector {
-    scene: RefCell<Option<Rc<dyn Scene>>>,
+    scene: RefCell<Option<Rc<dyn SceneLike>>>,
     delegate: RefCell<Option<Rc<dyn AppDelegate>>>,
     resolution_size: RefCell<Option<ResolutionSize>>,
     visible_size: RefCell<Option<Size>>,
@@ -25,16 +25,16 @@ impl ApplicationDerector {
         }
     }
 
-    pub fn run_with_scene(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+    pub fn run_with_scene(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
         self.init(delegate, scene);
         self.run();
     }
 
-    pub fn set_scene(&self, scene: Rc<dyn Scene>) {
+    pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
         self.scene.replace(Some(scene));
     }
 
-    pub fn get_scene(&self) -> Rc<dyn Scene> {
+    pub fn get_scene(&self) -> Rc<dyn SceneLike> {
         self.scene.borrow().clone().unwrap()
     }
 
@@ -87,7 +87,7 @@ impl ApplicationDerector {
         }
     }
 
-    fn init(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+    fn init(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
         let size = delegate.window_size();
         self.set_scene(scene);
         self.set_delegate(delegate);

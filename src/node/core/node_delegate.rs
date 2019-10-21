@@ -14,7 +14,7 @@ pub trait NodeDelegate {
     fn before_be_added_child(&self) { }
 
     fn id(&self) -> NodeId {
-        NodeId { id: format!("{:p}", self) }
+        NodeId::new(format!("{:p}", self))
     }
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {

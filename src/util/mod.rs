@@ -3,8 +3,9 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::rc::Rc;
 use std::io::{BufReader, Read, Write, stdout};
+use std::any::Any;
 use ::application::{ AppDelegate };
-use ::node::{ Scene };
+use ::node::{ Node, SceneLike };
 use ::director::{ Director };
 
 mod coordinate;
@@ -63,10 +64,11 @@ pub fn load_file(path: &PathBuf) -> Result<Vec<u8>, String> {
     Ok(result)
 }
 
-pub fn run_with_scene(app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn Scene>) {
+pub fn run_with_scene(app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
     director(|d| d.run_with_scene(app_delegate, scene));
 }
 
 pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
     ::DIRECTOR.with(callback)
 }
+

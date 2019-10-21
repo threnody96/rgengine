@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use ::application::{ AppDelegate };
-use ::node::{ Scene };
+use ::node::{ SceneLike };
 use ::util::{ Point, Size, director };
 use ggez::{ Context, GameResult };
 use ggez::event::{ EventHandler };
@@ -19,7 +19,7 @@ impl Game {
         }
     }
 
-    fn get_scene(&self) -> Rc<dyn Scene> {
+    fn get_scene(&self) -> Rc<dyn SceneLike> {
         director(|d| d.get_scene())
     }
 
