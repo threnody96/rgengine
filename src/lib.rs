@@ -7,6 +7,7 @@ pub extern crate ggez;
 extern crate crypto;
 extern crate rusqlite;
 extern crate base64;
+extern crate html5ever;
 
 pub mod director;
 pub mod resource;

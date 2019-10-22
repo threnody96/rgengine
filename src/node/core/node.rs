@@ -31,10 +31,18 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn update(&self) {
         self.delegate.update();
+        for child in &*self.children.borrow() {
+            let c = director(|d| d.get_nodelike(child.id.clone()));
+            if c.is_some() { c.unwrap().update(); }
+        }
     }
 
     fn render(&self, ctx: &mut Context) {
         self.delegate.render(ctx);
+        for child in &*self.children.borrow() {
+            let c = director(|d| d.get_nodelike(child.id.clone()));
+            if c.is_some() { c.unwrap().render(ctx); }
+        }
     }
 
     fn add_parent(&self, id: NodeId) {

@@ -1,14 +1,16 @@
 pub mod node;
 pub mod application;
+pub mod resource;
 
 use std::rc::Rc;
 use std::any::Any;
 use self::node::{ NodeDirector };
 use self::application::{ ApplicationDerector };
-use ::node::{ Node, NodeDelegate, SceneLike, NodeId, NodeLike };
+use ::node::{ Node, NodeDelegate, SceneLike, NodeId, NodeLike, LabelTextOption };
 use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
 use ::util::{ Size };
 use ggez::{ Context };
+use ggez::graphics::{ Scale };
 
 pub struct Director {
     node: NodeDirector,
@@ -34,6 +36,18 @@ impl Director {
 
     pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
         self.application.set_scene(scene);
+    }
+
+    pub fn add_font_size(&self, name: String, scale: f32) {
+        self.application.add_font_size(name, scale);
+    }
+
+    pub fn get_font_size(&self, name: String) -> Option<Scale> {
+        self.application.get_font_size(name)
+    }
+
+    pub fn get_default_label_option(&self) -> LabelTextOption {
+        self.application.get_default_label_option()
     }
 
     pub fn get_visible_size(&self) -> Size {

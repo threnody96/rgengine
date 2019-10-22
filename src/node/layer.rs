@@ -1,4 +1,4 @@
-use ::node::{ NodeId, NodeDelegate };
+use ::node::{ NodeDelegate };
 use ggez::{ Context };
 
 pub struct Layer { }

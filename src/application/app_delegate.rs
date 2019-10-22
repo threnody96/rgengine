@@ -1,4 +1,5 @@
 use ::util::{ Size };
+use ::application::application_setup::ApplicationSetup;
 use ggez::conf::{ WindowSetup, WindowMode };
 
 pub trait AppDelegate {
@@ -15,19 +16,16 @@ pub trait AppDelegate {
 
     fn fps(&self) -> u32 { 60 }
 
-    fn window_setup(&self) -> WindowSetup {
-        WindowSetup::default()
+    fn window_setup(&self) -> Option<WindowSetup> {
+        None
     }
 
-    fn window_mode(&self) -> WindowMode {
-        WindowMode::default()
+    fn window_mode(&self) -> Option<WindowMode> {
+        None
     }
 
-    fn window_size(&self) -> Size {
-        Size {
-            width: self.window_mode().width,
-            height: self.window_mode().height
-        }
+    fn application_setup(&self) -> ApplicationSetup {
+        ApplicationSetup::default()
     }
 
 }

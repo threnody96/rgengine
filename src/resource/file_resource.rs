@@ -7,7 +7,7 @@ pub struct FileStorage { }
 
 impl FileStorage {
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 
