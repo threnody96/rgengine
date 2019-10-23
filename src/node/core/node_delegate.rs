@@ -1,13 +1,12 @@
 use std::rc::Rc;
 use ::node::{ NodeId, NodeLike, AddChildOption };
 use ::util::{ director };
-use ggez::{ Context };
 
 pub trait NodeDelegate {
 
     fn update(&self);
 
-    fn render(&self, ctx: &mut Context);
+    fn render(&self);
 
     fn before_add_child(&self) { }
 

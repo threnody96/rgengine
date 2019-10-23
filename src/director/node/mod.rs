@@ -3,7 +3,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use ::node::{ Node, NodeDelegate, NodeId, NodeLike };
-use ggez::{ Context };
 
 pub struct NodeDirector {
     nodelikes: RefCell<HashMap<NodeId, Rc<dyn NodeLike>>>,
@@ -50,11 +49,11 @@ impl NodeDirector {
         node.unwrap().update();
     }
 
-    pub fn render(&self, id: NodeId, ctx: &mut Context) {
+    pub fn render(&self, id: NodeId) {
         let nodelikes = self.nodelikes.borrow();
         let node = nodelikes.get(&id);
         if node.is_none() { return; }
-        node.unwrap().render(ctx);
+        node.unwrap().render();
     }
 
     pub fn destroy(&self, id: NodeId) {

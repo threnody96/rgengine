@@ -39,7 +39,7 @@ impl NodeDelegate for LabelText {
 
     fn update(&self) {}
 
-    fn render(&self, ctx: &mut Context) {
+    fn render(&self) {
     }
 
 }

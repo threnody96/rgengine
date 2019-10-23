@@ -7,9 +7,13 @@ use std::any::Any;
 use ::application::{ AppDelegate };
 use ::node::{ Node, SceneLike };
 use ::director::{ Director };
+use ggez::{ Context, GameResult };
+use ggez::graphics::{ Drawable, DrawParam };
 
 mod coordinate;
+mod event;
 pub use self::coordinate::*;
+pub use self::event::*;
 
 #[derive(Eq, PartialEq)]
 pub enum BuildMode {
@@ -70,5 +74,13 @@ pub fn run_with_scene(app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike
 
 pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
     ::DIRECTOR.with(callback)
+}
+
+pub fn context<T, R>(callback: T) -> R where T: FnOnce(&mut Context) -> R {
+    director(|d| d.with_context(callback))
+}
+
+pub fn draw<D, T>(drawable: &D, params: T) -> GameResult where D: Drawable, T: Into<DrawParam> {
+    context(|ctx| ggez::graphics::draw(ctx, drawable, params))
 }
 

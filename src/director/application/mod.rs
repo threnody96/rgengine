@@ -3,8 +3,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use ::application::{ AppDelegate, ResolutionSize, ResolutionPolicy, Game };
 use ::node::{ Node, SceneLike, NodeLike, LabelTextOption };
-use ::util::{ BuildMode, build_mode, Size, Point };
-use ggez::{ Context, ContextBuilder, event::run, event::EventsLoop };
+use ::util::{ BuildMode, build_mode, Size, Point, run };
+use ggez::{ Context, ContextBuilder, event::EventsLoop };
 use ggez::graphics::{ Scale, Color };
 
 pub struct ApplicationDerector {
@@ -31,11 +31,6 @@ impl ApplicationDerector {
             color: RefCell::new(HashMap::new()),
             display_stats: RefCell::new(build_mode() == BuildMode::Development),
         }
-    }
-
-    pub fn run_with_scene(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
-        self.init(delegate, scene);
-        self.run();
     }
 
     pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
@@ -104,14 +99,7 @@ impl ApplicationDerector {
         let delegate = self.delegate.borrow();
         match delegate.as_ref() {
             None => {
-                LabelTextOption {
-                    size: 10.0,
-                    size_name: "".to_owned(),
-                    size_magnification: 1.0,
-                    color: Color::from_rgba(255, 255,255, 255),
-                    color_name: "".to_owned(),
-                    font: "".to_owned(),
-                }
+                LabelTextOption::default()
             },
             Some(d) => {
                 d.application_setup().default_label_option.clone()
@@ -134,22 +122,22 @@ impl ApplicationDerector {
         self.display_stats.borrow().clone()
     }
 
-    fn run(&self) {
+    pub fn run(&self, event_loop: &mut EventsLoop) {
         let delegate = self.delegate.borrow().clone().unwrap();
-        let (mut ctx, mut event_loop) = self.build();
-        let mut game = Game::new(&mut ctx, delegate);
-        match run(&mut ctx, &mut event_loop, &mut game) {
+        let mut game = Game::new(delegate);
+        match run(event_loop, &mut game) {
             Ok(_) => { },
             Err(e) => { panic!(format!("初期化に失敗しました: {}", e)); }
         }
     }
 
-    fn init(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
+    pub fn init(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) -> (Context, EventsLoop) {
         let size = delegate.application_setup().generate_window_size();
         self.set_scene(scene);
         self.set_delegate(delegate);
         self.set_visible_size(size.clone());
         self.set_resolution_size(size, ResolutionPolicy::ShowAll);
+        self.build()
     }
 
     fn build(&self) -> (Context, EventsLoop) {

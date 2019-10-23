@@ -1,6 +1,5 @@
 use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
-use ggez::{ Context };
 
 pub trait NodeLike {
 
@@ -8,7 +7,7 @@ pub trait NodeLike {
 
     fn update(&self);
 
-    fn render(&self, ctx: &mut Context);
+    fn render(&self);
 
     fn add_parent(&self, id: NodeId);
 

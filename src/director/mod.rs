@@ -4,12 +4,13 @@ pub mod resource;
 
 use std::rc::Rc;
 use std::any::Any;
+use std::cell::RefCell;
 use self::node::{ NodeDirector };
 use self::application::{ ApplicationDerector };
 use self::resource::{ ResourceDirector };
 use ::node::{ Node, NodeDelegate, SceneLike, NodeId, NodeLike, LabelTextOption };
 use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
-use ::util::{ Size };
+use ::util::{ must, Size };
 use ggez::{ Context };
 use ggez::graphics::{ Scale, Image, Font, Color };
 use serde_json::{ Value };
@@ -17,7 +18,8 @@ use serde_json::{ Value };
 pub struct Director {
     node: NodeDirector,
     application: ApplicationDerector,
-    resource: ResourceDirector
+    resource: ResourceDirector,
+    context: RefCell<Option<Context>>
 }
 
 impl Director {
@@ -26,12 +28,25 @@ impl Director {
         Self {
             node: NodeDirector::new(),
             application: ApplicationDerector::new(),
-            resource: ResourceDirector::new()
+            resource: ResourceDirector::new(),
+            context: RefCell::new(None)
         }
     }
 
     pub fn run_with_scene(&self, app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
-        self.application.run_with_scene(app_delegate, scene);
+        let (ctx, mut event_loop) = self.application.init(app_delegate, scene);
+        self.set_context(ctx);
+        self.application.run(&mut event_loop);
+    }
+
+    pub fn set_context(&self, ctx: Context) {
+        self.context.replace(Some(ctx));
+    }
+
+    pub fn with_context<T, R>(&self, callback: T) -> R where T: FnOnce(&mut Context) -> R {
+        let mut ctx = self.context.borrow_mut();
+        if ctx.is_none() { must::<String, String>(Err("ゲームが実行されていません".to_owned())); }
+        callback(ctx.as_mut().unwrap())
     }
 
     pub fn get_scene(&self) -> Rc<dyn SceneLike> {
@@ -113,8 +128,8 @@ impl Director {
         self.node.update(id);
     }
 
-    pub fn render_node(&self, id: NodeId, ctx: &mut Context) {
-        self.node.render(id, ctx);
+    pub fn render_node(&self, id: NodeId) {
+        self.node.render(id);
     }
 
     pub fn destroy_node(&self, id: NodeId) {
@@ -134,23 +149,15 @@ impl Director {
     }
 
     pub fn load_image(&self, path: String) -> Rc<Image> {
-        self.resource.load_image(path)
+        self.with_context(|ctx| {
+            self.resource.load_image(ctx, path)
+        })
     }
 
     pub fn load_font(&self, path: String) -> Rc<Font> {
-        self.resource.load_font(path)
-    }
-
-    pub fn preload_font(&self, path: String) {
-        self.resource.preload_font(path);
-    }
-
-    pub fn preload_image(&self, path: String) {
-        self.resource.preload_image(path);
-    }
-
-    pub fn do_preload(&self, ctx: &mut Context) {
-        self.resource.do_preload(ctx);
+        self.with_context(|ctx| {
+            self.resource.load_font(ctx, path)
+        })
     }
 
 }

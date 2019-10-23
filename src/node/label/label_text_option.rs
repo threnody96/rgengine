@@ -134,12 +134,23 @@ impl LabelTextOption {
     //     }
     // }
 
+    fn application_default() -> Self {
+        director(|d| d.get_default_label_option())
+    }
+
 }
 
 impl Default for LabelTextOption {
 
     fn default() -> Self {
-        director(|d| d.get_default_label_option() )
+        Self {
+            size: 10.0,
+            size_name: "".to_owned(),
+            size_magnification: 1.0,
+            color: Color::from_rgba(255, 255,255, 255),
+            color_name: "".to_owned(),
+            font: "".to_owned(),
+        }
     }
 
 }

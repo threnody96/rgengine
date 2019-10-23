@@ -5,7 +5,6 @@ use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
 use ::util::{ director };
-use ggez::{ Context };
 
 pub struct Node<T> where T: NodeDelegate + Any {
     delegate: T,
@@ -37,11 +36,11 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         }
     }
 
-    fn render(&self, ctx: &mut Context) {
-        self.delegate.render(ctx);
+    fn render(&self) {
+        self.delegate.render();
         for child in &*self.children.borrow() {
             let c = director(|d| d.get_nodelike(child.id.clone()));
-            if c.is_some() { c.unwrap().render(ctx); }
+            if c.is_some() { c.unwrap().render(); }
         }
     }
 

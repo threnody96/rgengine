@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use ::application::{ AppDelegate };
 use ::node::{ SceneLike };
-use ::util::{ Point, Size, director };
+use ::util::{ Point, Size, director, context };
 use ggez::{ Context, GameResult };
 use ggez::event::{ EventHandler };
 use ggez::timer::{ check_update_time, fps };
@@ -13,7 +13,7 @@ pub struct Game {
 
 impl Game {
 
-    pub fn new(ctx: &mut Context, delegate: Rc<dyn AppDelegate>) -> Self {
+    pub fn new(delegate: Rc<dyn AppDelegate>) -> Self {
         Self {
             delegate: delegate
         }
@@ -23,14 +23,16 @@ impl Game {
         director(|d| d.get_scene())
     }
 
-    fn draw_debug_message(&self, ctx: &mut Context) -> GameResult<()> {
+    fn draw_debug_message(&self) -> GameResult<()> {
         if director(|d| !d.get_display_stats()) { return Ok(()); }
-        let fps_display = Text::new(format!("FPS: {}", fps(ctx).round() as u32));
-        draw(
-            ctx,
-            &fps_display,
-            (Point { x: 0.0, y: 0.0}, WHITE)
-        )?;
+        context(|ctx| {
+            let fps_display = Text::new(format!("FPS: {}", fps(ctx).round() as u32));
+            draw(
+                ctx,
+                &fps_display,
+                (Point { x: 0.0, y: 0.0}, WHITE)
+            )
+        })?;
         Ok(())
     }
 
@@ -38,22 +40,21 @@ impl Game {
 
 impl EventHandler for Game {
 
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        director(|d| d.do_preload(ctx));
-        while(check_update_time(ctx, self.delegate.fps())) {
+    fn update(&mut self) -> GameResult<()> {
+        while { context(|ctx| check_update_time(ctx, self.delegate.fps())) } {
             self.get_scene().update();
         }
         Ok(())
     }
 
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        clear(ctx, BLACK);
-        self.get_scene().render(ctx);
-        self.draw_debug_message(ctx);
-        present(ctx)
+    fn draw(&mut self) -> GameResult<()> {
+        context(|ctx| clear(ctx, BLACK));
+        self.get_scene().render();
+        self.draw_debug_message();
+        context(|ctx| present(ctx))
     }
 
-    fn resize_event(&mut self, _ctx: &mut Context, width: f32, height: f32) {
+    fn resize_event(&mut self, width: f32, height: f32) {
         director(|d| {
             d.set_visible_size(Size {
                 width: width,
