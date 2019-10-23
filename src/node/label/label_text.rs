@@ -1,11 +1,11 @@
 use std::rc::Rc;
 use ::node::{ Node, NodeDelegate };
-use ::node::label::{ Label, LabelTextOption };
+use ::node::label::{PrettyLabel, LabelTextOption };
 use ggez::{ Context };
 
 pub struct LabelText {
     text: String,
-    ruby: Option<Label>,
+    ruby: Option<PrettyLabel>,
     option: LabelTextOption
 }
 

@@ -58,12 +58,18 @@ impl NodeDirector {
     }
 
     pub fn destroy(&self, id: NodeId) {
-        let mut nodelikes = self.nodelikes.borrow_mut();
-        let mut anynodes = self.anynodes.borrow_mut();
-        anynodes.remove(&id);
-        if let Some(node) = nodelikes.remove(&id) {
+        let nodelike = {
+            let mut nodelikes = self.nodelikes.borrow_mut();
+            let mut anynodes = self.anynodes.borrow_mut();
+            anynodes.remove(&id);
+            nodelikes.remove(&id)
+        };
+        if let Some(node) = nodelike {
             for parent in node.get_parents() {
-                self.get_nodelike(parent.clone()).unwrap().remove_child(id.clone());
+                self.get_nodelike(parent).unwrap().remove_child(id.clone());
+            }
+            for child in node.get_children() {
+                self.destroy(child);
             }
         }
     }

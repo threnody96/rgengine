@@ -5,7 +5,7 @@ use ::application::{ AppDelegate, ResolutionSize, ResolutionPolicy, Game };
 use ::node::{ Node, SceneLike, NodeLike, LabelTextOption };
 use ::util::{ BuildMode, build_mode, Size, Point };
 use ggez::{ Context, ContextBuilder, event::run, event::EventsLoop };
-use ggez::graphics::{ Scale };
+use ggez::graphics::{ Scale, Color };
 
 pub struct ApplicationDerector {
     scene: RefCell<Option<Rc<dyn SceneLike>>>,
@@ -13,6 +13,8 @@ pub struct ApplicationDerector {
     resolution_size: RefCell<Option<ResolutionSize>>,
     visible_size: RefCell<Option<Size>>,
     font_size: RefCell<HashMap<String, Scale>>,
+    font: RefCell<HashMap<String, String>>,
+    color: RefCell<HashMap<String, Color>>,
     display_stats: RefCell<bool>
 }
 
@@ -25,6 +27,8 @@ impl ApplicationDerector {
             visible_size: RefCell::new(None),
             resolution_size: RefCell::new(None),
             font_size: RefCell::new(HashMap::new()),
+            font: RefCell::new(HashMap::new()),
+            color: RefCell::new(HashMap::new()),
             display_stats: RefCell::new(build_mode() == BuildMode::Development),
         }
     }
@@ -56,6 +60,26 @@ impl ApplicationDerector {
         font_size.get(&name).cloned()
     }
 
+    pub fn add_font(&self, name: String, path: String) {
+        let mut font = self.font.borrow_mut();
+        font.insert(name, path);
+    }
+
+    pub fn get_font(&self, name: String) -> Option<String> {
+        let font = self.font.borrow();
+        font.get(&name).cloned()
+    }
+
+    pub fn add_color(&self, name: String, color: Color) {
+        let mut c = self.color.borrow_mut();
+        c.insert(name, color);
+    }
+
+    pub fn get_color(&self, name: String) -> Option<Color> {
+        let color = self.color.borrow();
+        color.get(&name).cloned()
+    }
+
     pub fn get_visible_size(&self) -> Size {
         let visible_size = self.visible_size.borrow();
         if visible_size.is_none() { panic!("ゲームが実行されていません"); }
@@ -78,8 +102,21 @@ impl ApplicationDerector {
 
     pub fn get_default_label_option(&self) -> LabelTextOption {
         let delegate = self.delegate.borrow();
-        if delegate.is_none() { return LabelTextOption::default(); }
-        delegate.as_ref().unwrap().application_setup().default_label_option.clone()
+        match delegate.as_ref() {
+            None => {
+                LabelTextOption {
+                    size: 10.0,
+                    size_name: "".to_owned(),
+                    size_magnification: 1.0,
+                    color: Color::from_rgba(255, 255,255, 255),
+                    color_name: "".to_owned(),
+                    font: "".to_owned(),
+                }
+            },
+            Some(d) => {
+                d.application_setup().default_label_option.clone()
+            }
+        }
     }
 
     pub fn set_resolution_size(&self, size: Size, policy: ResolutionPolicy) {

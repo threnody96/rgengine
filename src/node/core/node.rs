@@ -80,6 +80,15 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         node.add_parent(self.id());
     }
 
+    fn get_children(&self) -> Vec<NodeId> {
+        let mut output: Vec<NodeId> = Vec::new();
+        let children = self.children.borrow();
+        for child in &*children {
+            output.push(child.id.clone());
+        }
+        output
+    }
+
     fn remove_child(&self, id: NodeId) {
         let mut next_children = Vec::new();
         for child in &*self.children.borrow() {

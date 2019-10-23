@@ -6,15 +6,18 @@ use std::rc::Rc;
 use std::any::Any;
 use self::node::{ NodeDirector };
 use self::application::{ ApplicationDerector };
+use self::resource::{ ResourceDirector };
 use ::node::{ Node, NodeDelegate, SceneLike, NodeId, NodeLike, LabelTextOption };
 use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
 use ::util::{ Size };
 use ggez::{ Context };
-use ggez::graphics::{ Scale };
+use ggez::graphics::{ Scale, Image, Font, Color };
+use serde_json::{ Value };
 
 pub struct Director {
     node: NodeDirector,
-    application: ApplicationDerector
+    application: ApplicationDerector,
+    resource: ResourceDirector
 }
 
 impl Director {
@@ -22,7 +25,8 @@ impl Director {
     pub fn new() -> Self {
         Self {
             node: NodeDirector::new(),
-            application: ApplicationDerector::new()
+            application: ApplicationDerector::new(),
+            resource: ResourceDirector::new()
         }
     }
 
@@ -35,6 +39,9 @@ impl Director {
     }
 
     pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
+        if self.application.get_scene().id() != scene.id() {
+            self.destroy_node(self.application.get_scene().id());
+        }
         self.application.set_scene(scene);
     }
 
@@ -44,6 +51,22 @@ impl Director {
 
     pub fn get_font_size(&self, name: String) -> Option<Scale> {
         self.application.get_font_size(name)
+    }
+
+    pub fn add_font(&self, name: String, path: String) {
+        self.application.add_font(name, path);
+    }
+
+    pub fn get_font(&self, name: String) -> Option<String> {
+        self.application.get_font(name)
+    }
+
+    pub fn add_color(&self, name: String, color: Color) {
+        self.application.add_color(name, color);
+    }
+
+    pub fn get_color(&self, name: String) -> Option<Color> {
+        self.application.get_color(name)
     }
 
     pub fn get_default_label_option(&self) -> LabelTextOption {
@@ -96,6 +119,38 @@ impl Director {
 
     pub fn destroy_node(&self, id: NodeId) {
         self.node.destroy(id);
+    }
+
+    pub fn load_plain_data(&self, path: String) -> Rc<Vec<u8>> {
+        self.resource.load_plain_data(path)
+    }
+
+    pub fn load_string(&self, path: String) -> Rc<String> {
+        self.resource.load_string(path)
+    }
+
+    pub fn load_json(&self, path: String) -> Rc<Value> {
+        self.resource.load_json(path)
+    }
+
+    pub fn load_image(&self, path: String) -> Rc<Image> {
+        self.resource.load_image(path)
+    }
+
+    pub fn load_font(&self, path: String) -> Rc<Font> {
+        self.resource.load_font(path)
+    }
+
+    pub fn preload_font(&self, path: String) {
+        self.resource.preload_font(path);
+    }
+
+    pub fn preload_image(&self, path: String) {
+        self.resource.preload_image(path);
+    }
+
+    pub fn do_preload(&self, ctx: &mut Context) {
+        self.resource.do_preload(ctx);
     }
 
 }

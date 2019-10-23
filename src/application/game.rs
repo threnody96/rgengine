@@ -39,6 +39,7 @@ impl Game {
 impl EventHandler for Game {
 
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        director(|d| d.do_preload(ctx));
         while(check_update_time(ctx, self.delegate.fps())) {
             self.get_scene().update();
         }
