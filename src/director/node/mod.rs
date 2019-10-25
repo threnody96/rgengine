@@ -25,9 +25,9 @@ impl NodeDirector {
         anynodes.insert(node.id(), node.clone());
     }
 
-    pub fn get_node<T>(&self, id: NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
+    pub fn get_node<T>(&self, id: &NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
         let anynodes = self.anynodes.borrow();
-        let node = anynodes.get(&id);
+        let node = anynodes.get(id);
         if node.is_none() { return None; }
         if let Ok(n) = node.unwrap().clone().downcast::<Node<T>>() {
             return Some(n);
@@ -35,40 +35,40 @@ impl NodeDirector {
         None
     }
 
-    pub fn get_nodelike(&self, id: NodeId) -> Option<Rc<dyn NodeLike>> {
+    pub fn get_nodelike(&self, id: &NodeId) -> Option<Rc<dyn NodeLike>> {
         let nodelikes = self.nodelikes.borrow();
-        let node = nodelikes.get(&id);
+        let node = nodelikes.get(id);
         if node.is_none() { return None; }
         Some(node.unwrap().clone())
     }
 
-    pub fn update(&self, id: NodeId) {
+    pub fn update(&self, id: &NodeId) {
         let nodelikes = self.nodelikes.borrow();
-        let node = nodelikes.get(&id);
+        let node = nodelikes.get(id);
         if node.is_none() { return; }
         node.unwrap().update();
     }
 
-    pub fn render(&self, id: NodeId) {
+    pub fn render(&self, id: &NodeId) {
         let nodelikes = self.nodelikes.borrow();
-        let node = nodelikes.get(&id);
+        let node = nodelikes.get(id);
         if node.is_none() { return; }
         node.unwrap().render();
     }
 
-    pub fn destroy(&self, id: NodeId) {
+    pub fn destroy(&self, id: &NodeId) {
         let nodelike = {
             let mut nodelikes = self.nodelikes.borrow_mut();
             let mut anynodes = self.anynodes.borrow_mut();
-            anynodes.remove(&id);
-            nodelikes.remove(&id)
+            anynodes.remove(id);
+            nodelikes.remove(id)
         };
         if let Some(node) = nodelike {
             for parent in node.get_parents() {
-                self.get_nodelike(parent).unwrap().remove_child(id.clone());
+                self.get_nodelike(&parent).unwrap().remove_child(id);
             }
             for child in node.get_children() {
-                self.destroy(child);
+                self.destroy(&child);
             }
         }
     }

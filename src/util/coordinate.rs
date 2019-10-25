@@ -1,9 +1,6 @@
-use ggez::mint::Point2;
+pub use sdl2::rect::{ Point, Rect };
 
-pub type Point = Point2<f32>;
-
-#[derive(PartialEq, Clone, Copy)]
 pub struct Size {
-    pub width: f32,
-    pub height: f32
+    pub width: u32,
+    pub height: u32
 }

@@ -1,35 +1,24 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::collections::HashMap;
-use ::application::{ AppDelegate, ResolutionSize, ResolutionPolicy, Game };
-use ::node::{ Node, SceneLike, NodeLike, LabelTextOption };
-use ::util::{ BuildMode, build_mode, Size, Point, run };
-use ggez::{ Context, ContextBuilder, event::EventsLoop };
-use ggez::graphics::{ Scale, Color };
+use std::time::Duration;
+use ::application::{ Application };
+use ::node::{ SceneLike };
+use ::util::{ must, canvas };
+use sdl2::{ EventPump };
+use sdl2::render::{ Canvas };
+use sdl2::video::{ Window };
 
-pub struct ApplicationDerector {
+pub struct ApplicationDirector {
     scene: RefCell<Option<Rc<dyn SceneLike>>>,
-    delegate: RefCell<Option<Rc<dyn AppDelegate>>>,
-    resolution_size: RefCell<Option<ResolutionSize>>,
-    visible_size: RefCell<Option<Size>>,
-    font_size: RefCell<HashMap<String, Scale>>,
-    font: RefCell<HashMap<String, String>>,
-    color: RefCell<HashMap<String, Color>>,
-    display_stats: RefCell<bool>
+    application: RefCell<Option<Rc<dyn Application>>>
 }
 
-impl ApplicationDerector {
+impl ApplicationDirector {
 
     pub fn new() -> Self {
         Self {
             scene: RefCell::new(None),
-            delegate: RefCell::new(None),
-            visible_size: RefCell::new(None),
-            resolution_size: RefCell::new(None),
-            font_size: RefCell::new(HashMap::new()),
-            font: RefCell::new(HashMap::new()),
-            color: RefCell::new(HashMap::new()),
-            display_stats: RefCell::new(build_mode() == BuildMode::Development),
+            application: RefCell::new(None)
         }
     }
 
@@ -41,113 +30,40 @@ impl ApplicationDerector {
         self.scene.borrow().clone().unwrap()
     }
 
-    pub fn set_delegate(&self, delegate: Rc<dyn AppDelegate>) {
-        self.delegate.replace(Some(delegate));
+    pub fn set_application(&self, application: Rc<dyn Application>) {
+        self.application.replace(Some(application));
     }
 
-    pub fn add_font_size(&self, name: String, scale: f32) {
-        let mut font_size = self.font_size.borrow_mut();
-        font_size.insert(name, Scale::uniform(scale));
+    pub fn application(&self) -> Rc<dyn Application> {
+        let application = self.application.borrow();
+        must(application.clone().ok_or("application not found"))
     }
 
-    pub fn get_font_size(&self, name: String) -> Option<Scale> {
-        let font_size = self.font_size.borrow();
-        font_size.get(&name).cloned()
+    pub fn build(&self) -> (EventPump, Canvas<Window>) {
+        let sdl_context = must(sdl2::init());
+        let video_subsystem = must(sdl_context.video());
+        let title = self.application().title();
+        let window = must(video_subsystem.window(&title, 800, 600)
+            .position_centered()
+            .build());
+        (
+            must(sdl_context.event_pump()),
+            must(window.into_canvas().build())
+        )
     }
 
-    pub fn add_font(&self, name: String, path: String) {
-        let mut font = self.font.borrow_mut();
-        font.insert(name, path);
-    }
-
-    pub fn get_font(&self, name: String) -> Option<String> {
-        let font = self.font.borrow();
-        font.get(&name).cloned()
-    }
-
-    pub fn add_color(&self, name: String, color: Color) {
-        let mut c = self.color.borrow_mut();
-        c.insert(name, color);
-    }
-
-    pub fn get_color(&self, name: String) -> Option<Color> {
-        let color = self.color.borrow();
-        color.get(&name).cloned()
-    }
-
-    pub fn get_visible_size(&self) -> Size {
-        let visible_size = self.visible_size.borrow();
-        if visible_size.is_none() { panic!("ゲームが実行されていません"); }
-        visible_size.clone().unwrap()
-    }
-
-    pub fn set_visible_size(&self, size: Size) {
-        self.visible_size.replace(Some(size));
-    }
-
-    pub fn get_visible_origin(&self) -> Point {
-        Point { x: 0.0f32, y: 0.0f32 }
-    }
-
-    pub fn get_resolution_size(&self) -> ResolutionSize {
-        let resolution_size = self.resolution_size.borrow();
-        if resolution_size.is_none() { panic!("ゲームが実行されていません"); }
-        resolution_size.clone().unwrap()
-    }
-
-    pub fn get_default_label_option(&self) -> LabelTextOption {
-        let delegate = self.delegate.borrow();
-        match delegate.as_ref() {
-            None => {
-                LabelTextOption::default()
-            },
-            Some(d) => {
-                d.application_setup().default_label_option.clone()
+    pub fn run(&self, event_pump: &mut EventPump) {
+        'running: loop {
+            canvas(|c| c.clear());
+            let prev_scene = self.get_scene();
+            prev_scene.update();
+            let next_scene = self.get_scene();
+            if prev_scene.id() == next_scene.id() {
+                next_scene.render();
+                canvas(|c| c.present());
+                ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / self.application().fps()));
             }
         }
-    }
-
-    pub fn set_resolution_size(&self, size: Size, policy: ResolutionPolicy) {
-        self.resolution_size.replace(Some(ResolutionSize {
-            size: size,
-            policy: policy
-        }));
-    }
-
-    pub fn set_display_stats(&self, display_stats: bool) {
-        self.display_stats.replace(display_stats);
-    }
-
-    pub fn get_display_stats(&self) -> bool {
-        self.display_stats.borrow().clone()
-    }
-
-    pub fn run(&self, event_loop: &mut EventsLoop) {
-        let delegate = self.delegate.borrow().clone().unwrap();
-        let mut game = Game::new(delegate);
-        match run(event_loop, &mut game) {
-            Ok(_) => { },
-            Err(e) => { panic!(format!("初期化に失敗しました: {}", e)); }
-        }
-    }
-
-    pub fn init(&self, delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) -> (Context, EventsLoop) {
-        let size = delegate.application_setup().generate_window_size();
-        self.set_scene(scene);
-        self.set_delegate(delegate);
-        self.set_visible_size(size.clone());
-        self.set_resolution_size(size, ResolutionPolicy::ShowAll);
-        self.build()
-    }
-
-    fn build(&self) -> (Context, EventsLoop) {
-        let delegate = self.delegate.borrow().clone().unwrap();
-        let setup = delegate.application_setup();
-        ContextBuilder::new("game_id", &delegate.author())
-            .window_mode(delegate.window_mode().unwrap_or(setup.generate_window_mode()))
-            .window_setup(delegate.window_setup().unwrap_or(setup.generate_window_setup()))
-            .build()
-            .expect("aieee, could not create ggez context!")
     }
 
 }

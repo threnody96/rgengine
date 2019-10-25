@@ -18,7 +18,8 @@ pub trait NodeDelegate {
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
         director(|d| {
-            let n = d.get_nodelike(self.id()).unwrap();
+            let id = self.id();
+            let n = d.get_nodelike(&id).unwrap();
             n.add_child(node, option);
         })
     }

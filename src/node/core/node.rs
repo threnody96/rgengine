@@ -31,7 +31,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn update(&self) {
         self.delegate.update();
         for child in &*self.children.borrow() {
-            let c = director(|d| d.get_nodelike(child.id.clone()));
+            let c = director(|d| d.get_nodelike(&child.id));
             if c.is_some() { c.unwrap().update(); }
         }
     }
@@ -39,19 +39,19 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn render(&self) {
         self.delegate.render();
         for child in &*self.children.borrow() {
-            let c = director(|d| d.get_nodelike(child.id.clone()));
+            let c = director(|d| d.get_nodelike(&child.id));
             if c.is_some() { c.unwrap().render(); }
         }
     }
 
-    fn add_parent(&self, id: NodeId) {
-        self.parents.borrow_mut().push(id);
+    fn add_parent(&self, id: &NodeId) {
+        self.parents.borrow_mut().push(id.clone());
     }
 
-    fn remove_parent(&self, id: NodeId) {
+    fn remove_parent(&self, id: &NodeId) {
         let mut next_parents = Vec::new();
         for parent in &*self.parents.borrow() {
-            if &id != parent { next_parents.push(parent.clone()); }
+            if id != parent { next_parents.push(parent.clone()); }
         }
         self.parents.replace(next_parents);
     }
@@ -60,7 +60,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.parents.borrow().clone()
     }
 
-    fn add_child(&self, node: Rc<NodeLike>, option: AddChildOption) {
+    fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
         self.before_add_child();
         node.before_be_added_child();
         let inner_z_index = self.get_next_inner_z_index(option.z_index);
@@ -76,7 +76,8 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             if t != Ordering::Equal { return t; }
             a.inner_z_index.partial_cmp(&b.inner_z_index).unwrap()
         });
-        node.add_parent(self.id());
+        let id = self.id();
+        node.add_parent(&id);
     }
 
     fn get_children(&self) -> Vec<NodeId> {
@@ -88,14 +89,15 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         output
     }
 
-    fn remove_child(&self, id: NodeId) {
+    fn remove_child(&self, id: &NodeId) {
         let mut next_children = Vec::new();
         for child in &*self.children.borrow() {
-            if id != child.id { next_children.push(child.clone()); }
+            if id != &child.id { next_children.push(child.clone()); }
         }
         self.children.replace(next_children);
         director(|d| {
-            d.get_nodelike(id).unwrap().remove_parent(self.id());
+            let pid = self.id();
+            d.get_nodelike(id).unwrap().remove_parent(&pid);
         });
     }
 

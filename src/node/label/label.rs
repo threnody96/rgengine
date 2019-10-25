@@ -31,7 +31,7 @@ impl NodeDelegate for Label {
 
     fn render(&self) {
         draw(&self.text, DrawParam {
-            dest: Point { x: 0.0, y: 0.0 },
+            dest: Point::new(0, 0),
             ..Default::default()
         });
     }

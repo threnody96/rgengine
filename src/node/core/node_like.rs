@@ -9,9 +9,9 @@ pub trait NodeLike {
 
     fn render(&self);
 
-    fn add_parent(&self, id: NodeId);
+    fn add_parent(&self, id: &NodeId);
 
-    fn remove_parent(&self, id: NodeId);
+    fn remove_parent(&self, id: &NodeId);
 
     fn get_parents(&self) -> Vec<NodeId>;
 
@@ -19,7 +19,7 @@ pub trait NodeLike {
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption);
 
-    fn remove_child(&self, id: NodeId);
+    fn remove_child(&self, id: &NodeId);
 
     fn before_add_child(&self) { }
 
