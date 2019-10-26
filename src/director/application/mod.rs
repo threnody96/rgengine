@@ -7,6 +7,8 @@ use ::util::{ must, canvas };
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas };
 use sdl2::video::{ Window };
+use sdl2::event::{ Event };
+use sdl2::keyboard::{ Keycode };
 
 pub struct ApplicationDirector {
     scene: RefCell<Option<Rc<dyn SceneLike>>>,
@@ -54,6 +56,15 @@ impl ApplicationDirector {
 
     pub fn run(&self, event_pump: &mut EventPump) {
         'running: loop {
+            for event in event_pump.poll_iter() {
+                match event {
+                    Event::Quit {..} |
+                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                        break 'running
+                    },
+                    _ => {}
+                }
+            }
             canvas(|c| c.clear());
             let prev_scene = self.get_scene();
             prev_scene.update();
@@ -61,7 +72,7 @@ impl ApplicationDirector {
             if prev_scene.id() == next_scene.id() {
                 next_scene.render();
                 canvas(|c| c.present());
-                ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / self.application().fps()));
+                ::std::thread::sleep(Duration::new(1, 1_000_000_000u32 / self.application().fps()));
             }
         }
     }
