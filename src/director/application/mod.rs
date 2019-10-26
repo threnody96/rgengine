@@ -46,12 +46,23 @@ impl ApplicationDirector {
         let video_subsystem = must(sdl_context.video());
         let title = self.application().title();
         let window = must(video_subsystem.window(&title, 800, 600)
+            .opengl()
             .position_centered()
             .build());
+        let gl = must(self.find_sdl_gl_driver());
         (
             must(sdl_context.event_pump()),
-            must(window.into_canvas().build())
+            must(window.into_canvas().index(gl).build())
         )
+    }
+
+    fn find_sdl_gl_driver(&self) -> Result<u32, String> {
+        for (index, item) in sdl2::render::drivers().enumerate() {
+            if item.name == "opengl" {
+                return Ok(index as u32);
+            }
+        }
+        Err("OpenGL の初期化に失敗しました".to_owned())
     }
 
     pub fn run(&self, event_pump: &mut EventPump) {
@@ -72,7 +83,7 @@ impl ApplicationDirector {
             if prev_scene.id() == next_scene.id() {
                 next_scene.render();
                 canvas(|c| c.present());
-                ::std::thread::sleep(Duration::new(1, 1_000_000_000u32 / self.application().fps()));
+                ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / self.application().fps()));
             }
         }
     }

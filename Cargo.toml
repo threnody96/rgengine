@@ -2,6 +2,7 @@
 name = "rgengine"
 version = "0.1.0"
 authors = ["Imota Eru <threnody96@gmail.com>"]
+build = "build.rs"
 
 [dependencies]
 image = "^0.21"
@@ -20,3 +21,6 @@ features = ["bundled"]
 version = "^0.32"
 default-features = false
 features = ["image", "ttf"]
+
+[dependencies.gl]
+git = "https://github.com/bjz/gl-rs"
