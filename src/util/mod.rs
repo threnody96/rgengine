@@ -21,10 +21,10 @@ pub enum BuildMode {
     Development
 }
 
-#[cfg(build_mode = "release")]
+#[cfg(not(debug_assertions))]
 pub fn build_mode() -> BuildMode { BuildMode::Release }
 
-#[cfg(not(build_mode = "release"))]
+#[cfg(debug_assertions)]
 pub fn build_mode() -> BuildMode { BuildMode::Development }
 
 pub fn exe_dir() -> PathBuf {
