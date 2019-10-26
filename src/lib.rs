@@ -1,4 +1,5 @@
 extern crate sdl2;
+extern crate time;
 
 pub mod application;
 pub mod director;

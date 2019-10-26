@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::time::Duration;
 use ::application::{ Application };
 use ::node::{ SceneLike };
-use ::util::{ must, canvas };
+use ::util::{ must, canvas, FpsManager };
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas };
 use sdl2::video::{ Window };
@@ -12,7 +12,7 @@ use sdl2::keyboard::{ Keycode };
 
 pub struct ApplicationDirector {
     scene: RefCell<Option<Rc<dyn SceneLike>>>,
-    application: RefCell<Option<Rc<dyn Application>>>
+    application: RefCell<Option<Rc<dyn Application>>>,
 }
 
 impl ApplicationDirector {
@@ -20,7 +20,7 @@ impl ApplicationDirector {
     pub fn new() -> Self {
         Self {
             scene: RefCell::new(None),
-            application: RefCell::new(None)
+            application: RefCell::new(None),
         }
     }
 
@@ -66,25 +66,30 @@ impl ApplicationDirector {
     }
 
     pub fn run(&self, event_pump: &mut EventPump) {
+        let mut fps_manager = FpsManager::new(self.application().fps());
+        self.get_scene().update();
         'running: loop {
             for event in event_pump.poll_iter() {
                 match event {
-                    Event::Quit {..} |
-                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    Event::Quit {..} => {
                         break 'running
                     },
                     _ => {}
                 }
             }
-            canvas(|c| c.clear());
-            let prev_scene = self.get_scene();
-            prev_scene.update();
-            let next_scene = self.get_scene();
-            if prev_scene.id() == next_scene.id() {
-                next_scene.render();
-                canvas(|c| c.present());
-                ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / self.application().fps()));
-            }
+            fps_manager.run(
+                || {
+                    let prev_scene = self.get_scene();
+                    prev_scene.update();
+                    let next_scene = self.get_scene();
+                    prev_scene.id() == next_scene.id()
+                },
+                || {
+                    canvas(|c| c.clear());
+                    self.get_scene().render();
+                    canvas(|c| c.present());
+                }
+            );
         }
     }
 
