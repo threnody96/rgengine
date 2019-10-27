@@ -14,6 +14,10 @@ impl RFont {
         Self { key: key.to_owned() }
     }
 
+    pub fn key(&self) -> String {
+        self.key.clone()
+    }
+
 }
 
 pub struct FontFactory<'a> {

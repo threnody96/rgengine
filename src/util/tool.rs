@@ -84,14 +84,18 @@ pub(crate) fn render<T, R>(callback: T) -> R where T: FnOnce(&'static mut Render
     }
 }
 
-pub fn run(application: Rc<dyn Application>, scene: Rc<dyn SceneLike>) {
+pub fn run(application: Rc<dyn Application>) {
     let fps = director(|d| {
-        d.init(application.clone(), scene.clone());
-        d.get_scene().update();
+        d.set_application(application.clone());
         d.fps()
     });
     let mut event_pump = render(|r| r.build());
     let mut fps_manager = FpsManager::new(fps);
+    director(|d| {
+        let scene = application.application_did_finish_launching();
+        d.set_scene_first(scene);
+        d.get_scene().update();
+    });
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {

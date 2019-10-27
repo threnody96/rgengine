@@ -51,10 +51,13 @@ impl Director {
         self.application.borrow().title()
     }
 
-    pub fn init(&self, application: Rc<dyn Application>, scene: Rc<dyn SceneLike>) {
+    pub fn set_application(&self, application: Rc<dyn Application>) {
         let mut app = self.application.borrow_mut();
         app.set_application(application);
-        app.set_scene(scene);
+    }
+
+    pub fn set_scene_first(&self, scene: Rc<dyn SceneLike>) {
+        self.application.borrow_mut().set_scene(scene);
     }
 
     pub fn fps(&self) -> u32 {

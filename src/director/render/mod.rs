@@ -121,4 +121,11 @@ impl <'a> RenderDirector<'a> {
         id
     }
 
+    pub fn render_texture(&mut self, texture: &RTexture) {
+        let mut canvas = self.canvas.as_mut().unwrap();
+        if let Some(texture) = self.textures.get(texture.key().as_str()) {
+            must(canvas.copy(texture, None, None));
+        }
+    }
+
 }

@@ -1,10 +1,9 @@
-
+use std::rc::Rc;
+use ::node::{ SceneLike };
 
 pub trait Application {
 
-    fn application_did_finish_launching(&self) -> bool {
-        true
-    }
+    fn application_did_finish_launching(&self) -> Rc<dyn SceneLike>;
 
     fn init_gl_context_attrs(&self) { }
 
