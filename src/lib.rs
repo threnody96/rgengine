@@ -4,6 +4,7 @@ extern crate crypto;
 extern crate base64;
 extern crate rusqlite;
 extern crate uuid;
+extern crate serde_json;
 
 pub mod application;
 pub mod director;
@@ -19,5 +20,6 @@ use std::cell::RefCell;
 thread_local! {
     pub static DIRECTOR: Director = Director::new();
 
-    pub static RENDER: RefCell<RenderDirector<'static>> = RefCell::new(RenderDirector::new());
 }
+
+pub static mut RENDER: Option<RenderDirector<'static>> = None;

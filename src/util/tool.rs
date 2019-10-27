@@ -74,17 +74,14 @@ pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
 }
 
 pub fn canvas<T, R>(callback: T) -> R where T: FnOnce(&mut Canvas<Window>) -> R {
-    render(|r| r.borrow_mut().with_canvas(callback))
+    render(|r| r.with_canvas(callback))
 }
 
-pub(crate) fn render<T, R>(callback: T) -> R where T: FnOnce(&RefCell<RenderDirector<'static>>) -> R {
-    ::RENDER.with(|r: &'static RefCell<RenderDirector<'static>>| {
-        callback(r)
-    })
-}
-
-pub(crate) fn load_texture(path: &str) -> String {
-    render(|r| r.borrow_mut().load_texture(path))
+pub(crate) fn render<T, R>(callback: T) -> R where T: FnOnce(&'static mut RenderDirector<'static>) -> R {
+    unsafe {
+        if ::RENDER.is_none() { ::RENDER = Some(RenderDirector::new()); }
+        callback(::RENDER.as_mut().unwrap())
+    }
 }
 
 pub fn run(application: Rc<dyn Application>, scene: Rc<dyn SceneLike>) {
@@ -93,7 +90,7 @@ pub fn run(application: Rc<dyn Application>, scene: Rc<dyn SceneLike>) {
         d.get_scene().update();
         d.fps()
     });
-    let mut event_pump = render(|r| r.borrow_mut().build());
+    let mut event_pump = render(|r| r.build());
     let mut fps_manager = FpsManager::new(fps);
     'running: loop {
         for event in event_pump.poll_iter() {

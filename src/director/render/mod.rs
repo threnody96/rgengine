@@ -9,6 +9,7 @@ use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
 use sdl2::{ EventPump };
 use sdl2::ttf::{ Sdl2TtfContext, Font };
+use serde_json::Value;
 use uuid::Uuid;
 
 pub struct RenderDirector<'a> {
@@ -17,6 +18,8 @@ pub struct RenderDirector<'a> {
     ttf_context: Option<Sdl2TtfContext>,
     storage: Storage,
     plain_datas: HashMap<String, Rc<Vec<u8>>>,
+    strings: HashMap<String, Rc<String>>,
+    jsons: HashMap<String, Rc<Value>>,
     textures: HashMap<String, Texture<'a>>,
     fonts: HashMap<String, FontFactory<'a>>
 }
@@ -30,6 +33,8 @@ impl <'a> RenderDirector<'a> {
             ttf_context: None,
             storage: Storage::new(),
             plain_datas: HashMap::new(),
+            strings: HashMap::new(),
+            jsons: HashMap::new(),
             textures: HashMap::new(),
             fonts: HashMap::new()
         }
@@ -71,6 +76,29 @@ impl <'a> RenderDirector<'a> {
             let data = Rc::new(must(self.storage.load(path)));
             self.plain_datas.insert(path.to_owned(), data.clone());
             data
+        }
+    }
+
+    pub fn load_string(&mut self, path: &str) -> Rc<String> {
+        if let Some(current) = self.strings.get(path) {
+            current.clone()
+        } else {
+            let data = self.load_plain_data(path);
+            let s = Rc::new(must(String::from_utf8(data.as_ref().clone())));
+            self.strings.insert(path.to_owned(), s.clone());
+            s
+        }
+    }
+
+    pub fn load_json(&mut self, path: &str) -> Rc<Value> {
+        if let Some(current) = self.jsons.get(path) {
+            current.clone()
+        } else {
+            let data = self.load_string(path);
+            let json: Value = must(serde_json::from_str(data.as_str()));
+            let j = Rc::new(json);
+            self.jsons.insert(path.to_owned(), j.clone());
+            j
         }
     }
 

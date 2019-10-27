@@ -9,6 +9,7 @@ use std::any::Any;
 use ::application::{ Application };
 use ::util::{ must };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike };
+use ::resource::{ RTexture, RFont };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
 use self::resource::ResourceDirector;
@@ -78,6 +79,18 @@ impl Director {
 
     pub fn destroy_node(&self, id: &NodeId) {
         self.node.borrow_mut().destroy(id);
+    }
+
+    pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
+        self.resource.borrow_mut().load_plain_data(path)
+    }
+
+    pub fn load_texture(&self, path: &str) -> RTexture {
+        self.resource.borrow_mut().load_texture(path)
+    }
+
+    pub fn load_font(&self, path: &str, point: u16) -> RFont {
+        self.resource.borrow_mut().load_font(path, point)
     }
 
 }
