@@ -13,15 +13,20 @@ serde = "^1"
 serde_derive = "^1"
 serde_json = "^1"
 html5ever = "^0.24"
+lazy_static = "^1.4"
 
 [dependencies.rusqlite]
 version = "^0.19"
 features = ["bundled"]
 
+[dependencies.uuid]
+version = "^0.8"
+features = ["v4"]
+
 [dependencies.sdl2]
 version = "^0.32"
 default-features = false
-features = ["image", "ttf", "unsafe_textures"]
+features = ["image", "ttf"]
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"

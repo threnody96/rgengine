@@ -4,11 +4,15 @@ use std::fs::File;
 use std::rc::Rc;
 use std::io::{BufReader, Read, Write, stdout};
 use std::any::Any;
-use ::director::{ Director };
+use std::ops::DerefMut;
+use std::cell::RefCell;
+use ::director::{ Director, RenderDirector };
 use ::application::{ Application };
+use ::util::{ FpsManager };
 use ::node::{ SceneLike };
 use sdl2::render::{ Canvas };
 use sdl2::video::{ Window };
+use sdl2::event::{ Event };
 
 #[derive(Eq, PartialEq)]
 pub enum BuildMode {
@@ -64,13 +68,54 @@ pub fn load_file(path: &PathBuf) -> Result<Vec<u8>, String> {
 }
 
 pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
-    ::DIRECTOR.with(callback)
+    ::DIRECTOR.with(|d| {
+        callback(d)
+    })
 }
 
 pub fn canvas<T, R>(callback: T) -> R where T: FnOnce(&mut Canvas<Window>) -> R {
-    director(|d| d.with_canvas(callback))
+    render(|r| r.borrow_mut().with_canvas(callback))
 }
 
-pub fn run_with_scene(application: Rc<dyn Application>, scene: Rc<dyn SceneLike>) {
-    director(|d| d.run_with_scene(application, scene));
+pub(crate) fn render<T, R>(callback: T) -> R where T: FnOnce(&RefCell<RenderDirector<'static>>) -> R {
+    ::RENDER.with(|r: &'static RefCell<RenderDirector<'static>>| {
+        callback(r)
+    })
+}
+
+pub(crate) fn load_texture(path: &str) -> String {
+    render(|r| r.borrow_mut().load_texture(path))
+}
+
+pub fn run(application: Rc<dyn Application>, scene: Rc<dyn SceneLike>) {
+    let fps = director(|d| {
+        d.init(application.clone(), scene.clone());
+        d.get_scene().update();
+        d.fps()
+    });
+    let mut event_pump = render(|r| r.borrow_mut().build());
+    let mut fps_manager = FpsManager::new(fps);
+    'running: loop {
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} => {
+                    break 'running
+                },
+                _ => {}
+            }
+        }
+        fps_manager.run(
+            || {
+                let prev_scene = director(|d| d.get_scene());
+                prev_scene.update();
+                let next_scene = director(|d| d.get_scene());
+                prev_scene.id() == next_scene.id()
+            },
+            || {
+                canvas(|c| c.clear());
+                director(|d| d.get_scene()).render();
+                canvas(|c| c.present());
+            }
+        );
+    }
 }
