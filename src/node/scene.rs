@@ -10,7 +10,7 @@ pub trait Scene: NodeDelegate {
 
     fn update_scene(&self) {}
 
-    fn render_scene(&self) {}
+    fn render_scene(&self, parent: Option<Rc<dyn NodeLike>>) {}
 
 }
 
@@ -24,8 +24,8 @@ impl <T> NodeDelegate for T where T: Scene {
         self.update_scene();
     }
 
-    fn render(&self) {
-        self.render_scene();
+    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+        self.render_scene(parent);
     }
 
     fn before_add_child(&self) {

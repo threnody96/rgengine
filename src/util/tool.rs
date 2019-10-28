@@ -90,7 +90,7 @@ pub fn run(application: Rc<dyn Application>) {
     let mut fps_manager = FpsManager::new(application.fps());
     director(|d| {
         let scene = application.application_did_finish_launching();
-        d.set_scene_first(scene);
+        d.set_scene(scene);
         d.get_scene().update();
     });
     'running: loop {
@@ -110,7 +110,7 @@ pub fn run(application: Rc<dyn Application>) {
                 prev_scene.id() == next_scene.id()
             },
             || {
-                director(|d| d.get_scene()).render();
+                director(|d| d.get_scene()).render(None);
                 render(|r| {
                     r.update_resolution_size(
                         application.resolution_size(),

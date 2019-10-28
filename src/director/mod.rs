@@ -39,7 +39,7 @@ impl Director {
         self.application.borrow().get_scene()
     }
 
-    pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
+    pub fn replace_scene(&self, scene: Rc<dyn SceneLike>) {
         let current_scene = { self.application.borrow().get_scene() };
         if current_scene.id() != scene.id() {
             let id = current_scene.id();
@@ -53,7 +53,7 @@ impl Director {
         app.set_application(application);
     }
 
-    pub(crate) fn set_scene_first(&self, scene: Rc<dyn SceneLike>) {
+    pub(crate) fn set_scene(&self, scene: Rc<dyn SceneLike>) {
         self.application.borrow_mut().set_scene(scene);
     }
 

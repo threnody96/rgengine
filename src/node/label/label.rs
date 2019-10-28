@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use ::node::{ Node, NodeDelegate };
+use ::node::{ Node, NodeLike, NodeDelegate };
 use ::util::{ director, render };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
@@ -35,11 +35,9 @@ impl NodeDelegate for Label {
 
     fn update(&self) { }
 
-    fn render(&self) {
-        let text = self.text.borrow().clone();;
-        render(|r| {
-            r.render_text(&text, &self.font, &self.color);
-        });
+    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+        let text = self.text.borrow().clone();
+        self.render_label(&parent, &text, &self.font, &self.color);
     }
 
 }

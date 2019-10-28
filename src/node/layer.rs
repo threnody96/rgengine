@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::node::{ NodeDelegate, Node };
+use ::node::{ NodeDelegate, Node, NodeLike };
 
 pub struct Layer { }
 
@@ -15,7 +15,7 @@ impl NodeDelegate for Layer {
 
     fn update(&self) { }
 
-    fn render(&self) {
+    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
     }
 
 }

@@ -4,10 +4,13 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::util::{ director };
+use ::util::{ director, Point };
+use ::resource::{ RTexture, RFont };
+use sdl2::pixels::{ Color };
 
 pub struct Node<T> where T: NodeDelegate + Any {
     delegate: T,
+    position: RefCell<Point>,
     parents: RefCell<Vec<NodeId>>,
     children: RefCell<Vec<NodeChild>>
 }
@@ -28,6 +31,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.delegate.id()
     }
 
+    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: &RTexture) {
+        self.delegate.render_texture(parent, texture);
+    }
+
+    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: &RFont, color: &Color) {
+        self.delegate.render_label(parent, text, font, color);
+    }
+
     fn update(&self) {
         self.delegate.update();
         for child in &*self.children.borrow() {
@@ -36,11 +47,13 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         }
     }
 
-    fn render(&self) {
-        self.delegate.render();
+    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+        self.delegate.render(parent);
         for child in &*self.children.borrow() {
+            let id = self.id();
+            let current = director(|d| d.get_nodelike(&id));
             let c = director(|d| d.get_nodelike(&child.id));
-            if c.is_some() { c.unwrap().render(); }
+            if c.is_some() { c.unwrap().render(current); }
         }
     }
 
@@ -102,6 +115,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         node.remove_parent(&pid)
     }
 
+    fn set_position(&self, point: &Point) {
+        self.position.replace(point.clone());
+    }
+
+    fn get_position(&self) -> Point {
+        self.position.borrow().clone()
+    }
+
 }
 
 impl <T> Node<T> where T: NodeDelegate + Any {
@@ -117,6 +138,7 @@ impl <T> Node<T> where T: NodeDelegate + Any {
     fn new(delegate: T) -> Self {
         Self {
             delegate: delegate,
+            position: RefCell::new(Point::new(0, 0)),
             parents: RefCell::new(Vec::new()),
             children: RefCell::new(Vec::new())
         }

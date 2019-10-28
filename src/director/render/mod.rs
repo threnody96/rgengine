@@ -1,9 +1,10 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use ::node::{ NodeLike };
 use ::resource::{ RTexture, FontFactory, RFont, Storage };
 use ::application::{ Application, ResolutionPolicy };
-use ::util::{ must, director, Size, Rect };
+use ::util::{ must, director, Size, Rect, Point };
 use sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
 use sdl2::video::{ WindowContext, Window };
 use sdl2::rwops::{ RWops };
@@ -16,8 +17,8 @@ use uuid::Uuid;
 
 #[derive(Clone)]
 pub enum RenderOperation {
-    Image(RTexture),
-    Text(String, RFont, Color)
+    Image(Point, RTexture),
+    Label(Point, String, RFont, Color)
 }
 
 pub struct RenderDirector<'a> {
@@ -153,12 +154,12 @@ impl <'a> RenderDirector<'a> {
         id
     }
 
-    pub fn render_texture(&mut self, texture: &RTexture) {
-        self.render_operations.push(RenderOperation::Image(texture.clone()));
+    pub fn render_texture(&mut self, point: Point, texture: &RTexture) {
+        self.render_operations.push(RenderOperation::Image(point, texture.clone()));
     }
 
-    pub fn render_text(&mut self, text: &str, font: &RFont, color: &Color) {
-        self.render_operations.push(RenderOperation::Text(text.to_owned(), font.clone(), color.clone()));
+    pub fn render_label(&mut self, point: Point, text: &str, font: &RFont, color: &Color) {
+        self.render_operations.push(RenderOperation::Label(point, text.to_owned(), font.clone(), color.clone()));
     }
 
     pub fn update_resolution_size(&'a mut self, resolution_size: Size, resolution_policy: ResolutionPolicy) {
@@ -187,18 +188,19 @@ impl <'a> RenderDirector<'a> {
             c.clear();
             for operation in operations {
                 match operation {
-                    RenderOperation::Image(texture) => {
+                    RenderOperation::Image(point, texture) => {
                         if let Some(t) = textures.get(texture.key().as_str()) {
-                            must(c.copy(t, None, None));
+                            let query = t.query();
+                            must(c.copy(t, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))));
                         }
                     },
-                    RenderOperation::Text(text, font, color) => {
+                    RenderOperation::Label(point, text, font, color) => {
                         if let Some(f) = fonts.get(font.key().as_str()) {
                             let font = f.font();
                             let surface = must(font.render(text.as_str()).blended(*color));
                             let texture = must(texture_creator.create_texture_from_surface(surface));
                             let query = texture.query();
-                            must(c.copy(&texture, None, Some(Rect::new(0, 0, query.width, query.height))));
+                            must(c.copy(&texture, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))));
                         }
                     }
                 }

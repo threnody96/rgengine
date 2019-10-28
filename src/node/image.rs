@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::node::{ NodeDelegate, Node };
+use ::node::{ NodeDelegate, Node, NodeLike };
 use ::resource::{ RTexture };
 use ::util::{ director, render };
 
@@ -21,8 +21,8 @@ impl NodeDelegate for Image {
 
     fn update(&self) { }
 
-    fn render(&self) {
-        render(|r| r.render_texture(&self.image));
+    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+        self.render_texture(&parent, &self.image);
     }
 
 }
