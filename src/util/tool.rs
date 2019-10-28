@@ -114,7 +114,12 @@ pub fn run(application: Rc<dyn Application>) {
             },
             || {
                 director(|d| d.get_scene()).render();
-                render(|r| r.update_resolution_size(application.resolution_size()) );
+                render(|r| {
+                    r.update_resolution_size(
+                        application.resolution_size(),
+                        application.resolution_policy()
+                    );
+                });
                 render(|r| r.render_inner_canvas() );
                 render(|r| r.render_canvas());
             }

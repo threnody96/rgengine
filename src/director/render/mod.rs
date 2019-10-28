@@ -2,8 +2,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use ::resource::{ RTexture, FontFactory, RFont, Storage };
-use ::application::{ Application, ResolutionSize, ResolutionPolicy };
-use ::util::{ must, director, Size };
+use ::application::{ Application, ResolutionPolicy };
+use ::util::{ must, director, Size, Rect };
 use sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
 use sdl2::video::{ WindowContext, Window };
 use sdl2::rwops::{ RWops };
@@ -11,7 +11,6 @@ use sdl2::image::{ ImageRWops };
 use sdl2::{ EventPump };
 use sdl2::ttf::{ Sdl2TtfContext, Font };
 use sdl2::pixels::{ PixelFormatEnum };
-use sdl2::rect::{ Rect };
 use serde_json::Value;
 use uuid::Uuid;
 
@@ -22,10 +21,10 @@ pub enum RenderOperation {
 
 pub struct RenderDirector<'a> {
     canvas: Option<Canvas<Window>>,
-    width: u32,
-    height: u32,
+    canvas_size: Size,
     inner_canvas: Option<Texture<'a>>,
-    resolution_size: ResolutionSize,
+    resolution_size: Size,
+    resolution_policy: ResolutionPolicy,
     render_canvas_dest: Option<Rect>,
     render_operations: Vec<RenderOperation>,
     texture_creator: Option<TextureCreator<WindowContext>>,
@@ -43,10 +42,10 @@ impl <'a> RenderDirector<'a> {
     pub fn new() -> Self {
         Self {
             canvas: None,
-            width: 0,
-            height: 0,
+            canvas_size: Size { width: 0, height: 0 },
             inner_canvas: None,
-            resolution_size: ResolutionSize::default(),
+            resolution_size: Size { width: 0, height: 0 },
+            resolution_policy: ResolutionPolicy::ExactFit,
             render_canvas_dest: None,
             render_operations: Vec::new(),
             texture_creator: None,
@@ -76,24 +75,25 @@ impl <'a> RenderDirector<'a> {
     pub fn build(&'a mut self, application: Rc<dyn Application>) -> EventPump {
         let sdl_context = must(sdl2::init());
         let video_subsystem = must(sdl_context.video());
+        let canvas_size = application.window_size();
         let window = must(video_subsystem
-            .window(application.title().as_str(), application.window_width(), application.window_height())
+            .window(application.title().as_str(), canvas_size.width, canvas_size.height)
             .opengl()
             .position_centered()
             .build());
         let gl = must(self.find_sdl_gl_driver());
         let canvas = must(window.into_canvas().index(gl).build());
         self.texture_creator = Some(canvas.texture_creator());
-        self.width = application.window_width();
-        self.height = application.window_height();
+        self.canvas_size = canvas_size;
         self.resolution_size = application.resolution_size();
+        self.resolution_policy = application.resolution_policy();
         self.render_canvas_dest = self.generate_render_canvas_dest();
         self.canvas = Some(canvas);
         let texture_creator = self.texture_creator.as_ref().unwrap();
         self.inner_canvas = Some(must(texture_creator.create_texture_target(
             Some(PixelFormatEnum::RGBA8888),
-            self.resolution_size.size.width,
-            self.resolution_size.size.height
+            self.resolution_size.width,
+            self.resolution_size.height
         )));
         self.ttf_context = Some(must(sdl2::ttf::init()));
         must(sdl_context.event_pump())
@@ -155,14 +155,15 @@ impl <'a> RenderDirector<'a> {
         self.render_operations.push(RenderOperation::Image(texture.clone()));
     }
 
-    pub fn update_resolution_size(&'a mut self, resolution_size: ResolutionSize) {
-        if self.resolution_size != resolution_size {
+    pub fn update_resolution_size(&'a mut self, resolution_size: Size, resolution_policy: ResolutionPolicy) {
+        if self.resolution_size != resolution_size || self.resolution_policy != resolution_policy {
             self.resolution_size = resolution_size;
+            self.resolution_policy = resolution_policy;
             let texture_creator = self.texture_creator.as_ref().unwrap();
             self.inner_canvas = Some(must(texture_creator.create_texture_target(
                 Some(PixelFormatEnum::RGBA8888),
-                self.resolution_size.size.width,
-                self.resolution_size.size.height
+                self.resolution_size.width,
+                self.resolution_size.height
             )));
             self.render_canvas_dest = self.generate_render_canvas_dest();
         }
@@ -199,18 +200,19 @@ impl <'a> RenderDirector<'a> {
     }
 
     fn generate_render_canvas_dest(&self) -> Option<Rect> {
-        if self.resolution_size.policy == ResolutionPolicy::ExactFit { return None; }
-        let rsize = self.resolution_size.size.clone();
-        let per_size = (self.width as f32 / rsize.width as f32, self.height as f32 / rsize.height as f32);
-        let use_per_size = self.choice_per_size_from_policy(per_size.0, per_size.1, &self.resolution_size.policy);
+        if self.resolution_policy == ResolutionPolicy::ExactFit { return None; }
+        let rsize = &self.resolution_size;
+        let canvas_size = &self.canvas_size;
+        let per_size = (canvas_size.width as f32 / rsize.width as f32, canvas_size.height as f32 / rsize.height as f32);
+        let use_per_size = self.choice_per_size_from_policy(per_size.0, per_size.1, self.resolution_policy);
         let dest_size = ((rsize.width as f32 * use_per_size).round() as i32, (rsize.height as f32 * use_per_size).round() as i32);
         let dest_center = (dest_size.0 / 2, dest_size.1 / 2);
-        let real_center = (self.width as i32 / 2, self.height as i32 / 2);
+        let real_center = (canvas_size.width as i32 / 2, canvas_size.height as i32 / 2);
         let render_to = (real_center.0 - dest_center.0, real_center.1 - dest_center.1);
-        Some(Rect::new(render_to.0, render_to.1, (render_to.0 + dest_size.0) as u32, (render_to.1 + dest_size.1) as u32))
+        Some(Rect::new(render_to.0, render_to.1, dest_size.0 as u32, dest_size.1 as u32))
     }
 
-    fn choice_per_size_from_policy(&self, per_width: f32, per_height: f32, policy: &ResolutionPolicy) -> f32 {
+    fn choice_per_size_from_policy(&self, per_width: f32, per_height: f32, policy: ResolutionPolicy) -> f32 {
         match policy {
             ResolutionPolicy::ShowAll => { if per_width > per_height { per_height } else { per_width } },
             ResolutionPolicy::NoBorder => { if per_width > per_height { per_width } else { per_height } },
