@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use ::resource::{ RTexture, RFont };
 use ::util::{ must, render };
 use serde_json::Value;
+use sdl2::ttf::FontStyle;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub enum ResourceType {
     Texture,
-    Font(u16)
+    Font(u16, FontStyle)
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -54,15 +55,15 @@ impl ResourceDirector {
         }
     }
 
-    pub fn load_font(&mut self, path: &str, point: u16) -> RFont {
+    pub fn load_font(&mut self, path: &str, point: u16, style: FontStyle) -> RFont {
         let key = ResourceKey {
             path: path.to_owned(),
-            rt: ResourceType::Font(point)
+            rt: ResourceType::Font(point, style)
         };
         if let Some(font) = self.resources.get(&key) {
             RFont::new(font.as_ref())
         } else {
-            let k = render(|r| r.load_font(path, point));
+            let k = render(|r| r.load_font(path, point, style));
             self.resources.insert(key, k.clone());
             RFont::new(k.as_ref())
         }

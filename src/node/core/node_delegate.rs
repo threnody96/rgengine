@@ -16,12 +16,19 @@ pub trait NodeDelegate {
         NodeId::new(format!("{:p}", self))
     }
 
-    fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
+    fn node(&self) -> Rc<dyn NodeLike> {
         director(|d| {
             let id = self.id();
-            let n = d.get_nodelike(&id).unwrap();
-            n.add_child(node, option);
+            d.get_nodelike(&id).unwrap()
         })
+    }
+
+    fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
+        self.node().add_child(node, option);
+    }
+
+    fn get_children(&self) -> Vec<NodeId> {
+        self.node().get_children()
     }
 
 }

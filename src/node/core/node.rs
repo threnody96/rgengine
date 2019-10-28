@@ -95,10 +95,11 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             if id != &child.id { next_children.push(child.clone()); }
         }
         self.children.replace(next_children);
-        director(|d| {
-            let pid = self.id();
-            d.get_nodelike(id).unwrap().remove_parent(&pid);
+        let node = director(|d| {
+            d.get_nodelike(id).unwrap()
         });
+        let pid = self.id();
+        node.remove_parent(&pid)
     }
 
 }

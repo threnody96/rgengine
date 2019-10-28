@@ -15,7 +15,8 @@ use uuid::Uuid;
 pub struct ApplicationDirector {
     scene: Option<Rc<dyn SceneLike>>,
     application: Option<Rc<dyn Application>>,
-    id_cache: HashMap<String, bool>
+    id_cache: HashMap<String, bool>,
+    current_fps: usize
 }
 
 impl ApplicationDirector {
@@ -24,7 +25,8 @@ impl ApplicationDirector {
         Self {
             scene: None,
             application: None,
-            id_cache: HashMap::new()
+            id_cache: HashMap::new(),
+            current_fps: 0
         }
     }
 
@@ -44,12 +46,12 @@ impl ApplicationDirector {
         must(self.application.clone().ok_or("application not found"))
     }
 
-    pub fn title(&self) -> String {
-        self.application().title()
+    pub fn set_current_fps(&mut self, current_fps: usize) {
+        self.current_fps = current_fps;
     }
 
-    pub fn fps(&self) -> u32 {
-        self.application().fps()
+    pub fn current_fps(&self) -> usize {
+        self.current_fps
     }
 
     pub fn generate_id(&mut self) -> String {

@@ -9,14 +9,15 @@ use sdl2::video::{ WindowContext, Window };
 use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
 use sdl2::{ EventPump };
-use sdl2::ttf::{ Sdl2TtfContext, Font };
-use sdl2::pixels::{ PixelFormatEnum };
+use sdl2::ttf::{ Sdl2TtfContext, Font, FontStyle };
+use sdl2::pixels::{ PixelFormatEnum, Color };
 use serde_json::Value;
 use uuid::Uuid;
 
 #[derive(Clone)]
 pub enum RenderOperation {
-    Image(RTexture)
+    Image(RTexture),
+    Text(String, RFont, Color)
 }
 
 pub struct RenderDirector<'a> {
@@ -143,16 +144,21 @@ impl <'a> RenderDirector<'a> {
         id
     }
 
-    pub fn load_font(&'a mut self, path: &str, point: u16) -> String {
+    pub fn load_font(&'a mut self, path: &str, point: u16, style: FontStyle) -> String {
         let data = self.load_plain_data(path);
-        let font = FontFactory::new(data, point);
         let id = director(|d| d.generate_id());
-        self.fonts.insert(id.clone(), font);
+        self.fonts.insert(id.clone(), FontFactory::new(data, point, style));
+        let font = self.fonts.get_mut(&id).unwrap();
+        font.generate_font(self.ttf_context.as_ref().unwrap());
         id
     }
 
     pub fn render_texture(&mut self, texture: &RTexture) {
         self.render_operations.push(RenderOperation::Image(texture.clone()));
+    }
+
+    pub fn render_text(&mut self, text: &str, font: &RFont, color: &Color) {
+        self.render_operations.push(RenderOperation::Text(text.to_owned(), font.clone(), color.clone()));
     }
 
     pub fn update_resolution_size(&'a mut self, resolution_size: Size, resolution_policy: ResolutionPolicy) {
@@ -174,6 +180,8 @@ impl <'a> RenderDirector<'a> {
         let inner_canvas = self.inner_canvas.as_mut().unwrap();
         let operations = &self.render_operations;
         let textures = &self.textures;
+        let fonts = &self.fonts;
+        let texture_creator = self.texture_creator.as_ref().unwrap();
         must(canvas.with_texture_canvas(inner_canvas, |c| {
             c.set_blend_mode(BlendMode::Blend);
             c.clear();
@@ -183,10 +191,18 @@ impl <'a> RenderDirector<'a> {
                         if let Some(t) = textures.get(texture.key().as_str()) {
                             must(c.copy(t, None, None));
                         }
+                    },
+                    RenderOperation::Text(text, font, color) => {
+                        if let Some(f) = fonts.get(font.key().as_str()) {
+                            let font = f.font();
+                            let surface = must(font.render(text.as_str()).blended(*color));
+                            let texture = must(texture_creator.create_texture_from_surface(surface));
+                            let query = texture.query();
+                            must(c.copy(&texture, None, Some(Rect::new(0, 0, query.width, query.height))));
+                        }
                     }
                 }
             }
-            c.present();
         }));
         self.render_operations = Vec::new();
     }
@@ -195,7 +211,7 @@ impl <'a> RenderDirector<'a> {
         let canvas = self.canvas.as_mut().unwrap();
         let inner_canvas = self.inner_canvas.as_ref().unwrap();
         canvas.clear();
-        must(canvas.copy(inner_canvas, None, self.render_canvas_dest.clone()));
+        canvas.copy(inner_canvas, None, self.render_canvas_dest.clone());
         canvas.present();
     }
 

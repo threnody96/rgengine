@@ -1,26 +1,32 @@
 use std::rc::Rc;
-use ::node::{ Node, NodeDelegate, LabelTextOption };
-use ::util::{ director, draw, Point };
-use ggez::graphics::{ Text, TextFragment, DrawParam };
+use std::cell::RefCell;
+use ::node::{ Node, NodeDelegate };
+use ::util::{ director, render };
+use ::resource::{ RFont };
+pub use sdl2::pixels::{ Color };
+use sdl2::ttf::{ FontStyle };
 
 pub struct Label {
-    text: Text
+    text: RefCell<String>,
+    font: RFont,
+    color: Color
 }
 
 impl Label {
 
-    fn create(text: String, option: LabelTextOption) -> Rc<Node<Self>> {
+    pub fn create(text: &str, font_path: &str, color: &Color) -> Rc<Node<Self>> {
+        let font = director(|d| d.load_font(font_path, 15, FontStyle::NORMAL));
         Node::create(|| {
             Self {
-                text: Text::new(TextFragment {
-                    text: text.clone(),
-                    color: Some(option.color()),
-                    font: Some((*director(|d| d.load_font(option.font()))).clone()),
-                    scale: Some(option.size()),
-                    ..Default::default()
-                })
+                text: RefCell::new(text.to_owned()),
+                font: font.clone(),
+                color: color.clone()
             }
         })
+    }
+
+    pub fn set_text(&self, text: &str) {
+        self.text.replace(text.to_owned());
     }
 
 }
@@ -30,9 +36,9 @@ impl NodeDelegate for Label {
     fn update(&self) { }
 
     fn render(&self) {
-        draw(&self.text, DrawParam {
-            dest: Point::new(0, 0),
-            ..Default::default()
+        let text = self.text.borrow().clone();;
+        render(|r| {
+            r.render_text(&text, &self.font, &self.color);
         });
     }
 

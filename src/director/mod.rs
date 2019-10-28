@@ -16,6 +16,7 @@ use self::resource::ResourceDirector;
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, Texture, TextureCreator };
 use sdl2::video::{ Window, WindowContext };
+use sdl2::ttf::FontStyle;
 pub use self::render::RenderDirector;
 
 pub struct Director {
@@ -47,21 +48,21 @@ impl Director {
         self.application.borrow_mut().set_scene(scene);
     }
 
-    pub fn title(&self) -> String {
-        self.application.borrow().title()
-    }
-
     pub fn set_application(&self, application: Rc<dyn Application>) {
         let mut app = self.application.borrow_mut();
         app.set_application(application);
     }
 
-    pub fn set_scene_first(&self, scene: Rc<dyn SceneLike>) {
+    pub(crate) fn set_scene_first(&self, scene: Rc<dyn SceneLike>) {
         self.application.borrow_mut().set_scene(scene);
     }
 
-    pub fn fps(&self) -> u32 {
-        self.application.borrow().fps()
+    pub(crate) fn set_current_fps(&self, fps: usize) {
+        self.application.borrow_mut().set_current_fps(fps);
+    }
+
+    pub fn current_fps(&self) -> usize {
+        self.application.borrow().current_fps()
     }
 
     pub fn generate_id(&self) -> String {
@@ -92,8 +93,8 @@ impl Director {
         self.resource.borrow_mut().load_texture(path)
     }
 
-    pub fn load_font(&self, path: &str, point: u16) -> RFont {
-        self.resource.borrow_mut().load_font(path, point)
+    pub fn load_font(&self, path: &str, point: u16, style: FontStyle) -> RFont {
+        self.resource.borrow_mut().load_font(path, point, style)
     }
 
 }

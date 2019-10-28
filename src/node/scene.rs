@@ -8,6 +8,10 @@ pub trait Scene: NodeDelegate {
         self.add_child(node, option);
     }
 
+    fn update_scene(&self) {}
+
+    fn render_scene(&self) {}
+
 }
 
 pub trait SceneLike: NodeLike {
@@ -16,9 +20,13 @@ pub trait SceneLike: NodeLike {
 
 impl <T> NodeDelegate for T where T: Scene {
 
-    fn update(&self) { }
+    fn update(&self) {
+        self.update_scene();
+    }
 
-    fn render(&self) { }
+    fn render(&self) {
+        self.render_scene();
+    }
 
     fn before_add_child(&self) {
         panic!("Scene には add_child ではなく add_layer メソッドを使ってください");

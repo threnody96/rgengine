@@ -85,12 +85,9 @@ pub(crate) fn render<T, R>(callback: T) -> R where T: FnOnce(&'static mut Render
 }
 
 pub fn run(application: Rc<dyn Application>) {
-    let fps = director(|d| {
-        d.set_application(application.clone());
-        d.fps()
-    });
+    director(|d| d.set_application(application.clone()));
     let mut event_pump = render(|r| r.build(application.clone()));
-    let mut fps_manager = FpsManager::new(fps);
+    let mut fps_manager = FpsManager::new(application.fps());
     director(|d| {
         let scene = application.application_did_finish_launching();
         d.set_scene_first(scene);
@@ -124,5 +121,6 @@ pub fn run(application: Rc<dyn Application>) {
                 render(|r| r.render_canvas());
             }
         );
+        director(|d| d.set_current_fps(fps_manager.fps()));
     }
 }
