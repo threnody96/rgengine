@@ -1,5 +1,7 @@
 use std::rc::Rc;
 use ::node::{ SceneLike };
+use ::application::{ ResolutionSize, ResolutionPolicy };
+use util::{ Size };
 
 pub trait Application {
 
@@ -21,6 +23,13 @@ pub trait Application {
 
     fn window_height(&self) -> u32 {
         600
+    }
+
+    fn resolution_size(&self) -> ResolutionSize {
+        ResolutionSize {
+            size: Size { width: self.window_width(), height: self.window_height() },
+            policy: ResolutionPolicy::ExactFit
+        }
     }
 
 }

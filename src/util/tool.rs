@@ -89,7 +89,7 @@ pub fn run(application: Rc<dyn Application>) {
         d.set_application(application.clone());
         d.fps()
     });
-    let mut event_pump = render(|r| r.build());
+    let mut event_pump = render(|r| r.build(application.clone()));
     let mut fps_manager = FpsManager::new(fps);
     director(|d| {
         let scene = application.application_did_finish_launching();
@@ -113,9 +113,10 @@ pub fn run(application: Rc<dyn Application>) {
                 prev_scene.id() == next_scene.id()
             },
             || {
-                canvas(|c| c.clear());
                 director(|d| d.get_scene()).render();
-                canvas(|c| c.present());
+                render(|r| r.update_resolution_size(application.resolution_size()) );
+                render(|r| r.render_inner_canvas() );
+                render(|r| r.render_canvas());
             }
         );
     }
