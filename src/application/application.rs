@@ -18,7 +18,7 @@ pub trait Application {
     fn title(&self) -> String;
 
     fn window_size(&self) -> Size {
-        Size { width: 800, height: 600 }
+        Size::new(800, 600)
     }
 
     fn resolution_size(&self) -> Size {

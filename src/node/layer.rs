@@ -13,7 +13,7 @@ impl Layer {
             size: director(|d| d.window_size())
         });
         let size = n.get_size();
-        n.set_position(&Point::new(size.width as i32 / 2, size.height as i32 / 2));
+        n.set_position(&Point::new(size.width() as i32 / 2, size.height() as i32 / 2));
         n
     }
 

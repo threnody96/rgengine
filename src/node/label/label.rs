@@ -37,7 +37,7 @@ impl Label {
     fn update_size(&self) {
         let text = self.text.borrow().clone();
         match text.as_str() {
-            "" => { self.size.replace(Some(Size { width: 0, height: 0 })); },
+            "" => { self.size.replace(Some(Size::new(0, 0))); },
             _ => {
                 let font = self.font.borrow().clone();
                 let size = render(|r| r.measure_label_size(&text, font.clone()));

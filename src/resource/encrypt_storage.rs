@@ -3,7 +3,7 @@ use rusqlite::{ Connection };
 use base64::{ decode };
 use crypto::{ buffer, aes, blockmodes };
 use crypto::buffer::{ WriteBuffer, ReadBuffer, BufferResult };
-use ::util::{ exe_dir, must };
+use ::util::{ exe_dir, Must };
 
 pub struct EncryptStorage {
     con: Connection,
@@ -17,8 +17,8 @@ impl EncryptStorage {
         let mut source_path = exe_dir();
         source_path.push("resource.dat");
         Self {
-            con: must(Connection::open(source_path)),
-            key: must(decode(base64_key))
+            con: Connection::open(source_path).must(),
+            key: decode(base64_key).must()
         }
     }
 

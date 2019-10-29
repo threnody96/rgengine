@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::any::Any;
 use std::collections::HashMap;
 use ::resource::{ RTexture, RFont };
-use ::util::{ must, render };
+use ::util::{ render, Must };
 use serde_json::Value;
 use sdl2::ttf::FontStyle;
 

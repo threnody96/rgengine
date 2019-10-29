@@ -4,7 +4,7 @@ use std::rc::Rc;
 use ::node::{ NodeLike };
 use ::resource::{ RTexture, FontFactory, RFont, Storage };
 use ::application::{ Application, ResolutionPolicy };
-use ::util::{ must, director, Size, Rect, Point };
+use ::util::{ director, Size, Rect, Point, Must };
 use sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
 use sdl2::video::{ WindowContext, Window };
 use sdl2::rwops::{ RWops };
@@ -44,9 +44,9 @@ impl <'a> RenderDirector<'a> {
     pub fn new() -> Self {
         Self {
             canvas: None,
-            canvas_size: Size { width: 0, height: 0 },
+            canvas_size: Size::new(0, 0),
             inner_canvas: None,
-            resolution_size: Size { width: 0, height: 0 },
+            resolution_size: Size::new(0, 0),
             resolution_policy: ResolutionPolicy::ExactFit,
             render_canvas_dest: None,
             render_operations: Vec::new(),
@@ -75,16 +75,17 @@ impl <'a> RenderDirector<'a> {
     }
 
     pub fn build(&'a mut self, application: Rc<dyn Application>) -> EventPump {
-        let sdl_context = must(sdl2::init());
-        let video_subsystem = must(sdl_context.video());
+        let sdl_context = sdl2::init().must();
+        let video_subsystem = sdl_context.video().must();
         let canvas_size = application.window_size();
-        let window = must(video_subsystem
-            .window(application.title().as_str(), canvas_size.width, canvas_size.height)
+        let window = video_subsystem
+            .window(application.title().as_str(), canvas_size.width(), canvas_size.height())
             .opengl()
             .position_centered()
-            .build());
-        let gl = must(self.find_sdl_gl_driver());
-        let canvas = must(window.into_canvas().index(gl).build());
+            .build()
+            .must();
+        let gl = self.find_sdl_gl_driver().must();
+        let canvas = window.into_canvas().index(gl).build().must();
         self.texture_creator = Some(canvas.texture_creator());
         self.canvas_size = canvas_size;
         self.resolution_size = application.resolution_size();
@@ -92,20 +93,20 @@ impl <'a> RenderDirector<'a> {
         self.render_canvas_dest = self.generate_render_canvas_dest();
         self.canvas = Some(canvas);
         let texture_creator = self.texture_creator.as_ref().unwrap();
-        self.inner_canvas = Some(must(texture_creator.create_texture_target(
+        self.inner_canvas = Some(texture_creator.create_texture_target(
             Some(PixelFormatEnum::RGBA8888),
-            self.resolution_size.width,
-            self.resolution_size.height
-        )));
-        self.ttf_context = Some(must(sdl2::ttf::init()));
-        must(sdl_context.event_pump())
+            self.resolution_size.width(),
+            self.resolution_size.height()
+        ).must());
+        self.ttf_context = Some(sdl2::ttf::init().must());
+        sdl_context.event_pump().must()
     }
 
     pub fn load_plain_data(&mut self, path: &str) -> Rc<Vec<u8>> {
         if let Some(current) = self.plain_datas.get(path) {
             current.clone()
         } else {
-            let data = Rc::new(must(self.storage.load(path)));
+            let data = Rc::new(self.storage.load(path).must());
             self.plain_datas.insert(path.to_owned(), data.clone());
             data
         }
@@ -116,7 +117,7 @@ impl <'a> RenderDirector<'a> {
             current.clone()
         } else {
             let data = self.load_plain_data(path);
-            let s = Rc::new(must(String::from_utf8(data.as_ref().clone())));
+            let s = Rc::new(String::from_utf8(data.as_ref().clone()).must());
             self.strings.insert(path.to_owned(), s.clone());
             s
         }
@@ -127,7 +128,7 @@ impl <'a> RenderDirector<'a> {
             current.clone()
         } else {
             let data = self.load_string(path);
-            let json: Value = must(serde_json::from_str(data.as_str()));
+            let json: Value = serde_json::from_str(data.as_str()).must();
             let j = Rc::new(json);
             self.jsons.insert(path.to_owned(), j.clone());
             j
@@ -136,10 +137,10 @@ impl <'a> RenderDirector<'a> {
 
     pub fn load_texture(&'a mut self, path: &str) -> Rc<RTexture> {
         let data = self.load_plain_data(path);
-        let rwops = must(RWops::from_bytes(data.as_slice()));
-        let surface = must(rwops.load());
+        let rwops = RWops::from_bytes(data.as_slice()).must();
+        let surface = rwops.load().must();
         let texture_creator = self.texture_creator.as_ref().unwrap();
-        let texture = must(texture_creator.create_texture_from_surface(surface));
+        let texture = texture_creator.create_texture_from_surface(surface).must();
         let query = texture.query();
         let id = director(|d| d.generate_id());
         self.textures.insert(id.clone(), texture);
@@ -165,10 +166,10 @@ impl <'a> RenderDirector<'a> {
 
     pub fn measure_label_size(&self, text: &str, font: Rc<RFont>) -> Size {
         if let Some(f) = self.fonts.get(font.key().as_str()) {
-            let surface = must(f.font().render(text).blended(Color::RGBA(255, 255, 255, 255)));
-            Size { width: surface.width(), height: surface.height() }
+            let surface = f.font().render(text).blended(Color::RGBA(255, 255, 255, 255)).must();
+            Size::new(surface.width(), surface.height())
         } else {
-            Size { width: 0, height: 0 }
+            Size::new(0, 0)
         }
     }
 
@@ -177,11 +178,11 @@ impl <'a> RenderDirector<'a> {
             self.resolution_size = resolution_size;
             self.resolution_policy = resolution_policy;
             let texture_creator = self.texture_creator.as_ref().unwrap();
-            self.inner_canvas = Some(must(texture_creator.create_texture_target(
+            self.inner_canvas = Some(texture_creator.create_texture_target(
                 Some(PixelFormatEnum::RGBA8888),
-                self.resolution_size.width,
-                self.resolution_size.height
-            )));
+                self.resolution_size.width(),
+                self.resolution_size.height()
+            ).must());
             self.render_canvas_dest = self.generate_render_canvas_dest();
         }
     }
@@ -193,7 +194,7 @@ impl <'a> RenderDirector<'a> {
         let textures = &self.textures;
         let fonts = &self.fonts;
         let texture_creator = self.texture_creator.as_ref().unwrap();
-        must(canvas.with_texture_canvas(inner_canvas, |c| {
+        canvas.with_texture_canvas(inner_canvas, |c| {
             c.set_blend_mode(BlendMode::Blend);
             c.clear();
             for operation in operations {
@@ -201,21 +202,21 @@ impl <'a> RenderDirector<'a> {
                     RenderOperation::Image(point, texture) => {
                         if let Some(t) = textures.get(texture.key().as_str()) {
                             let query = t.query();
-                            must(c.copy(t, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))));
+                            c.copy(t, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))).must();
                         }
                     },
                     RenderOperation::Label(point, text, font, color) => {
                         if let Some(f) = fonts.get(font.key().as_str()) {
                             let font = f.font();
-                            let surface = must(font.render(text.as_str()).blended(*color));
-                            let texture = must(texture_creator.create_texture_from_surface(surface));
+                            let surface = font.render(text.as_str()).blended(*color).must();
+                            let texture = texture_creator.create_texture_from_surface(surface).must();
                             let query = texture.query();
-                            must(c.copy(&texture, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))));
+                            c.copy(&texture, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))).must();
                         }
                     }
                 }
             }
-        }));
+        }).must();
         self.render_operations = Vec::new();
     }
 
@@ -231,11 +232,11 @@ impl <'a> RenderDirector<'a> {
         if self.resolution_policy == ResolutionPolicy::ExactFit { return None; }
         let rsize = &self.resolution_size;
         let canvas_size = &self.canvas_size;
-        let per_size = (canvas_size.width as f32 / rsize.width as f32, canvas_size.height as f32 / rsize.height as f32);
+        let per_size = (canvas_size.width() as f32 / rsize.width() as f32, canvas_size.height() as f32 / rsize.height() as f32);
         let use_per_size = self.choice_per_size_from_policy(per_size.0, per_size.1, self.resolution_policy);
-        let dest_size = ((rsize.width as f32 * use_per_size).round() as i32, (rsize.height as f32 * use_per_size).round() as i32);
+        let dest_size = ((rsize.width() as f32 * use_per_size).round() as i32, (rsize.height() as f32 * use_per_size).round() as i32);
         let dest_center = (dest_size.0 / 2, dest_size.1 / 2);
-        let real_center = (canvas_size.width as i32 / 2, canvas_size.height as i32 / 2);
+        let real_center = (canvas_size.width() as i32 / 2, canvas_size.height() as i32 / 2);
         let render_to = (real_center.0 - dest_center.0, real_center.1 - dest_center.1);
         Some(Rect::new(render_to.0, render_to.1, dest_size.0 as u32, dest_size.1 as u32))
     }

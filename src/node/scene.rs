@@ -34,7 +34,7 @@ impl <T> NodeDelegate for T where T: Scene {
     }
 
     fn get_fixed_anchor_point(&self) -> Option<AnchorPoint> {
-        Some(AnchorPoint { x: 0.0, y: 0.0 })
+        Some(AnchorPoint::new(0.0, 0.0))
     }
 
     fn before_add_child(&self) {

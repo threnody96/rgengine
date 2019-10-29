@@ -25,10 +25,7 @@ impl RTexture {
     }
 
     pub fn size(&self) -> Size {
-        Size {
-            width: self.info.width,
-            height: self.info.height
-        }
+        Size::new(self.info.width, self.info.height)
     }
 
 }

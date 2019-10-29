@@ -4,7 +4,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 use ::application::{ Application };
 use ::node::{ SceneLike };
-use ::util::{ must, canvas, FpsManager, Size };
+use ::util::{ canvas, FpsManager, Size, Must };
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, TextureCreator };
 use sdl2::video::{ Window, WindowContext};
@@ -57,7 +57,7 @@ impl ApplicationDirector {
     }
 
     pub fn application(&self) -> Rc<dyn Application> {
-        must(self.application.clone().ok_or("application not found"))
+        self.application.clone().ok_or("application not found").must()
     }
 
     pub fn set_current_fps(&mut self, current_fps: usize) {

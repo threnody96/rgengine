@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::util::{ must };
+use ::util::{ Must };
 use sdl2::ttf::{ Sdl2TtfContext, Font, FontStyle };
 use sdl2::rwops::{ RWops };
 
@@ -44,8 +44,8 @@ impl <'a> FontFactory<'a> {
 
     pub fn generate_font(&'a mut self, ttf_context: &'a Sdl2TtfContext) {
         if self.font.is_some() { return; }
-        let rwops = must(RWops::from_bytes(self.plain_data.as_slice()));
-        let mut font = must(ttf_context.load_font_from_rwops(rwops, self.point));
+        let rwops = RWops::from_bytes(self.plain_data.as_slice()).must();
+        let mut font = ttf_context.load_font_from_rwops(rwops, self.point).must();
         font.set_style(self.style);
         self.font = Some(font);
     }

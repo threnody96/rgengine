@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
-use ::util::{ must, Size, Point };
+use ::util::{ Size, Point, Must };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike };
 use ::resource::{ RTexture, RFont };
 use self::application::ApplicationDirector;

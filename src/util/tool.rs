@@ -32,33 +32,6 @@ pub fn exe_dir() -> PathBuf {
     path.to_path_buf()
 }
 
-pub fn must<O, E>(result: Result<O, E>) -> O
-    where E: ToString
-{
-    match result {
-        Ok(o) => { return o; },
-        Err(e) => {
-            output_error_log(e);
-            panic!("爆発しました");
-        }
-    }
-}
-
-fn output_error_log<E>(err: E)
-    where E: ToString
-{
-    let mut file = match build_mode() {
-        BuildMode::Release => {
-            let mut dir = exe_dir();
-            dir.push("application.log");
-            Box::new(File::create(dir).unwrap()) as Box<dyn Write>
-        },
-        BuildMode::Development => { Box::new(stdout()) as Box<dyn Write> }
-    };
-    write!(file, "{}", err.to_string()).unwrap();
-    file.flush().unwrap();
-}
-
 pub fn load_file(path: &PathBuf) -> Result<Vec<u8>, String> {
     let f = File::open(path).map_err(|_| format!("ファイルの読み込みに失敗しました: {}", path.to_str().unwrap()))?;
     let mut bytes = BufReader::new(f).bytes();
@@ -93,8 +66,10 @@ pub fn run(application: Rc<dyn Application>) {
         d.set_scene(scene);
         d.get_scene().update();
     });
+    let mut prev_sleep_time: i64 = 0;
     loop {
-        fps_manager.run(
+        prev_sleep_time = fps_manager.run(
+            prev_sleep_time,
             || {
                 director(|d| d.clear_render_points());
                 for event in event_pump.poll_iter() {

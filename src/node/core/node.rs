@@ -41,8 +41,8 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         let ap = self.get_anchor_point();
         let s = self.get_size();
         Point::new(
-            p.x() - ((s.width as f32 * ap.x).round() as i32),
-            p.y() - ((s.height as f32 * ap.y).round() as i32)
+            p.x() - ((s.width() as f32 * ap.x()).round() as i32),
+            p.y() - ((s.height() as f32 * ap.y()).round() as i32)
         )
     }
 
