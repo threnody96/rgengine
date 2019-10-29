@@ -56,9 +56,9 @@ impl Must for AnchorPoint {
     fn must(self) -> AnchorPoint {
         let err = (&self).on_error::<String>();
         if self.x < 0.0 || self.x > 1.0 || self.y < 0.0 || self.y > 1.0 {
-            return self;
+            err(format!("invalid anchor_point: {}, {}", self.x, self.y));
         }
-        err(format!("invalid anchor_point: {}, {}", self.x, self.y))
+        self
     }
 
 }

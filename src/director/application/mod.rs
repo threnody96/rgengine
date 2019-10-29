@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::time::Duration;
 use std::collections::HashMap;
 use ::application::{ Application };
-use ::node::{ SceneLike };
+use ::node::{ SceneLike, LabelOption };
 use ::util::{ canvas, FpsManager, Size, Must };
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, TextureCreator };
@@ -15,6 +15,7 @@ use uuid::Uuid;
 pub struct ApplicationDirector {
     scene: Option<Rc<dyn SceneLike>>,
     application: Option<Rc<dyn Application>>,
+    default_label_option: Option<LabelOption>,
     id_cache: HashMap<String, bool>,
     current_fps: usize,
     continuing: bool
@@ -26,6 +27,7 @@ impl ApplicationDirector {
         Self {
             scene: None,
             application: None,
+            default_label_option: None,
             id_cache: HashMap::new(),
             current_fps: 0,
             continuing: true
@@ -42,6 +44,14 @@ impl ApplicationDirector {
 
     pub fn set_continuing(&mut self, continuing: bool) {
         self.continuing = continuing;
+    }
+
+    pub fn default_label_option(&self) -> Option<LabelOption> {
+        self.default_label_option.clone()
+    }
+
+    pub fn set_default_label_option(&mut self, option: &LabelOption) {
+        self.default_label_option = Some(option.clone());
     }
 
     pub fn set_scene(&mut self, scene: Rc<dyn SceneLike>) {

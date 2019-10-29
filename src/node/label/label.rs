@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use ::node::{ Node, NodeLike, NodeDelegate };
+use ::node::{ Node, NodeLike, NodeDelegate, LabelOption };
 use ::util::{ director, render, Size };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
@@ -10,19 +10,19 @@ pub struct Label {
     size: RefCell<Option<Size>>,
     text: RefCell<String>,
     font: RefCell<Rc<RFont>>,
-    color: Color
+    option: RefCell<LabelOption>
 }
 
 impl Label {
 
-    pub fn create(text: &str, font_path: &str, color: &Color) -> Rc<Node<Self>> {
-        let font = director(|d| d.load_font(font_path, 15, FontStyle::NORMAL));
+    pub fn create(text: &str, option: &LabelOption) -> Rc<Node<Self>> {
+        let font = director(|d| d.load_font(option));
         let n = Node::create(|| {
             Self {
                 size: RefCell::new(None),
                 text: RefCell::new(text.to_owned()),
                 font: RefCell::new(font.clone()),
-                color: color.clone()
+                option: RefCell::new(option.clone())
             }
         });
         n.update_size();
@@ -59,7 +59,8 @@ impl NodeDelegate for Label {
     fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
-        self.render_label(&parent, &text, font, &self.color);
+        let option = self.option.borrow().clone();
+        self.render_label(&parent, &text, font, &option.color);
     }
 
 }

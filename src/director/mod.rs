@@ -8,7 +8,7 @@ use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
 use ::util::{ Size, Point, Must };
-use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike };
+use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike, LabelOption };
 use ::resource::{ RTexture, RFont };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
@@ -73,6 +73,14 @@ impl Director {
         self.application.borrow_mut().set_current_fps(fps);
     }
 
+    pub fn default_label_option(&self) -> Option<LabelOption> {
+        self.application.borrow().default_label_option()
+    }
+
+    pub fn set_default_label_option(&self, option: &LabelOption) {
+        self.application.borrow_mut().set_default_label_option(option);
+    }
+
     pub fn current_fps(&self) -> usize {
         self.application.borrow().current_fps()
     }
@@ -109,6 +117,10 @@ impl Director {
         self.node.borrow_mut().destroy(id);
     }
 
+    pub fn add_alias(&self, name: &str, path: &str) {
+        self.resource.borrow_mut().add_alias(name, path);
+    }
+
     pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
         self.resource.borrow_mut().load_plain_data(path)
     }
@@ -117,8 +129,8 @@ impl Director {
         self.resource.borrow_mut().load_texture(path)
     }
 
-    pub fn load_font(&self, path: &str, point: u16, style: FontStyle) -> Rc<RFont> {
-        self.resource.borrow_mut().load_font(path, point, style)
+    pub fn load_font(&self, option: &LabelOption) -> Rc<RFont> {
+        self.resource.borrow_mut().load_font(option)
     }
 
 }
