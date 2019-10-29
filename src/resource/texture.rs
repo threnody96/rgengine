@@ -1,22 +1,34 @@
 use std::rc::Rc;
-use sdl2::render::{ Texture, TextureCreator };
+use ::util::{ Size };
+use sdl2::render::{ Texture, TextureCreator, TextureQuery };
 use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
 use sdl2::video::{ WindowContext };
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone)]
 pub struct RTexture {
-    key: String
+    key: String,
+    info: TextureQuery
 }
 
 impl RTexture {
 
-    pub fn new(key: &str) -> Self {
-        Self { key: key.to_owned() }
+    pub fn new(key: &str, info: &TextureQuery) -> Self {
+        Self {
+            key: key.to_owned(),
+            info: info.clone()
+        }
     }
 
     pub fn key(&self) -> String {
         self.key.clone()
+    }
+
+    pub fn size(&self) -> Size {
+        Size {
+            width: self.info.width,
+            height: self.info.height
+        }
     }
 
 }

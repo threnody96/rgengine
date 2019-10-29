@@ -1,10 +1,12 @@
 use std::rc::Rc;
 use ::resource::{ RTexture, RFont };
 use ::node::{ NodeId, NodeLike, AddChildOption };
-use ::util::{ director, render, Point };
+use ::util::{ director, render, Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
 pub trait NodeDelegate {
+
+    fn get_size(&self) -> Size;
 
     fn update(&self);
 
@@ -20,8 +22,7 @@ pub trait NodeDelegate {
 
     fn node(&self) -> Rc<dyn NodeLike> {
         director(|d| {
-            let id = self.id();
-            d.get_nodelike(&id).unwrap()
+            d.get_nodelike(&self.id()).unwrap()
         })
     }
 
@@ -34,20 +35,43 @@ pub trait NodeDelegate {
     }
 
     fn generate_position_with_parent(&self, parent: &Option<Rc<dyn NodeLike>>) -> Point {
-        let mut position = self.node().get_position();
+        let node = self.node();
+        let mut position = node.get_render_point();
         if let Some(p) = parent.clone() {
-            let parent_position = p.get_position();
-            position = Point::new(position.x() + parent_position.x(), position.y() + parent_position.y());
+            if let Some(parent_position) = director(|d| d.get_render_point(&p.id())) {
+                position = Point::new(position.x() + parent_position.x(), position.y() + parent_position.y());
+            }
         }
+        director(|d| d.set_render_point(&self.id(), &position));
         position
     }
 
-    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: &RTexture) {
+    fn set_position(&self, position: &Point) {
+        self.node().set_position(position);
+    }
+
+    fn get_position(&self) -> Point {
+        self.node().get_position()
+    }
+
+    fn set_anchor_point(&self, anchor_point: &AnchorPoint) {
+        self.node().set_anchor_point(anchor_point);
+    }
+
+    fn get_anchor_point(&self) -> AnchorPoint {
+        self.node().get_anchor_point()
+    }
+
+    fn get_fixed_anchor_point(&self) -> Option<AnchorPoint> {
+        None
+    }
+
+    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: Rc<RTexture>) {
         let position = self.generate_position_with_parent(parent);
         render(|r| r.render_texture(position, texture));
     }
 
-    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: &RFont, color: &Color) {
+    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color) {
         let position = self.generate_position_with_parent(parent);
         render(|r| r.render_label(position, text, font, color));
     }

@@ -1,10 +1,10 @@
 use std::rc::Rc;
 use ::node::{ NodeDelegate, Node, NodeLike };
 use ::resource::{ RTexture };
-use ::util::{ director, render };
+use ::util::{ director, render, Size };
 
 pub struct Image {
-    image: RTexture
+    image: Rc<RTexture>
 }
 
 impl Image {
@@ -19,10 +19,14 @@ impl Image {
 
 impl NodeDelegate for Image {
 
+    fn get_size(&self) -> Size {
+        self.image.size()
+    }
+
     fn update(&self) { }
 
     fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
-        self.render_texture(&parent, &self.image);
+        self.render_texture(&parent, self.image.clone());
     }
 
 }

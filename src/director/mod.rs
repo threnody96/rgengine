@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
-use ::util::{ must };
+use ::util::{ must, Size, Point };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike };
 use ::resource::{ RTexture, RFont };
 use self::application::ApplicationDirector;
@@ -33,6 +33,18 @@ impl Director {
             node: RefCell::new(NodeDirector::new()),
             resource: RefCell::new(ResourceDirector::new())
         }
+    }
+
+    pub fn window_size(&self) -> Size {
+        self.application.borrow().window_size()
+    }
+
+    pub fn is_continuing(&self) -> bool {
+        self.application.borrow().is_continuing()
+    }
+
+    pub fn set_continuing(&self, continuing: bool) {
+        self.application.borrow_mut().set_continuing(continuing);
     }
 
     pub fn get_scene(&self) -> Rc<dyn SceneLike> {
@@ -81,6 +93,18 @@ impl Director {
         self.node.borrow().get_nodelike(id)
     }
 
+    pub(crate) fn set_render_point(&self, id: &NodeId, render_point: &Point) {
+        self.node.borrow_mut().set_render_point(id, render_point);
+    }
+
+    pub(crate) fn get_render_point(&self, id: &NodeId) -> Option<Point> {
+        self.node.borrow().get_render_point(id)
+    }
+
+    pub(crate) fn clear_render_points(&self) {
+        self.node.borrow_mut().clear_render_points();
+    }
+
     pub fn destroy_node(&self, id: &NodeId) {
         self.node.borrow_mut().destroy(id);
     }
@@ -89,11 +113,11 @@ impl Director {
         self.resource.borrow_mut().load_plain_data(path)
     }
 
-    pub fn load_texture(&self, path: &str) -> RTexture {
+    pub fn load_texture(&self, path: &str) -> Rc<RTexture> {
         self.resource.borrow_mut().load_texture(path)
     }
 
-    pub fn load_font(&self, path: &str, point: u16, style: FontStyle) -> RFont {
+    pub fn load_font(&self, path: &str, point: u16, style: FontStyle) -> Rc<RFont> {
         self.resource.borrow_mut().load_font(path, point, style)
     }
 

@@ -4,13 +4,14 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::util::{ director, Point };
+use ::util::{ director, Point, AnchorPoint, Size };
 use ::resource::{ RTexture, RFont };
 use sdl2::pixels::{ Color };
 
 pub struct Node<T> where T: NodeDelegate + Any {
     delegate: T,
     position: RefCell<Point>,
+    anchor_point: RefCell<AnchorPoint>,
     parents: RefCell<Vec<NodeId>>,
     children: RefCell<Vec<NodeChild>>
 }
@@ -31,11 +32,25 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.delegate.id()
     }
 
-    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: &RTexture) {
+    fn get_size(&self) -> Size {
+        self.delegate.get_size()
+    }
+
+    fn get_render_point(&self) -> Point {
+        let p = self.get_position();
+        let ap = self.get_anchor_point();
+        let s = self.get_size();
+        Point::new(
+            p.x() - ((s.width as f32 * ap.x).round() as i32),
+            p.y() - ((s.height as f32 * ap.y).round() as i32)
+        )
+    }
+
+    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: Rc<RTexture>) {
         self.delegate.render_texture(parent, texture);
     }
 
-    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: &RFont, color: &Color) {
+    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color) {
         self.delegate.render_label(parent, text, font, color);
     }
 
@@ -123,6 +138,17 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.position.borrow().clone()
     }
 
+    fn set_anchor_point(&self, anchor_point: &AnchorPoint) {
+        self.anchor_point.replace(anchor_point.clone());
+    }
+
+    fn get_anchor_point(&self) -> AnchorPoint {
+        if let Some(fa) = self.delegate.get_fixed_anchor_point() {
+            return fa;
+        }
+        self.anchor_point.borrow().clone()
+    }
+
 }
 
 impl <T> Node<T> where T: NodeDelegate + Any {
@@ -139,6 +165,7 @@ impl <T> Node<T> where T: NodeDelegate + Any {
         Self {
             delegate: delegate,
             position: RefCell::new(Point::new(0, 0)),
+            anchor_point: RefCell::new(AnchorPoint::default()),
             parents: RefCell::new(Vec::new()),
             children: RefCell::new(Vec::new())
         }

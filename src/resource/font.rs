@@ -3,7 +3,7 @@ use ::util::{ must };
 use sdl2::ttf::{ Sdl2TtfContext, Font, FontStyle };
 use sdl2::rwops::{ RWops };
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone)]
 pub struct RFont {
     key: String
 }

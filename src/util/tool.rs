@@ -93,16 +93,19 @@ pub fn run(application: Rc<dyn Application>) {
         d.set_scene(scene);
         d.get_scene().update();
     });
-    'running: loop {
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} => {
-                    break 'running
-                },
-                _ => {}
-            }
-        }
+    loop {
         fps_manager.run(
+            || {
+                director(|d| d.clear_render_points());
+                for event in event_pump.poll_iter() {
+                    match event {
+                        Event::Quit {..} => {
+                            director(|d| d.set_continuing(false));
+                        },
+                        _ => {}
+                    }
+                }
+            },
             || {
                 let prev_scene = director(|d| d.get_scene());
                 prev_scene.update();
@@ -121,6 +124,7 @@ pub fn run(application: Rc<dyn Application>) {
                 render(|r| r.render_canvas());
             }
         );
+        if !director(|d| d.is_continuing()) { break; }
         director(|d| d.set_current_fps(fps_manager.fps()));
     }
 }

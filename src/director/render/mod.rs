@@ -17,8 +17,8 @@ use uuid::Uuid;
 
 #[derive(Clone)]
 pub enum RenderOperation {
-    Image(Point, RTexture),
-    Label(Point, String, RFont, Color)
+    Image(Point, Rc<RTexture>),
+    Label(Point, String, Rc<RFont>, Color)
 }
 
 pub struct RenderDirector<'a> {
@@ -134,32 +134,42 @@ impl <'a> RenderDirector<'a> {
         }
     }
 
-    pub fn load_texture(&'a mut self, path: &str) -> String {
+    pub fn load_texture(&'a mut self, path: &str) -> Rc<RTexture> {
         let data = self.load_plain_data(path);
         let rwops = must(RWops::from_bytes(data.as_slice()));
         let surface = must(rwops.load());
         let texture_creator = self.texture_creator.as_ref().unwrap();
         let texture = must(texture_creator.create_texture_from_surface(surface));
+        let query = texture.query();
         let id = director(|d| d.generate_id());
         self.textures.insert(id.clone(), texture);
-        id
+        Rc::new(RTexture::new(&id, &query))
     }
 
-    pub fn load_font(&'a mut self, path: &str, point: u16, style: FontStyle) -> String {
+    pub fn load_font(&'a mut self, path: &str, point: u16, style: FontStyle) -> Rc<RFont> {
         let data = self.load_plain_data(path);
         let id = director(|d| d.generate_id());
         self.fonts.insert(id.clone(), FontFactory::new(data, point, style));
         let font = self.fonts.get_mut(&id).unwrap();
         font.generate_font(self.ttf_context.as_ref().unwrap());
-        id
+        Rc::new(RFont::new(&id))
     }
 
-    pub fn render_texture(&mut self, point: Point, texture: &RTexture) {
-        self.render_operations.push(RenderOperation::Image(point, texture.clone()));
+    pub fn render_texture(&mut self, point: Point, texture: Rc<RTexture>) {
+        self.render_operations.push(RenderOperation::Image(point, texture));
     }
 
-    pub fn render_label(&mut self, point: Point, text: &str, font: &RFont, color: &Color) {
-        self.render_operations.push(RenderOperation::Label(point, text.to_owned(), font.clone(), color.clone()));
+    pub fn render_label(&mut self, point: Point, text: &str, font: Rc<RFont>, color: &Color) {
+        self.render_operations.push(RenderOperation::Label(point, text.to_owned(), font, color.clone()));
+    }
+
+    pub fn measure_label_size(&self, text: &str, font: Rc<RFont>) -> Size {
+        if let Some(f) = self.fonts.get(font.key().as_str()) {
+            let surface = must(f.font().render(text).blended(Color::RGBA(255, 255, 255, 255)));
+            Size { width: surface.width(), height: surface.height() }
+        } else {
+            Size { width: 0, height: 0 }
+        }
     }
 
     pub fn update_resolution_size(&'a mut self, resolution_size: Size, resolution_policy: ResolutionPolicy) {

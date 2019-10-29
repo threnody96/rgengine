@@ -1,12 +1,16 @@
 use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
 use ::resource::{ RTexture, RFont };
-use ::util::{ Point };
+use ::util::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
 pub trait NodeLike {
 
     fn id(&self) -> NodeId;
+
+    fn get_size(&self) -> Size;
+
+    fn get_render_point(&self) -> Point;
 
     fn update(&self);
 
@@ -32,9 +36,13 @@ pub trait NodeLike {
 
     fn get_position(&self) -> Point;
 
-    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: &RTexture);
+    fn set_anchor_point(&self, anchor_point: &AnchorPoint);
 
-    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: &RFont, color: &Color);
+    fn get_anchor_point(&self) -> AnchorPoint;
+
+    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: Rc<RTexture>);
+
+    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color);
 
 }
 

@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::any::Any;
 use std::collections::HashMap;
 use ::resource::{ RTexture, RFont };
 use ::util::{ must, render };
@@ -18,7 +19,7 @@ pub struct ResourceKey {
 }
 
 pub struct ResourceDirector {
-    resources: HashMap<ResourceKey, String>
+    resources: HashMap<ResourceKey, Rc<dyn Any>>
 }
 
 impl ResourceDirector {
@@ -26,6 +27,17 @@ impl ResourceDirector {
     pub fn new() -> Self {
         Self {
             resources: HashMap::new()
+        }
+    }
+
+    fn get_resource<T>(&self, key: &ResourceKey) -> Option<Rc<T>> where T: Any {
+        if let Some(r) = self.resources.get(key) {
+            match r.clone().downcast::<T>() {
+                Ok(t) => { Some(t) }
+                Err(e) => { None }
+            }
+        } else {
+            None
         }
     }
 
@@ -41,31 +53,31 @@ impl ResourceDirector {
         render(|r| r.load_json(path))
     }
 
-    pub fn load_texture(&mut self, path: &str) -> RTexture {
+    pub fn load_texture(&mut self, path: &str) -> Rc<RTexture> {
         let key = ResourceKey {
             path: path.to_owned(),
             rt: ResourceType::Texture
         };
-        if let Some(texture) = self.resources.get(&key) {
-            RTexture::new(texture.as_ref())
+        if let Some(texture) = self.get_resource::<RTexture>(&key) {
+            texture
         } else {
             let k = render(|r| r.load_texture(path));
             self.resources.insert(key, k.clone());
-            RTexture::new(k.as_ref())
+            k
         }
     }
 
-    pub fn load_font(&mut self, path: &str, point: u16, style: FontStyle) -> RFont {
+    pub fn load_font(&mut self, path: &str, point: u16, style: FontStyle) -> Rc<RFont> {
         let key = ResourceKey {
             path: path.to_owned(),
             rt: ResourceType::Font(point, style)
         };
-        if let Some(font) = self.resources.get(&key) {
-            RFont::new(font.as_ref())
+        if let Some(font) = self.get_resource::<RFont>(&key) {
+            font
         } else {
             let k = render(|r| r.load_font(path, point, style));
             self.resources.insert(key, k.clone());
-            RFont::new(k.as_ref())
+            k
         }
     }
 

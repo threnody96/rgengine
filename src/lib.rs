@@ -22,4 +22,4 @@ thread_local! {
 
 }
 
-pub static mut RENDER: Option<RenderDirector<'static>> = None;
+pub(crate) static mut RENDER: Option<RenderDirector<'static>> = None;

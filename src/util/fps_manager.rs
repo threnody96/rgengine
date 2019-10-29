@@ -28,11 +28,13 @@ impl FpsManager {
         self.fps = fps;
     }
 
-    pub fn run<U, R>(&mut self, update: U, render: R) where U: Fn() -> bool, R: Fn() -> () {
+    pub fn run<P, U, R>(&mut self, prepare: P, update: U, render: R)
+    where P: FnOnce() -> (), U: Fn() -> bool, R: FnOnce() -> () {
         let (render_time, _) = Self::measure(|| {
             render();
             self.rendered();
         });
+        let (prepare_time, _) = Self::measure(|| prepare());
         let mut update_time: u64 = 0;
         for i in 0..self.max_retry {
             loop {
@@ -40,7 +42,7 @@ impl FpsManager {
                 update_time += utime;
                 if r { break; }
             }
-            let delay = (self.dt * (i + 1) as f64) - (render_time + update_time) as f64;
+            let delay = (self.dt * (i + 1) as f64) - (prepare_time + render_time + update_time) as f64;
             if delay >= 0.0 {
                 if delay != 0.0 && i == 0 {
                     sleep(Duration::new(0, delay as u32 * 1_000));

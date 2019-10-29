@@ -4,7 +4,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 use ::application::{ Application };
 use ::node::{ SceneLike };
-use ::util::{ must, canvas, FpsManager };
+use ::util::{ must, canvas, FpsManager, Size };
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, TextureCreator };
 use sdl2::video::{ Window, WindowContext};
@@ -16,7 +16,8 @@ pub struct ApplicationDirector {
     scene: Option<Rc<dyn SceneLike>>,
     application: Option<Rc<dyn Application>>,
     id_cache: HashMap<String, bool>,
-    current_fps: usize
+    current_fps: usize,
+    continuing: bool
 }
 
 impl ApplicationDirector {
@@ -26,8 +27,21 @@ impl ApplicationDirector {
             scene: None,
             application: None,
             id_cache: HashMap::new(),
-            current_fps: 0
+            current_fps: 0,
+            continuing: true
         }
+    }
+
+    pub fn window_size(&self) -> Size {
+        self.application().window_size()
+    }
+
+    pub fn is_continuing(&self) -> bool {
+        self.continuing
+    }
+
+    pub fn set_continuing(&mut self, continuing: bool) {
+        self.continuing = continuing;
     }
 
     pub fn set_scene(&mut self, scene: Rc<dyn SceneLike>) {
