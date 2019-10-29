@@ -5,6 +5,7 @@ extern crate base64;
 extern crate rusqlite;
 extern crate uuid;
 extern crate serde_json;
+extern crate rand;
 
 pub mod application;
 pub mod director;

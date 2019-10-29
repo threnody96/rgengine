@@ -149,6 +149,19 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.anchor_point.borrow().clone()
     }
 
+    fn destroy(&self) {
+        let id = self.id();
+        for parent_id in self.get_parents() {
+            let parent = director(|d| d.get_nodelike(&parent_id)).unwrap();
+            parent.remove_child(&id);
+        }
+        for child_id in self.get_children() {
+            let child = director(|d| d.get_nodelike(&child_id)).unwrap();
+            child.destroy();
+        }
+        director(|d| d.destroy_node(&id));
+    }
+
 }
 
 impl <T> Node<T> where T: NodeDelegate + Any {

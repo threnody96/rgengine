@@ -17,6 +17,7 @@ use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, Texture, TextureCreator };
 use sdl2::video::{ Window, WindowContext };
 use sdl2::ttf::FontStyle;
+use rand::distributions::{ Standard, Distribution };
 pub use self::render::RenderDirector;
 
 pub struct Director {
@@ -37,6 +38,10 @@ impl Director {
 
     pub fn window_size(&self) -> Size {
         self.application.borrow().window_size()
+    }
+
+    pub fn rand<T>(&self) -> T where Standard: Distribution<T> {
+        self.application.borrow_mut().rand()
     }
 
     pub fn is_continuing(&self) -> bool {

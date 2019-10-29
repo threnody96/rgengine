@@ -44,5 +44,7 @@ pub trait NodeLike {
 
     fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color);
 
+    fn destroy(&self);
+
 }
 

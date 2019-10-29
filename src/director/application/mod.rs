@@ -11,6 +11,9 @@ use sdl2::video::{ Window, WindowContext};
 use sdl2::event::{ Event };
 use sdl2::keyboard::{ Keycode };
 use uuid::Uuid;
+use rand::{ Rng };
+use rand::rngs::{ ThreadRng };
+use rand::distributions::{ Standard, Distribution };
 
 pub struct ApplicationDirector {
     scene: Option<Rc<dyn SceneLike>>,
@@ -18,6 +21,7 @@ pub struct ApplicationDirector {
     default_label_option: Option<LabelOption>,
     id_cache: HashMap<String, bool>,
     current_fps: usize,
+    rand: ThreadRng,
     continuing: bool
 }
 
@@ -30,12 +34,17 @@ impl ApplicationDirector {
             default_label_option: None,
             id_cache: HashMap::new(),
             current_fps: 0,
+            rand: rand::thread_rng(),
             continuing: true
         }
     }
 
     pub fn window_size(&self) -> Size {
         self.application().window_size()
+    }
+
+    pub fn rand<T>(&mut self) -> T where Standard: Distribution<T> {
+        self.rand.gen()
     }
 
     pub fn is_continuing(&self) -> bool {
