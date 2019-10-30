@@ -14,13 +14,10 @@ pub mod node;
 pub mod resource;
 
 use ::director::Director;
-use ::director::RenderDirector;
-
-use std::cell::RefCell;
+use ::application::Context;
 
 thread_local! {
-    pub static DIRECTOR: Director = Director::new();
-
+    pub static DIRECTOR: Director<'static> = Director::new();
 }
 
-pub(crate) static mut RENDER: Option<RenderDirector<'static>> = None;
+pub(crate) static mut CONTEXT: Option<Context> = None;

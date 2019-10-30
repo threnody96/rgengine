@@ -11,7 +11,7 @@ pub trait Scene: NodeDelegate {
 
     fn update_scene(&self) {}
 
-    fn render_scene(&self, parent: Option<Rc<dyn NodeLike>>) {}
+    fn render_scene(&self) {}
 
 }
 
@@ -22,15 +22,15 @@ pub trait SceneLike: NodeLike {
 impl <T> NodeDelegate for T where T: Scene {
 
     fn get_size(&self) -> Size {
-        director(|d| d.window_size())
+        director(|d| d.get_resolution_size())
     }
 
     fn update(&self) {
         self.update_scene();
     }
 
-    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
-        self.render_scene(parent);
+    fn render(&self) {
+        self.render_scene();
     }
 
     fn get_fixed_anchor_point(&self) -> Option<AnchorPoint> {

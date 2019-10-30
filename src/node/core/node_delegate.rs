@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use ::resource::{ RTexture, RFont };
 use ::node::{ NodeId, NodeLike, AddChildOption };
-use ::util::{ director, render, Point, AnchorPoint, Size };
+use ::util::{ director, Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
 pub trait NodeDelegate {
@@ -10,7 +10,7 @@ pub trait NodeDelegate {
 
     fn update(&self);
 
-    fn render(&self, parent: Option<Rc<dyn NodeLike>>);
+    fn render(&self);
 
     fn before_add_child(&self) { }
 
@@ -34,18 +34,6 @@ pub trait NodeDelegate {
         self.node().get_children()
     }
 
-    fn generate_position_with_parent(&self, parent: &Option<Rc<dyn NodeLike>>) -> Point {
-        let node = self.node();
-        let mut position = node.get_render_point();
-        if let Some(p) = parent.clone() {
-            if let Some(parent_position) = director(|d| d.get_render_point(&p.id())) {
-                position = Point::new(position.x() + parent_position.x(), position.y() + parent_position.y());
-            }
-        }
-        director(|d| d.set_render_point(&self.id(), &position));
-        position
-    }
-
     fn set_position(&self, position: &Point) {
         self.node().set_position(position);
     }
@@ -66,14 +54,16 @@ pub trait NodeDelegate {
         None
     }
 
-    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: Rc<RTexture>) {
-        let position = self.generate_position_with_parent(parent);
-        render(|r| r.render_texture(position, texture));
+    fn prepare_render_tree(&self, parent: &Option<Rc<dyn NodeLike>>) {
+        director(|d| d.prepare_render_tree(parent, self.node()));
     }
 
-    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color) {
-        let position = self.generate_position_with_parent(parent);
-        render(|r| r.render_label(position, text, font, color));
+    fn render_texture(&self, texture: Rc<RTexture>) {
+        director(|d| d.render_texture(self.node(), texture));
+    }
+
+    fn render_label(&self, text: &str, font: Rc<RFont>, color: &Color) {
+        director(|d| d.render_label(self.node(), text, font, color));
     }
 
 }

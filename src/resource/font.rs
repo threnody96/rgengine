@@ -1,53 +1,51 @@
 use std::rc::Rc;
-use ::util::{ Must };
+use ::resource::{ ResourceKey };
+use ::util::{ Must, context };
 use sdl2::ttf::{ Sdl2TtfContext, Font, FontStyle };
 use sdl2::rwops::{ RWops };
 
 #[derive(Clone)]
 pub struct RFont {
-    key: String
+    key: ResourceKey
 }
 
 impl RFont {
 
-    pub fn new(key: &str) -> Self {
-        Self { key: key.to_owned() }
+    pub fn new(key: &ResourceKey) -> Self {
+        Self { key: key.clone() }
     }
 
-    pub fn key(&self) -> String {
+    pub fn key(&self) -> ResourceKey {
         self.key.clone()
     }
 
 }
 
 pub struct FontFactory<'a> {
-    plain_data: Rc<Vec<u8>>,
     point: u16,
     style: FontStyle,
-    font: Option<Font<'a, 'a>>
+    font: Rc<Font<'a, 'a>>
+}
+
+pub struct FontWrapper {
+
 }
 
 impl <'a> FontFactory<'a> {
 
-    pub fn new(plain_data: Rc<Vec<u8>>, point: u16, style: FontStyle) -> Self {
+    pub fn new(plain_data: &'a [u8], point: u16, style: FontStyle) -> Self {
+        let rwops = RWops::from_bytes(plain_data).must();
+        let mut font = context(|c| c.ttf_context.load_font_from_rwops(rwops, point)).must();
+        font.set_style(style);
         Self {
-            plain_data: plain_data,
             point: point,
             style: style,
-            font: None
+            font: Rc::new(font)
         }
     }
 
-    pub fn font(&'a self) -> &'a Font<'a, 'a> {
-        self.font.as_ref().unwrap()
-    }
-
-    pub fn generate_font(&'a mut self, ttf_context: &'a Sdl2TtfContext) {
-        if self.font.is_some() { return; }
-        let rwops = RWops::from_bytes(self.plain_data.as_slice()).must();
-        let mut font = ttf_context.load_font_from_rwops(rwops, self.point).must();
-        font.set_style(self.style);
-        self.font = Some(font);
+    pub fn font(&self) -> Rc<Font<'a, 'a>> {
+        self.font.clone()
     }
 
 }

@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::max;
 use ::node::{ Node, NodeLike, NodeDelegate, LabelOption, OneLineLabel, AddChildOption };
-use ::util::{ director, render, Point, Size, AnchorPoint };
+use ::util::{ director, Point, Size, AnchorPoint };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
 use sdl2::ttf::{ FontStyle };
@@ -93,7 +93,7 @@ impl NodeDelegate for Label {
 
     fn update(&self) { }
 
-    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+    fn render(&self) {
     }
 
 }

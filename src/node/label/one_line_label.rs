@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ Node, NodeLike, NodeDelegate, LabelOption };
-use ::util::{ director, render, Size };
+use ::util::{ director, Size };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
 use sdl2::ttf::{ FontStyle };
@@ -46,7 +46,7 @@ impl OneLineLabel {
     fn update_size(&self) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
-        let size = render(|r| r.measure_label_size(&text, font.clone()));
+        let size = director(|d| d.measure_label_size(&text, font.clone()));
         self.size.replace(Some(size));
     }
 
@@ -64,11 +64,11 @@ impl NodeDelegate for OneLineLabel {
 
     fn update(&self) { }
 
-    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+    fn render(&self) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
         let option = self.option.borrow().clone();
-        self.render_label(&parent, &text, font, &option.color);
+        self.render_label(&text, font, &option.color);
     }
 
 }

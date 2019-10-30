@@ -4,7 +4,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 use ::application::{ Application };
 use ::node::{ SceneLike, LabelOption };
-use ::util::{ canvas, FpsManager, Size, Must };
+use ::util::{ FpsManager, Size, Must };
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, TextureCreator };
 use sdl2::video::{ Window, WindowContext};
@@ -41,6 +41,10 @@ impl ApplicationDirector {
 
     pub fn window_size(&self) -> Size {
         self.application().window_size()
+    }
+
+    pub fn get_resolution_size(&self) -> Size {
+        self.application().resolution_size()
     }
 
     pub fn rand<T>(&mut self) -> T where Standard: Distribution<T> {

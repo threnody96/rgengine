@@ -9,35 +9,41 @@ use std::any::Any;
 use ::application::{ Application };
 use ::util::{ Size, Point, Must };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike, LabelOption };
-use ::resource::{ RTexture, RFont };
+use ::resource::{ RTexture, RFont, FontFactory };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
 use self::resource::ResourceDirector;
+use self::render::RenderDirector;
 use sdl2::{ EventPump };
 use sdl2::render::{ Canvas, Texture, TextureCreator };
 use sdl2::video::{ Window, WindowContext };
-use sdl2::ttf::FontStyle;
+use sdl2::ttf::{ FontStyle, Font };
+use sdl2::pixels::{ Color };
 use rand::distributions::{ Standard, Distribution };
-pub use self::render::RenderDirector;
+use application::ResolutionPolicy;
 
-pub struct Director {
+pub struct Director<'a> {
     application: RefCell<ApplicationDirector>,
     node: RefCell<NodeDirector>,
-    resource: RefCell<ResourceDirector>
+    render: RefCell<RenderDirector<'a>>
 }
 
-impl Director {
+impl <'a> Director<'a> {
 
     pub fn new() -> Self {
         Self {
             application: RefCell::new(ApplicationDirector::new()),
             node: RefCell::new(NodeDirector::new()),
-            resource: RefCell::new(ResourceDirector::new())
+            render: RefCell::new(RenderDirector::new())
         }
     }
 
     pub fn window_size(&self) -> Size {
         self.application.borrow().window_size()
+    }
+
+    pub fn get_resolution_size(&self) -> Size {
+        self.application.borrow().get_resolution_size()
     }
 
     pub fn rand<T>(&self) -> T where Standard: Distribution<T> {
@@ -66,8 +72,8 @@ impl Director {
     }
 
     pub fn set_application(&self, application: Rc<dyn Application>) {
-        let mut app = self.application.borrow_mut();
-        app.set_application(application);
+        self.application.borrow_mut().set_application(application.clone());
+        self.render.borrow_mut().set_application(application.clone());
     }
 
     pub(crate) fn set_scene(&self, scene: Rc<dyn SceneLike>) {
@@ -122,20 +128,44 @@ impl Director {
         self.node.borrow_mut().destroy(id);
     }
 
+    pub fn measure_label_size(&self, text: &str, font: Rc<RFont>) -> Size {
+        self.render.borrow().measure_label_size(text, font)
+    }
+
     pub fn add_alias(&self, name: &str, path: &str) {
-        self.resource.borrow_mut().add_alias(name, path);
+        self.render.borrow_mut().add_alias(name, path);
     }
 
     pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
-        self.resource.borrow_mut().load_plain_data(path)
+        self.render.borrow_mut().load_plain_data(path)
     }
 
     pub fn load_texture(&self, path: &str) -> Rc<RTexture> {
-        self.resource.borrow_mut().load_texture(path)
+        self.render.borrow_mut().load_texture(path)
     }
 
     pub fn load_font(&self, option: &LabelOption) -> Rc<RFont> {
-        self.resource.borrow_mut().load_font(option)
+        self.render.borrow_mut().load_font(option)
+    }
+
+    pub fn prepare_render_tree(&self, parent: &Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
+        self.render.borrow_mut().prepare_render_tree(parent, node);
+    }
+
+    pub fn render_texture(&self, node: Rc<dyn NodeLike>, texture: Rc<RTexture>) {
+        self.render.borrow_mut().render_texture(node, texture);
+    }
+
+    pub fn render_label(&self, node: Rc<dyn NodeLike>, text: &str, font: Rc<RFont>, color: &Color) {
+        self.render.borrow_mut().render_label(node, text, font, color);
+    }
+
+    pub fn update_resolution_size(&self) {
+        self.render.borrow_mut().update_resolution_size();
+    }
+
+    pub fn render_canvas(&self) {
+        self.render.borrow_mut().render_canvas();
     }
 
 }

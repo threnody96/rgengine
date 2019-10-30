@@ -6,12 +6,12 @@ use std::io::{BufReader, Read, Write, stdout};
 use std::any::Any;
 use std::ops::DerefMut;
 use std::cell::RefCell;
-use ::director::{ Director, RenderDirector };
-use ::application::{ Application };
+use ::director::{ Director };
+use ::application::{ Application, Context };
 use ::util::{ FpsManager };
 use ::node::{ SceneLike };
-use sdl2::render::{ Canvas };
-use sdl2::video::{ Window };
+use sdl2::render::{ Canvas, TextureCreator };
+use sdl2::video::{ Window, WindowContext};
 use sdl2::event::{ Event };
 
 #[derive(Eq, PartialEq)]
@@ -46,20 +46,22 @@ pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
     })
 }
 
-pub fn canvas<T, R>(callback: T) -> R where T: FnOnce(&mut Canvas<Window>) -> R {
-    render(|r| r.with_canvas(callback))
+pub(crate) fn context<T, R>(callback: T) -> R where T: FnOnce(&'static mut Context) -> R {
+    unsafe {
+        callback(::CONTEXT.as_mut().unwrap())
+    }
 }
 
-pub(crate) fn render<T, R>(callback: T) -> R where T: FnOnce(&'static mut RenderDirector<'static>) -> R {
+fn initialize_context(application: Rc<dyn Application>) {
     unsafe {
-        if ::RENDER.is_none() { ::RENDER = Some(RenderDirector::new()); }
-        callback(::RENDER.as_mut().unwrap())
+        ::CONTEXT = Some(Context::new(application));
     }
 }
 
 pub fn run(application: Rc<dyn Application>) {
     director(|d| d.set_application(application.clone()));
-    let mut event_pump = render(|r| r.build(application.clone()));
+    initialize_context(application.clone());
+    let mut event_pump = context(|c| &mut c.event_pump);
     let mut fps_manager = FpsManager::new(application.fps());
     director(|d| {
         let scene = application.application_did_finish_launching();
@@ -88,15 +90,9 @@ pub fn run(application: Rc<dyn Application>) {
                 prev_scene.id() == next_scene.id()
             },
             || {
+                director(|r| r.update_resolution_size());
                 director(|d| d.get_scene()).render(None);
-                render(|r| {
-                    r.update_resolution_size(
-                        application.resolution_size(),
-                        application.resolution_policy()
-                    );
-                });
-                render(|r| r.render_inner_canvas() );
-                render(|r| r.render_canvas());
+                director(|r| r.render_canvas());
             }
         );
         if !director(|d| d.is_continuing()) { break; }

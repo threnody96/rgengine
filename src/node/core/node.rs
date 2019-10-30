@@ -46,12 +46,12 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         )
     }
 
-    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: Rc<RTexture>) {
-        self.delegate.render_texture(parent, texture);
+    fn render_texture(&self, texture: Rc<RTexture>) {
+        self.delegate.render_texture(texture);
     }
 
-    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color) {
-        self.delegate.render_label(parent, text, font, color);
+    fn render_label(&self, text: &str, font: Rc<RFont>, color: &Color) {
+        self.delegate.render_label(text, font, color);
     }
 
     fn update(&self) {
@@ -63,7 +63,8 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     }
 
     fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
-        self.delegate.render(parent);
+        self.prepare_render_tree(&parent);
+        self.delegate.render();
         for child in &*self.children.borrow() {
             let id = self.id();
             let current = director(|d| d.get_nodelike(&id));

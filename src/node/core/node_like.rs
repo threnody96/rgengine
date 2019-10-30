@@ -40,9 +40,9 @@ pub trait NodeLike {
 
     fn get_anchor_point(&self) -> AnchorPoint;
 
-    fn render_texture(&self, parent: &Option<Rc<dyn NodeLike>>, texture: Rc<RTexture>);
+    fn render_texture(&self, texture: Rc<RTexture>);
 
-    fn render_label(&self, parent: &Option<Rc<dyn NodeLike>>, text: &str, font: Rc<RFont>, color: &Color);
+    fn render_label(&self, text: &str, font: Rc<RFont>, color: &Color);
 
     fn destroy(&self);
 

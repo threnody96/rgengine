@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use ::util::{ Size };
+use ::resource::{ ResourceKey };
 use sdl2::render::{ Texture, TextureCreator, TextureQuery };
 use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
@@ -7,20 +8,20 @@ use sdl2::video::{ WindowContext };
 
 #[derive(Clone)]
 pub struct RTexture {
-    key: String,
+    key: ResourceKey,
     info: TextureQuery
 }
 
 impl RTexture {
 
-    pub fn new(key: &str, info: &TextureQuery) -> Self {
+    pub fn new(key: &ResourceKey, info: &TextureQuery) -> Self {
         Self {
-            key: key.to_owned(),
+            key: key.clone(),
             info: info.clone()
         }
     }
 
-    pub fn key(&self) -> String {
+    pub fn key(&self) -> ResourceKey {
         self.key.clone()
     }
 

@@ -27,7 +27,7 @@ impl NodeDelegate for Layer {
 
     fn update(&self) { }
 
-    fn render(&self, parent: Option<Rc<dyn NodeLike>>) {
+    fn render(&self) {
     }
 
 }
