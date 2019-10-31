@@ -154,13 +154,15 @@ impl <'a> RenderDirector<'a> {
 
     fn create_sub_canvas(&self, node: Rc<dyn NodeLike>) -> Texture<'a> {
         let canvas_size = node.get_size();
-        context(|c| {
+        let mut texture = context(|c| {
             c.texture_creator.create_texture_target(
                 Some(PixelFormatEnum::RGBA8888),
                 canvas_size.width(),
                 canvas_size.height()
             ).unwrap()
-        })
+        });
+        texture.set_blend_mode(BlendMode::Blend);
+        texture
     }
 
     fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {

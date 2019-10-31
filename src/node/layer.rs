@@ -10,7 +10,7 @@ impl Layer {
 
     pub fn create() -> Rc<Node<Layer>> {
         let n = Node::create(|| Layer {
-            size: director(|d| d.window_size())
+            size: director(|d| d.get_resolution_size())
         });
         let size = n.get_size();
         n.set_position(&Point::new(size.width() as i32 / 2, size.height() as i32 / 2));

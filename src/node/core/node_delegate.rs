@@ -48,6 +48,22 @@ pub trait NodeDelegate {
         self.node().get_position()
     }
 
+    fn set_visible(&self, visible: bool) {
+        self.node().set_visible(visible);
+    }
+
+    fn get_visible(&self) -> bool {
+        self.node().get_visible()
+    }
+
+    fn set_rotation(&self, rotation: f64) {
+        self.node().set_rotation(rotation);
+    }
+
+    fn get_rotation(&self) -> f64 {
+        self.node().get_rotation()
+    }
+
     fn set_anchor_point(&self, anchor_point: &AnchorPoint) {
         self.node().set_anchor_point(anchor_point);
     }
