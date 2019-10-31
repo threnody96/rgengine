@@ -171,37 +171,47 @@ impl <'b, 'c: 'b> RenderDirector<'b> {
         })
     }
 
-    fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Texture<'b> {
+    fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Rc<Texture<'b>> {
         let node = render_tree.node.clone();
-        let children: Vec<(Rc<dyn NodeLike>, Texture<'b>)> = render_tree.children.borrow().iter().map(|child| {
+        let children: Vec<(Rc<dyn NodeLike>, Rc<Texture<'b>>)> = render_tree.children.borrow().iter().map(|child| {
             (child.node.clone(), self.render_inner_canvas(child.clone()))
         }).collect();
-        let mut sub_canvas = self.create_sub_canvas(node.clone());
-        let canvas = context(|c| &mut c.canvas);
-        canvas.with_texture_canvas(&mut sub_canvas, |c| {
-            c.set_blend_mode(BlendMode::Blend);
-            c.clear();
-            for operation in render_tree.operations.borrow().iter() {
-                match operation {
-                    RenderOperation::Image(texture) => {
-                        let t = self.resource.load_texture_from_resource_key(texture.clone());
-                        c.copy(&*t, None, None).must();
-                    },
-                    RenderOperation::Label(text, font, color) => {
-                        let f = self.resource.load_font_from_resource_key(font.clone());
-                        let surface = f.render(text.as_str()).blended(*color).must();
-                        let texture = context(|c| c.texture_creator.create_texture_from_surface(surface)).must();
-                        c.copy(&texture, None, None).must();
-                    }
+        let operations_count = render_tree.operations.borrow().len();
+        if children.is_empty() && operations_count == 1 {
+            self.exec_operation(render_tree.operations.borrow().get(0).must())
+        } else {
+            let mut sub_canvas = self.create_sub_canvas(node.clone());
+            let canvas = context(|c| &mut c.canvas);
+            canvas.with_texture_canvas(&mut sub_canvas, |c| {
+                c.set_blend_mode(BlendMode::Blend);
+                c.clear();
+                for operation in render_tree.operations.borrow().iter() {
+                    let t = self.exec_operation(operation);
+                    let query = t.query();
+                    c.copy(&t, None, Some(Rect::new(0, 0, query.width, query.height)));
                 }
+                for (child_node, child_texture) in children {
+                    let point = child_node.get_render_point();
+                    let query = child_texture.query();
+                    c.copy(&child_texture, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))).must();
+                }
+            }).must();
+            Rc::new(sub_canvas)
+        }
+    }
+
+    fn exec_operation(&self, operation: &RenderOperation) -> Rc<Texture<'b>> {
+        match operation {
+            RenderOperation::Image(texture) => {
+                self.resource.load_texture_from_resource_key(texture.clone())
+            },
+            RenderOperation::Label(text, font, color) => {
+                let f = self.resource.load_font_from_resource_key(font.clone());
+                let surface = f.render(text.as_str()).blended(*color).must();
+                let texture = context(|c| c.texture_creator.create_texture_from_surface(surface)).must();
+                Rc::new(texture)
             }
-            for (child_node, child_texture) in children {
-                let point = child_node.get_render_point();
-                let query = child_texture.query();
-                c.copy(&child_texture, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))).must();
-            }
-        }).must();
-        sub_canvas
+        }
     }
 
     pub fn render_canvas(&mut self) {

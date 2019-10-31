@@ -52,7 +52,7 @@ impl Label {
     fn clear_labels(&self) {
         {
             for label in self.labels.borrow().iter() {
-                director(|d| d.destroy_node(&label.id()));
+                label.destroy();
             }
         }
         self.labels.replace(Vec::new());
