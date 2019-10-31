@@ -7,20 +7,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
-use ::util::{ Size, Point, Must };
+use ::util::{ Size };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike, LabelOption };
-use ::resource::{ RTexture, RFont, FontFactory };
+use ::resource::{ RTexture, RFont, ResourceKey };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
-use self::resource::ResourceDirector;
 use self::render::RenderDirector;
-use sdl2::{ EventPump };
-use sdl2::render::{ Canvas, Texture, TextureCreator };
-use sdl2::video::{ Window, WindowContext };
-use sdl2::ttf::{ FontStyle, Font };
 use sdl2::pixels::{ Color };
 use rand::distributions::{ Standard, Distribution };
-use application::ResolutionPolicy;
 
 pub struct Director<'a> {
     application: RefCell<ApplicationDirector>,
@@ -96,10 +90,6 @@ impl <'a> Director<'a> {
         self.application.borrow().current_fps()
     }
 
-    pub fn generate_id(&self) -> String {
-        self.application.borrow_mut().generate_id()
-    }
-
     pub fn register_node<T>(&self, node: Rc<Node<T>>) where T: NodeDelegate + Any {
         self.node.borrow_mut().register_node(node);
     }
@@ -108,20 +98,8 @@ impl <'a> Director<'a> {
         self.node.borrow().get_node(id)
     }
 
-    pub fn get_nodelike(&self, id: &NodeId) -> Option<Rc<dyn NodeLike>> {
+    pub fn get_nodelike(&self, id: &NodeId) -> Rc<dyn NodeLike> {
         self.node.borrow().get_nodelike(id)
-    }
-
-    pub(crate) fn set_render_point(&self, id: &NodeId, render_point: &Point) {
-        self.node.borrow_mut().set_render_point(id, render_point);
-    }
-
-    pub(crate) fn get_render_point(&self, id: &NodeId) -> Option<Point> {
-        self.node.borrow().get_render_point(id)
-    }
-
-    pub(crate) fn clear_render_points(&self) {
-        self.node.borrow_mut().clear_render_points();
     }
 
     pub fn destroy_node(&self, id: &NodeId) {
@@ -166,6 +144,10 @@ impl <'a> Director<'a> {
 
     pub fn render_canvas(&self) {
         self.render.borrow_mut().render_canvas();
+    }
+
+    pub fn destroy_render_cache(&self, key: &ResourceKey) {
+        self.render.borrow_mut().destroy_render_cache(key);
     }
 
 }

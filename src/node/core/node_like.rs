@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
-use ::resource::{ RTexture, RFont };
+use ::resource::{ RTexture, RFont, ResourceKey };
 use ::util::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
@@ -8,13 +8,27 @@ pub trait NodeLike {
 
     fn id(&self) -> NodeId;
 
+    fn node(&self) -> Rc<dyn NodeLike>;
+
     fn get_size(&self) -> Size;
 
     fn get_render_point(&self) -> Point;
 
-    fn update(&self);
+    fn update(&self, parent: Rc<dyn NodeLike>);
 
-    fn render(&self, parent: Option<Rc<dyn NodeLike>>);
+    fn update_children(&self, parent: Rc<dyn NodeLike>);
+
+    fn render(&self, parent: Rc<dyn NodeLike>);
+
+    fn render_children(&self, parent: Rc<dyn NodeLike>);
+
+    fn use_cache(&self) -> bool;
+
+    fn get_cache(&self) -> Option<ResourceKey>;
+
+    fn set_cache(&self, key: Option<ResourceKey>);
+
+    fn clear_cache(&self);
 
     fn add_parent(&self, id: &NodeId);
 
@@ -39,6 +53,18 @@ pub trait NodeLike {
     fn set_anchor_point(&self, anchor_point: &AnchorPoint);
 
     fn get_anchor_point(&self) -> AnchorPoint;
+
+    fn set_opacity(&self, opacity: u8);
+
+    fn get_opacity(&self) -> u8;
+
+    fn set_visible(&self, visible: bool);
+
+    fn get_visible(&self) -> bool;
+
+    fn set_rotation(&self, rotation: f64);
+
+    fn get_rotation(&self) -> f64;
 
     fn render_texture(&self, texture: Rc<RTexture>);
 

@@ -3,16 +3,11 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::rc::Rc;
 use std::io::{BufReader, Read, Write, stdout};
-use std::any::Any;
-use std::ops::DerefMut;
-use std::cell::RefCell;
 use ::director::{ Director };
 use ::application::{ Application, Context };
 use ::util::{ FpsManager };
-use ::node::{ SceneLike };
-use sdl2::render::{ Canvas, TextureCreator };
-use sdl2::video::{ Window, WindowContext};
 use sdl2::event::{ Event };
+use backtrace::Backtrace;
 
 #[derive(Eq, PartialEq)]
 pub enum BuildMode {
@@ -58,22 +53,49 @@ fn initialize_context(application: Rc<dyn Application>) {
     }
 }
 
+fn output_error_log(err: &str) {
+    let mut file = match build_mode() {
+        BuildMode::Release => {
+            let mut dir = exe_dir();
+            dir.push("application.log");
+            Box::new(File::create(dir).unwrap()) as Box<dyn Write>
+        },
+        BuildMode::Development => { Box::new(stdout()) as Box<dyn Write> }
+    };
+    write!(file, "{}", err.to_string()).unwrap();
+    file.flush().unwrap();
+}
+
+fn set_panic_hook() {
+    std::panic::set_hook(Box::new(|p| {
+        let b = Backtrace::new();
+        let err_msg = if let Some(s) = p.payload().downcast_ref::<String>() {
+            s.to_string()
+        } else if let Some(s) = p.payload().downcast_ref::<&str>() {
+            s.to_string()
+        } else {
+            "Unknown Error".to_owned()
+        };
+        output_error_log(format!("{}\n\n{:?}", err_msg, b).as_str());
+    }));
+}
+
 pub fn run(application: Rc<dyn Application>) {
+    set_panic_hook();
     director(|d| d.set_application(application.clone()));
     initialize_context(application.clone());
-    let mut event_pump = context(|c| &mut c.event_pump);
+    let event_pump = context(|c| &mut c.event_pump);
     let mut fps_manager = FpsManager::new(application.fps());
     director(|d| {
         let scene = application.application_did_finish_launching();
         d.set_scene(scene);
-        d.get_scene().update();
+        d.get_scene().start_update();
     });
     let mut prev_sleep_time: i64 = 0;
-    loop {
+    while director(|d| d.is_continuing()) {
         prev_sleep_time = fps_manager.run(
             prev_sleep_time,
             || {
-                director(|d| d.clear_render_points());
                 for event in event_pump.poll_iter() {
                     match event {
                         Event::Quit {..} => {
@@ -85,17 +107,16 @@ pub fn run(application: Rc<dyn Application>) {
             },
             || {
                 let prev_scene = director(|d| d.get_scene());
-                prev_scene.update();
+                prev_scene.start_update();
                 let next_scene = director(|d| d.get_scene());
                 prev_scene.id() == next_scene.id()
             },
             || {
                 director(|r| r.update_resolution_size());
-                director(|d| d.get_scene()).render(None);
+                director(|d| d.get_scene()).start_render();
                 director(|r| r.render_canvas());
             }
         );
-        if !director(|d| d.is_continuing()) { break; }
         director(|d| d.set_current_fps(fps_manager.fps()));
     }
 }

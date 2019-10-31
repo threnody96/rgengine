@@ -23,9 +23,13 @@ impl NodeDelegate for Image {
         self.image.size()
     }
 
-    fn update(&self) { }
+    fn use_cache(&self) -> bool {
+        true
+    }
 
-    fn render(&self) {
+    fn update(&self, _parent: Rc<dyn NodeLike>) { }
+
+    fn render(&self, _parent: Rc<dyn NodeLike>) {
         self.render_texture(self.image.clone());
     }
 

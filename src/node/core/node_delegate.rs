@@ -8,22 +8,28 @@ pub trait NodeDelegate {
 
     fn get_size(&self) -> Size;
 
-    fn update(&self);
+    fn update(&self, parent: Rc<dyn NodeLike>);
 
-    fn render(&self);
+    fn render(&self, parent: Rc<dyn NodeLike>) { }
 
     fn before_add_child(&self) { }
 
     fn before_be_added_child(&self) { }
+
+    fn use_cache(&self) -> bool {
+        false
+    }
+
+    fn clear_cache(&self) {
+        self.node().clear_cache();
+    }
 
     fn id(&self) -> NodeId {
         NodeId::new(format!("{:p}", self))
     }
 
     fn node(&self) -> Rc<dyn NodeLike> {
-        director(|d| {
-            d.get_nodelike(&self.id()).unwrap()
-        })
+        director(|d| d.get_nodelike(&self.id()))
     }
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {

@@ -1,14 +1,11 @@
 use std::any::Any;
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use ::node::{ Node, NodeDelegate, NodeId, NodeLike };
-use ::util::{ Point };
 
 pub struct NodeDirector {
     nodelikes: HashMap<NodeId, Rc<dyn NodeLike>>,
     anynodes: HashMap<NodeId, Rc<dyn Any>>,
-    render_points: HashMap<NodeId, Point>,
 }
 
 impl NodeDirector {
@@ -17,7 +14,6 @@ impl NodeDirector {
         Self {
             nodelikes: HashMap::new(),
             anynodes: HashMap::new(),
-            render_points: HashMap::new(),
         }
     }
 
@@ -35,22 +31,9 @@ impl NodeDirector {
         None
     }
 
-    pub fn get_nodelike(&self, id: &NodeId) -> Option<Rc<dyn NodeLike>> {
+    pub fn get_nodelike(&self, id: &NodeId) -> Rc<dyn NodeLike> {
         let node = self.nodelikes.get(id);
-        if node.is_none() { return None; }
-        node.cloned()
-    }
-
-    pub fn set_render_point(&mut self, id: &NodeId, render_point: &Point) {
-        self.render_points.insert(id.clone(), render_point.clone());
-    }
-
-    pub fn get_render_point(&self, id: &NodeId) -> Option<Point> {
-        self.render_points.get(id).cloned()
-    }
-
-    pub fn clear_render_points(&mut self) {
-        self.render_points = HashMap::new();
+        node.cloned().unwrap()
     }
 
     pub fn destroy(&mut self, id: &NodeId) {

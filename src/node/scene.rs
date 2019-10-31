@@ -17,6 +17,10 @@ pub trait Scene: NodeDelegate {
 
 pub trait SceneLike: NodeLike {
 
+    fn start_update(&self);
+
+    fn start_render(&self);
+
 }
 
 impl <T> NodeDelegate for T where T: Scene {
@@ -25,13 +29,9 @@ impl <T> NodeDelegate for T where T: Scene {
         director(|d| d.get_resolution_size())
     }
 
-    fn update(&self) {
-        self.update_scene();
-    }
+    fn update(&self, _parent: Rc<dyn NodeLike>) { }
 
-    fn render(&self) {
-        self.render_scene();
-    }
+    fn render(&self, _parent: Rc<dyn NodeLike>) { }
 
     fn get_fixed_anchor_point(&self) -> Option<AnchorPoint> {
         Some(AnchorPoint::new(0.0, 0.0))
@@ -48,5 +48,16 @@ impl <T> NodeDelegate for T where T: Scene {
 }
 
 impl <T> SceneLike for Node<T> where T: Scene + Any {
+
+    fn start_update(&self) {
+        self.update_scene();
+        self.update_children(self.node());
+    }
+
+    fn start_render(&self) {
+        self.prepare_render_tree(&None);
+        self.render_scene();
+        self.render_children(self.node());
+    }
 
 }

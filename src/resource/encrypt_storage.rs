@@ -1,9 +1,8 @@
-use std::path::PathBuf;
 use rusqlite::{ Connection };
 use base64::{ decode };
 use crypto::{ buffer, aes, blockmodes };
 use crypto::buffer::{ WriteBuffer, ReadBuffer, BufferResult };
-use ::util::{ exe_dir, Must };
+use ::util::{ exe_dir };
 
 pub struct EncryptStorage {
     con: Connection,
@@ -17,8 +16,8 @@ impl EncryptStorage {
         let mut source_path = exe_dir();
         source_path.push("resource.dat");
         Self {
-            con: Connection::open(source_path).must(),
-            key: decode(base64_key).must()
+            con: Connection::open(source_path).unwrap(),
+            key: decode(base64_key).unwrap()
         }
     }
 

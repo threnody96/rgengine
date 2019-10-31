@@ -25,10 +25,9 @@ impl NodeDelegate for Layer {
         self.size.clone()
     }
 
-    fn update(&self) { }
+    fn update(&self, _parent: Rc<dyn NodeLike>) { }
 
-    fn render(&self) {
-    }
+    fn render(&self, _parent: Rc<dyn NodeLike>) { }
 
 }
 

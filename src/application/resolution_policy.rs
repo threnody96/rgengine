@@ -1,5 +1,3 @@
-use ::util::{ Size };
-
 #[derive(Clone, Eq, PartialEq, Hash, Copy)]
 pub enum ResolutionPolicy {
     ExactFit,

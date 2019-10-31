@@ -1,10 +1,6 @@
-use std::rc::Rc;
 use ::util::{ Size };
 use ::resource::{ ResourceKey };
-use sdl2::render::{ Texture, TextureCreator, TextureQuery };
-use sdl2::rwops::{ RWops };
-use sdl2::image::{ ImageRWops };
-use sdl2::video::{ WindowContext };
+use sdl2::render::{ TextureQuery };
 
 #[derive(Clone)]
 pub struct RTexture {

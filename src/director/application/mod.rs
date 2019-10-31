@@ -1,16 +1,7 @@
 use std::rc::Rc;
-use std::cell::RefCell;
-use std::time::Duration;
-use std::collections::HashMap;
 use ::application::{ Application };
 use ::node::{ SceneLike, LabelOption };
-use ::util::{ FpsManager, Size, Must };
-use sdl2::{ EventPump };
-use sdl2::render::{ Canvas, TextureCreator };
-use sdl2::video::{ Window, WindowContext};
-use sdl2::event::{ Event };
-use sdl2::keyboard::{ Keycode };
-use uuid::Uuid;
+use ::util::{ Size };
 use rand::{ Rng };
 use rand::rngs::{ ThreadRng };
 use rand::distributions::{ Standard, Distribution };
@@ -19,7 +10,6 @@ pub struct ApplicationDirector {
     scene: Option<Rc<dyn SceneLike>>,
     application: Option<Rc<dyn Application>>,
     default_label_option: Option<LabelOption>,
-    id_cache: HashMap<String, bool>,
     current_fps: usize,
     rand: ThreadRng,
     continuing: bool
@@ -32,7 +22,6 @@ impl ApplicationDirector {
             scene: None,
             application: None,
             default_label_option: None,
-            id_cache: HashMap::new(),
             current_fps: 0,
             rand: rand::thread_rng(),
             continuing: true
@@ -80,7 +69,7 @@ impl ApplicationDirector {
     }
 
     pub fn application(&self) -> Rc<dyn Application> {
-        self.application.clone().ok_or("application not found").must()
+        self.application.clone().ok_or("application not found").unwrap()
     }
 
     pub fn set_current_fps(&mut self, current_fps: usize) {
@@ -89,16 +78,6 @@ impl ApplicationDirector {
 
     pub fn current_fps(&self) -> usize {
         self.current_fps
-    }
-
-    pub fn generate_id(&mut self) -> String {
-        let mut id = "".to_owned();
-        loop {
-            id = Uuid::new_v4().to_string();
-            if self.id_cache.get(&id).is_none() { break; }
-        }
-        self.id_cache.insert(id.clone(), true);
-        id
     }
 
 }

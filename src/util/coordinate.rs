@@ -1,4 +1,4 @@
-use ::util::{ Must };
+use ::util::{ Validation };
 pub use sdl2::rect::{ Point, Rect };
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -36,7 +36,7 @@ impl AnchorPoint {
 
     pub fn new(x: f32, y: f32) -> Self {
         let s = Self { x: x, y: y};
-        s.must()
+        s.validate()
     }
 
     pub fn x(&self) -> f32 {
@@ -49,14 +49,13 @@ impl AnchorPoint {
 
 }
 
-impl Must for AnchorPoint {
+impl Validation for AnchorPoint {
 
     type Output = AnchorPoint;
 
-    fn must(self) -> AnchorPoint {
-        let err = (&self).on_error::<String>();
+    fn validate(self) -> AnchorPoint {
         if self.x < 0.0 || self.x > 1.0 || self.y < 0.0 || self.y > 1.0 {
-            err(format!("invalid anchor_point: {}, {}", self.x, self.y));
+            panic!(format!("invalid anchor_point: {}, {}", self.x, self.y));
         }
         self
     }

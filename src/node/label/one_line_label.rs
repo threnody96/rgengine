@@ -4,7 +4,6 @@ use ::node::{ Node, NodeLike, NodeDelegate, LabelOption };
 use ::util::{ director, Size };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
-use sdl2::ttf::{ FontStyle };
 
 pub struct OneLineLabel {
     size: RefCell<Option<Size>>,
@@ -25,13 +24,13 @@ impl OneLineLabel {
                 option: RefCell::new(option.clone())
             }
         });
-        n.update_size();
+        n.updated();
         n
     }
 
     pub fn set_text(&self, text: &str) {
         self.text.replace(Self::normalize_text(text));
-        self.update_size();
+        self.updated();
     }
 
     pub fn set_point(&self, point: u16) {
@@ -40,14 +39,15 @@ impl OneLineLabel {
             option.point = point;
             self.font.replace(director(|d| d.load_font(&option.clone())));
         }
-        self.update_size();
+        self.updated();
     }
 
-    fn update_size(&self) {
+    fn updated(&self) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
         let size = director(|d| d.measure_label_size(&text, font.clone()));
         self.size.replace(Some(size));
+        self.clear_cache();
     }
 
     fn normalize_text(text: &str) -> String {
@@ -62,9 +62,13 @@ impl NodeDelegate for OneLineLabel {
         self.size.borrow().clone().unwrap()
     }
 
-    fn update(&self) { }
+    fn use_cache(&self) -> bool {
+        true
+    }
 
-    fn render(&self) {
+    fn update(&self, _parent: Rc<dyn NodeLike>) { }
+
+    fn render(&self, _parent: Rc<dyn NodeLike>) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
         let option = self.option.borrow().clone();

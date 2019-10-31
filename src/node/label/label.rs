@@ -2,10 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::max;
 use ::node::{ Node, NodeLike, NodeDelegate, LabelOption, OneLineLabel, AddChildOption };
-use ::util::{ director, Point, Size, AnchorPoint };
-use ::resource::{ RFont };
+use ::util::{ Point, Size, AnchorPoint };
 pub use sdl2::pixels::{ Color };
-use sdl2::ttf::{ FontStyle };
 
 pub struct Label {
     size: RefCell<Size>,
@@ -58,7 +56,7 @@ impl Label {
         self.labels.replace(Vec::new());
     }
 
-    fn rebuild(&self) {
+    fn updated(&self) {
         let text = self.text.borrow().clone();
         let option = self.option.borrow().clone();
         let (labels, size) = Self::build(&text, &option);
@@ -68,11 +66,12 @@ impl Label {
             self.add_child(label.clone(), AddChildOption::default());
         }
         self.size.replace(size);
+        self.clear_cache();
     }
 
     pub fn set_text(&self, text: &str) {
         self.text.replace(text.to_owned());
-        self.rebuild();
+        self.updated();
     }
 
     pub fn set_point(&self, point: u16) {
@@ -80,7 +79,7 @@ impl Label {
             let mut option = self.option.borrow_mut();
             option.point = point;
         }
-        self.rebuild();
+        self.updated();
     }
 
 }
@@ -91,9 +90,13 @@ impl NodeDelegate for Label {
         self.size.borrow().clone()
     }
 
-    fn update(&self) { }
+    fn use_cache(&self) -> bool {
+        true
+    }
 
-    fn render(&self) {
+    fn update(&self, _parent: Rc<dyn NodeLike>) { }
+
+    fn render(&self, _parent: Rc<dyn NodeLike>) {
     }
 
 }

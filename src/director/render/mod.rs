@@ -2,20 +2,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use ::node::{ NodeId, NodeLike, LabelOption };
-use ::resource::{ RTexture, FontFactory, RFont, Storage };
+use ::resource::{ RTexture, RFont, ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
-use ::util::{ director, context, Size, Rect, Point, Must };
+use ::util::{ context, Size, Rect };
 use ::director::resource::{ ResourceDirector };
-use sdl2::render::{ Canvas, Texture, TextureCreator, BlendMode };
-use sdl2::video::{ WindowContext, Window };
-use sdl2::rwops::{ RWops };
-use sdl2::surface::{ Surface };
-use sdl2::image::{ ImageRWops };
-use sdl2::{ EventPump };
-use sdl2::ttf::{ Sdl2TtfContext, Font, FontStyle };
+use sdl2::render::{ Texture, BlendMode };
 use sdl2::pixels::{ PixelFormatEnum, Color };
-use serde_json::Value;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub enum RenderOperation {
@@ -59,7 +51,7 @@ pub struct RenderDirector<'a> {
     render_tree: Option<Rc<RenderTree>>,
 }
 
-impl <'b, 'c: 'b> RenderDirector<'b> {
+impl <'a> RenderDirector<'a> {
 
     pub fn new() -> Self {
         Self {
@@ -128,25 +120,25 @@ impl <'b, 'c: 'b> RenderDirector<'b> {
                     self.render_tree = Some(tree_node);
                 },
                 Some(p) => {
-                    self.render_tree_nodes.get(&p.id()).must().push_child(tree_node.clone());
+                    self.render_tree_nodes.get(&p.id()).unwrap().push_child(tree_node.clone());
                 }
             }
         }
     }
 
     pub fn render_texture(&mut self, node: Rc<dyn NodeLike>, texture: Rc<RTexture>) {
-        let tree = self.render_tree_nodes.get(&node.id()).must();
+        let tree = self.render_tree_nodes.get(&node.id()).unwrap();
         tree.push_operation(RenderOperation::Image(texture));
     }
 
     pub fn render_label(&mut self, node: Rc<dyn NodeLike>, text: &str, font: Rc<RFont>, color: &Color) {
-        let tree = self.render_tree_nodes.get(&node.id()).must();
+        let tree = self.render_tree_nodes.get(&node.id()).unwrap();
         tree.push_operation(RenderOperation::Label(text.to_owned(), font, color.clone()));
     }
 
     pub fn measure_label_size(&self, text: &str, font: Rc<RFont>) -> Size {
         let f = self.resource.load_font_from_resource_key(font);
-        let surface = f.render(text).blended(Color::RGBA(255, 255, 255, 255)).must();
+        let surface = f.render(text).blended(Color::RGBA(255, 255, 255, 255)).unwrap();
         Size::new(surface.width(), surface.height())
     }
 
@@ -160,79 +152,98 @@ impl <'b, 'c: 'b> RenderDirector<'b> {
         }
     }
 
-    fn create_sub_canvas(&self, node: Rc<dyn NodeLike>) -> Texture<'b> {
+    fn create_sub_canvas(&self, node: Rc<dyn NodeLike>) -> Texture<'a> {
         let canvas_size = node.get_size();
         context(|c| {
             c.texture_creator.create_texture_target(
                 Some(PixelFormatEnum::RGBA8888),
                 canvas_size.width(),
                 canvas_size.height()
-            ).must()
+            ).unwrap()
         })
     }
 
-    fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Rc<Texture<'b>> {
+    fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {
         let node = render_tree.node.clone();
-        let children: Vec<(Rc<dyn NodeLike>, Rc<Texture<'b>>)> = render_tree.children.borrow().iter().map(|child| {
+        if !node.get_visible() { return None; }
+        if let Some(cache) = self.load_by_render_cache(node.clone()) {
+            return Some(cache);
+        }
+        let children: Vec<(Rc<dyn NodeLike>, Option<Rc<Texture<'a>>>)> = render_tree.children.borrow().iter().map(|child| {
             (child.node.clone(), self.render_inner_canvas(child.clone()))
         }).collect();
-        let operations_count = render_tree.operations.borrow().len();
-        if children.is_empty() && operations_count == 1 {
-            self.exec_operation(render_tree.operations.borrow().get(0).must())
-        } else {
-            let mut sub_canvas = self.create_sub_canvas(node.clone());
-            let canvas = context(|c| &mut c.canvas);
-            canvas.with_texture_canvas(&mut sub_canvas, |c| {
-                c.set_blend_mode(BlendMode::Blend);
-                c.clear();
-                for operation in render_tree.operations.borrow().iter() {
-                    let t = self.exec_operation(operation);
-                    let query = t.query();
-                    c.copy(&t, None, Some(Rect::new(0, 0, query.width, query.height)));
-                }
-                for (child_node, child_texture) in children {
+        let mut sub_canvas = self.create_sub_canvas(node.clone());
+        let canvas = context(|c| &mut c.canvas);
+        canvas.with_texture_canvas(&mut sub_canvas, |c| {
+            c.set_blend_mode(BlendMode::Blend);
+            c.clear();
+            for operation in render_tree.operations.borrow().iter() {
+                let t = self.exec_operation(operation);
+                let query = t.query();
+                c.copy(&t, None, Some(Rect::new(0, 0, query.width, query.height))).unwrap();
+            }
+            for (child_node, child_texture) in children {
+                if let Some(ct) = child_texture {
                     let point = child_node.get_render_point();
-                    let query = child_texture.query();
-                    c.copy(&child_texture, None, Some(Rect::new(point.x(), point.y(), query.width, query.height))).must();
+                    let angle = child_node.get_rotation();
+                    let query = ct.query();
+                    c.copy_ex(&ct, None, Some(Rect::new(point.x(), point.y(), query.width, query.height)), angle, None, false, false).unwrap();
                 }
-            }).must();
-            Rc::new(sub_canvas)
+            }
+        }).unwrap();
+        sub_canvas.set_alpha_mod(node.get_opacity());
+        let r = Rc::new(sub_canvas);
+        if node.use_cache() {
+            let key = self.resource.set_render_cache(r.clone());
+            node.set_cache(Some(key));
         }
+        Some(r)
     }
 
-    fn exec_operation(&self, operation: &RenderOperation) -> Rc<Texture<'b>> {
+    fn load_by_render_cache(&self, node: Rc<dyn NodeLike>) -> Option<Rc<Texture<'a>>> {
+        if !node.use_cache() { return None; }
+        if let Some(key) = node.get_cache() {
+            return Some(self.resource.get_render_cache(&key));
+        }
+        None
+    }
+
+    fn exec_operation(&self, operation: &RenderOperation) -> Rc<Texture<'a>> {
         match operation {
             RenderOperation::Image(texture) => {
                 self.resource.load_texture_from_resource_key(texture.clone())
             },
             RenderOperation::Label(text, font, color) => {
                 let f = self.resource.load_font_from_resource_key(font.clone());
-                let surface = f.render(text.as_str()).blended(*color).must();
-                let texture = context(|c| c.texture_creator.create_texture_from_surface(surface)).must();
+                let surface = f.render(text.as_str()).blended(*color).unwrap();
+                let texture = context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap();
                 Rc::new(texture)
             }
         }
     }
 
     pub fn render_canvas(&mut self) {
-        match &self.render_tree {
-            None => {
-                context(|c| {
-                    c.canvas.clear();
-                    c.canvas.present();
-                });
-            },
-            Some(render_tree) => {
-                let texture = self.render_inner_canvas(render_tree.clone());
-                context(|c| {
-                    c.canvas.clear();
-                    c.canvas.copy(&texture, None, self.render_canvas_dest.clone());
-                    c.canvas.present();
-                });
-            }
+        if let Some(render_tree) = self.render_tree.clone() {
+            let texture = self.render_inner_canvas(render_tree);
+            context(|c| {
+                c.canvas.clear();
+                if let Some(t) = texture {
+                    c.canvas.copy(&t, None, self.render_canvas_dest.clone()).unwrap();
+                }
+                c.canvas.present();
+            });
+        } else {
+            context(|c| {
+                c.canvas.clear();
+                c.canvas.present();
+            });
         }
         self.render_tree = None;
         self.render_tree_nodes = HashMap::new();
+    }
+
+    pub fn destroy_render_cache(&mut self, key: &ResourceKey) {
+        self.resource.destroy_render_cache(key);
     }
 
 }

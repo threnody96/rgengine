@@ -1,6 +1,5 @@
 use std::rc::Rc;
 use std::collections::HashMap;
-use ::util::{ Must };
 use ::application::{ Application };
 use ::resource::{ ResourceKey };
 use sdl2::render::{ Canvas, TextureCreator };
@@ -25,25 +24,25 @@ impl Context {
             canvas: canvas,
             event_pump: event_pump,
             texture_creator: texture_creator,
-            ttf_context: sdl2::ttf::init().must(),
+            ttf_context: sdl2::ttf::init().unwrap(),
             font_datas: HashMap::new()
         }
     }
 
     fn build(application: Rc<dyn Application>) -> (Canvas<Window>, EventPump) {
-        let sdl_context = sdl2::init().must();
-        let video_subsystem = sdl_context.video().must();
+        let sdl_context = sdl2::init().unwrap();
+        let video_subsystem = sdl_context.video().unwrap();
         let window_size = application.window_size();
         let window = video_subsystem
             .window(application.title().as_str(), window_size.width(), window_size.height())
             .opengl()
             .position_centered()
             .build()
-            .must();
-        let gl = Self::find_sdl_gl_driver().must();
+            .unwrap();
+        let gl = Self::find_sdl_gl_driver().unwrap();
         (
-            window.into_canvas().index(gl).build().must(),
-            sdl_context.event_pump().must()
+            window.into_canvas().index(gl).build().unwrap(),
+            sdl_context.event_pump().unwrap()
         )
     }
 
