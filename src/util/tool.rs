@@ -112,9 +112,9 @@ pub fn run(application: Rc<dyn Application>) {
                 prev_scene.id() == next_scene.id()
             },
             || {
-                director(|r| r.update_resolution_size());
+                director(|d| d.update_resolution_size());
                 director(|d| d.get_scene()).start_render();
-                director(|r| r.render_canvas());
+                director(|d| d.render_canvas());
             }
         );
         director(|d| d.set_current_fps(fps_manager.fps()));
