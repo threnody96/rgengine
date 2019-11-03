@@ -1,7 +1,8 @@
 use std::rc::Rc;
 use ::resource::{ RTexture, RFont };
 use ::node::{ NodeId, NodeLike, AddChildOption };
-use ::util::{ director, Point, AnchorPoint, Size };
+use ::util::{ director };
+use ::util::parameter::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
 pub trait NodeDelegate {

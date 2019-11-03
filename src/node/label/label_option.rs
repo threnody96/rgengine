@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use ::util::{ director, FuzzyArg, NoOption };
+use ::util::parameter::{ FontStyle };
 use sdl2::pixels::{ Color };
-use sdl2::ttf::{ FontStyle };
 
 #[derive(Clone)]
 pub struct LabelOption {

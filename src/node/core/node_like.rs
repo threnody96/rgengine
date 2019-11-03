@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
 use ::resource::{ RTexture, RFont, ResourceKey };
-use ::util::{ Point, AnchorPoint, Size };
+use ::util::parameter::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
 pub trait NodeLike {

@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use ::util::{ director, Size, Point, FuzzyArg };
+use ::util::{ director, FuzzyArg };
+use ::util::parameter::{ Size, Point };
 use ::node::{ NodeDelegate, Node, NodeLike };
 use ::node::layer::{ LayerOption };
 

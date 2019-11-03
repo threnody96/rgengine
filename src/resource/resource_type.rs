@@ -1,4 +1,4 @@
-use sdl2::ttf::{ FontStyle };
+use ::util::parameter::{ FontStyle };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub enum ResourceType {

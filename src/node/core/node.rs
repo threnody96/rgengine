@@ -4,7 +4,8 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::util::{ director, Point, AnchorPoint, Size, FuzzyArg };
+use ::util::{ director, FuzzyArg };
+use ::util::parameter::{ Point, AnchorPoint, Size };
 use ::resource::{ RTexture, RFont, ResourceKey };
 use sdl2::pixels::{ Color };
 
@@ -242,6 +243,18 @@ impl <T> Node<T> where T: NodeDelegate + Any {
     where A: FuzzyArg<AddChildOption>
     {
         (self as &NodeLike).add_child(node, option.take());
+    }
+
+    pub fn set_position<A>(&self, position: A)
+    where A: FuzzyArg<Point>
+    {
+        (self as &NodeLike).set_position(&position.take())
+    }
+
+    pub fn set_anchor_point<A>(&self, anchor_point: A)
+    where A: FuzzyArg<AnchorPoint>
+    {
+        (self as &NodeLike).set_anchor_point(&anchor_point.take())
     }
 
     fn new(delegate: T) -> Self {

@@ -2,7 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ Node, NodeLike, NodeDelegate };
 use ::node::label::{ LabelOption };
-use ::util::{ director, Size, FuzzyArg };
+use ::util::{ director, FuzzyArg };
+use ::util::parameter::{ Size };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
 

@@ -1,4 +1,5 @@
-use ::util::{ director, Size, FuzzyArg, NoOption };
+use ::util::{ director, FuzzyArg, NoOption };
+use ::util::parameter::{ Size };
 
 #[derive(Clone)]
 pub struct LayerOption {

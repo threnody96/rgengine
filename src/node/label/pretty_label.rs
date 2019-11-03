@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use std::cmp::max;
 use ::node::{ Node, NodeDelegate, NodeLike, AddChildOption };
 use ::node::label::{ OneLineLabel, LabelOption };
-use ::util::{ Size, Point, AnchorPoint, FuzzyArg };
+use ::util::{ FuzzyArg };
+use ::util::parameter::{ Size, Point, AnchorPoint };
 use html5ever::{ parse_document, QualName };
 use html5ever::driver::{ Parser, ParseOpts };
 use html5ever::rcdom::{ Handle, RcDom, NodeData };
@@ -29,7 +30,7 @@ impl PrettyLabel {
             labels: RefCell::new(labels.clone())
         });
         for label in &labels {
-            n.add_child(label.clone(), AddChildOption::default());
+            n.add_child(label.clone(), ::NoOption);
         }
         n
     }
@@ -70,14 +71,14 @@ impl PrettyLabel {
             let t = texts.get(i).unwrap().to_string();
             let label = OneLineLabel::create(t.as_str(), option);
             let size = label.get_size();
-            label.set_anchor_point(&AnchorPoint::new(0.0, 0.0));
+            label.set_anchor_point(AnchorPoint::new(0.0, 0.0));
             if i == 0 {
                 info.2 = max(info.2, size.height());
                 label.set_position(&Point::new(info.0, info.1));
                 if &t != "" { info.0 += size.width() as i32 + 2; }
             } else {
                 info.1 += info.2 as i32 + 2;
-                label.set_position(&Point::new(0, info.1));
+                label.set_position(Point::new(0, info.1));
                 info.0 = if &t == "" { 0 } else { size.width() as i32 + 2 };
                 info.2 = size.height();
             }

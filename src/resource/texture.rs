@@ -1,4 +1,4 @@
-use ::util::{ Size };
+use ::util::parameter::{ Size };
 use ::resource::{ ResourceKey };
 use sdl2::render::{ TextureQuery };
 

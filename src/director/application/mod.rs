@@ -2,7 +2,7 @@ use std::rc::Rc;
 use ::application::{ Application };
 use ::node::{ SceneLike };
 use ::node::label::{ LabelOption };
-use ::util::{ Size };
+use ::util::parameter::{ Size };
 use rand::{ Rng };
 use rand::rngs::{ ThreadRng };
 use rand::distributions::{ Standard, Distribution };

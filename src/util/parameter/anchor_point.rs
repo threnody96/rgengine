@@ -1,30 +1,4 @@
 use ::util::{ Validation, FuzzyArg };
-pub use sdl2::rect::{ Point, Rect };
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct Size {
-    width: u32,
-    height: u32
-}
-
-impl Size {
-
-    pub fn new(width: u32, height: u32) -> Self {
-        Self {
-            width: width,
-            height: height
-        }
-    }
-
-    pub fn width(&self) -> u32 {
-        self.width
-    }
-
-    pub fn height(&self) -> u32 {
-        self.height
-    }
-
-}
 
 #[derive(Clone)]
 pub struct AnchorPoint {
@@ -66,6 +40,30 @@ impl Default for AnchorPoint {
 
     fn default() -> Self {
         AnchorPoint::new(0.5, 0.5)
+    }
+
+}
+
+impl FuzzyArg<AnchorPoint> for AnchorPoint {
+
+    fn take(&self) -> AnchorPoint {
+        self.clone()
+    }
+
+}
+
+impl FuzzyArg<AnchorPoint> for &AnchorPoint {
+
+    fn take(&self) -> AnchorPoint {
+        (*self).clone()
+    }
+
+}
+
+impl FuzzyArg<AnchorPoint> for (f32, f32) {
+
+    fn take(&self) -> AnchorPoint {
+        AnchorPoint::new(self.0, self.1)
     }
 
 }

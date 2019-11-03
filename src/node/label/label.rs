@@ -3,7 +3,8 @@ use std::cell::RefCell;
 use std::cmp::max;
 use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
 use ::node::label::{ LabelOption, OneLineLabel };
-use ::util::{ Point, Size, AnchorPoint, FuzzyArg, NoOption };
+use ::util::{ FuzzyArg, NoOption };
+use ::util::parameter::{ Point, Size, AnchorPoint };
 pub use sdl2::pixels::{ Color };
 
 pub struct Label {

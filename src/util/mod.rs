@@ -1,11 +1,10 @@
-mod coordinate;
 mod tool;
 mod fps_manager;
-mod must;
+mod validation;
 mod args;
+pub mod parameter;
 
-pub use self::coordinate::*;
 pub use self::tool::*;
 pub use self::fps_manager::*;
-pub use self::must::*;
+pub use self::validation::*;
 pub use self::args::*;

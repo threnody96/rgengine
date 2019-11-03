@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::any::Any;
-use ::util::{ director, Size, AnchorPoint };
+use ::util::{ director };
+use ::util::parameter::{ Size, AnchorPoint };
 use ::node::{ Node, NodeDelegate, AddChildOption, NodeLike };
 use ::node::layer::{ Layer };
 

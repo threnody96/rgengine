@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use ::node::{ SceneLike };
 use ::application::{ ResolutionPolicy };
-use ::util::{ Size };
+use ::util::parameter::{ Size };
 
 pub trait Application {
 

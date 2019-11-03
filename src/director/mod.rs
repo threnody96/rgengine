@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
-use ::util::{ Size };
+use ::util::parameter::{ Size };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId, SceneLike };
 use ::node::label::{ LabelOption };
 use ::resource::{ RTexture, RFont, ResourceKey };
