@@ -29,3 +29,5 @@ impl <T, E> FuzzyArg<Option<E>> for Option<T> where T: FuzzyArg<E> {
 
 }
 
+#[derive(Clone, Copy)]
+pub struct NoOption {}

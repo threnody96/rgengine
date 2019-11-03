@@ -1,8 +1,8 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::max;
-use ::node::{ Node, NodeLike, NodeDelegate, LabelOption, OneLineLabel, AddChildOption };
-use ::node::label::label_builder::LabelBuilder;
+use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
+use ::node::label::{ LabelOption, OneLineLabel, label_builder::LabelBuilder };
 use ::util::{ Point, Size, AnchorPoint, FuzzyArg };
 pub use sdl2::pixels::{ Color };
 

@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use ::node::{ Node, NodeLike, NodeDelegate, LabelOption };
+use ::node::{ Node, NodeLike, NodeDelegate };
+use ::node::label::{ LabelOption };
 use ::util::{ director, Size };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };

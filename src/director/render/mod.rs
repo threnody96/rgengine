@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use ::node::{ NodeId, NodeLike, LabelOption };
+use ::node::{ NodeId, NodeLike };
+use ::node::label::{ LabelOption };
 use ::resource::{ RTexture, RFont, ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ context, Size, Rect };

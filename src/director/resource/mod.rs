@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::collections::HashMap;
-use ::node::{ LabelOption };
+use ::node::label::{ LabelOption };
 use ::resource::{ RTexture, RFont, Storage, ResourceType, ResourceKey };
 use ::util::{ context };
 use serde_json::Value;
