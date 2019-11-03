@@ -17,7 +17,6 @@ pub mod resource;
 
 use ::director::Director;
 use ::application::Context;
-use ::util::NoOption;
 
 thread_local! {
     pub static DIRECTOR: Director<'static> = Director::new();
@@ -25,4 +24,4 @@ thread_local! {
 
 pub(crate) static mut CONTEXT: Option<Context> = None;
 
-pub static NO_OPTION: NoOption = ::NoOption {};
+pub static NoOption: ::util::NoOption = ::util::NoOption {};

@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use ::node::{ NodeDelegate, Node, NodeLike };
 use ::resource::{ RTexture };
-use ::util::{ director, Size };
+use ::util::{ director, Size, FuzzyArg };
 
 pub struct Image {
     image: Rc<RTexture>
@@ -9,9 +9,12 @@ pub struct Image {
 
 impl Image {
 
-    pub fn create(path: &str) -> Rc<Node<Image>> {
+    pub fn create<A>(path: A) -> Rc<Node<Image>>
+    where A: FuzzyArg<String>
+    {
+        let p = path.take();
         Node::create(|| {
-            Image { image: director(|d| d.load_texture(path)) }
+            Image { image: director(|d| d.load_texture(&p)) }
         })
     }
 

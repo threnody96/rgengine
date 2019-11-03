@@ -20,6 +20,14 @@ impl FuzzyArg<String> for &str {
 
 }
 
+impl FuzzyArg<u16> for u16 {
+
+    fn take(&self) -> u16 {
+        *self
+    }
+
+}
+
 impl <T, E> FuzzyArg<Option<E>> for Option<T> where T: FuzzyArg<E> {
 
     fn take(&self) -> Option<E> {

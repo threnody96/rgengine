@@ -98,6 +98,61 @@ impl FuzzyArg<LabelOption> for &LabelOption {
 
 }
 
+impl FuzzyArg<LabelOption> for u16 {
+
+    fn take(&self) -> LabelOption {
+        LabelOption {
+            point: (*self),
+            ..Default::default()
+        }
+    }
+
+}
+
+impl FuzzyArg<LabelOption> for Color {
+
+    fn take(&self) -> LabelOption {
+        LabelOption {
+            color: self.clone(),
+            ..Default::default()
+        }
+    }
+
+}
+
+impl FuzzyArg<LabelOption> for &Color {
+
+    fn take(&self) -> LabelOption {
+        LabelOption {
+            color: (*self).clone(),
+            ..Default::default()
+        }
+    }
+
+}
+
+impl FuzzyArg<LabelOption> for FontStyle {
+
+    fn take(&self) -> LabelOption {
+        LabelOption {
+            style: self.clone(),
+            ..Default::default()
+        }
+    }
+
+}
+
+impl FuzzyArg<LabelOption> for &FontStyle {
+
+    fn take(&self) -> LabelOption {
+        LabelOption {
+            style: (*self).clone(),
+            ..Default::default()
+        }
+    }
+
+}
+
 impl FuzzyArg<LabelOption> for NoOption {
 
     fn take(&self) -> LabelOption {

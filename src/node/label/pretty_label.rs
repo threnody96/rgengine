@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::cmp::max;
 use ::node::{ Node, NodeDelegate, NodeLike, AddChildOption };
 use ::node::label::{ OneLineLabel, LabelOption };
-use ::util::{ Size, Point, AnchorPoint };
+use ::util::{ Size, Point, AnchorPoint, FuzzyArg };
 use html5ever::{ parse_document, QualName };
 use html5ever::driver::{ Parser, ParseOpts };
 use html5ever::rcdom::{ Handle, RcDom, NodeData };
@@ -18,8 +18,11 @@ pub struct PrettyLabel {
 
 impl PrettyLabel {
 
-    pub fn create(text: &str) -> Rc<Node<Self>> {
-        let labels = Self::build(text);
+    pub fn create<A>(text: A) -> Rc<Node<Self>>
+    where A: FuzzyArg<String>
+    {
+        let t = text.take();
+        let labels = Self::build(&t);
         let size = Self::measure_labels(&labels);
         let n= Node::create(|| PrettyLabel {
             size: RefCell::new(size.clone()),
@@ -65,7 +68,7 @@ impl PrettyLabel {
         let mut result: Vec<Rc<Node<OneLineLabel>>> = Vec::new();
         for i in 0..texts.len() {
             let t = texts.get(i).unwrap().to_string();
-            let label = OneLineLabel::create(&t, option);
+            let label = OneLineLabel::create(t.as_str(), option);
             let size = label.get_size();
             label.set_anchor_point(&AnchorPoint::new(0.0, 0.0));
             if i == 0 {

@@ -2,8 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::max;
 use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
-use ::node::label::{ LabelOption, OneLineLabel, label_builder::LabelBuilder };
-use ::util::{ Point, Size, AnchorPoint, FuzzyArg };
+use ::node::label::{ LabelOption, OneLineLabel };
+use ::util::{ Point, Size, AnchorPoint, FuzzyArg, NoOption };
 pub use sdl2::pixels::{ Color };
 
 pub struct Label {
@@ -15,32 +15,24 @@ pub struct Label {
 
 impl Label {
 
-    pub fn create<A>(text: A) -> Rc<Node<Self>>
+    pub fn create<A, B>(text: A, option: B) -> Rc<Node<Self>>
     where
         A: FuzzyArg<String>,
+        B: FuzzyArg<LabelOption>
     {
-        Self::create_with_option(text.take(), None)
-    }
-
-    pub fn with_option<A>(option: A) -> LabelBuilder
-    where A: FuzzyArg<LabelOption>
-    {
-        LabelBuilder::new().with_option(option)
-    }
-
-    pub(crate) fn create_with_option(text: String, option: Option<LabelOption>) -> Rc<Node<Self>> {
-        let o = option.unwrap_or(LabelOption::default());
-        let (labels, size) = Self::build(&text, &o);
+        let t = text.take();
+        let o = option.take();
+        let (labels, size) = Self::build(&t, &o);
         let n = Node::create(|| {
             Self {
                 size: RefCell::new(size.clone()),
-                text: RefCell::new(text.clone()),
+                text: RefCell::new(t.clone()),
                 labels: RefCell::new(labels.clone()),
                 option: RefCell::new(o.clone())
             }
         });
         for label in &labels {
-            n.add_child(label.clone(), AddChildOption::default());
+            n.add_child(label.clone(), ::NoOption);
         }
         n
     }
@@ -84,15 +76,19 @@ impl Label {
         self.clear_cache();
     }
 
-    pub fn set_text(&self, text: &str) {
-        self.text.replace(text.to_owned());
+    pub fn set_text<A>(&self, text: A)
+    where A: FuzzyArg<String>
+    {
+        self.text.replace(text.take());
         self.updated();
     }
 
-    pub fn set_point(&self, point: u16) {
+    pub fn set_point<A>(&self, point: A)
+    where A: FuzzyArg<u16>
+    {
         {
             let mut option = self.option.borrow_mut();
-            option.point = point;
+            option.point = point.take();
         }
         self.updated();
     }

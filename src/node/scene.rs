@@ -1,7 +1,8 @@
 use std::rc::Rc;
 use std::any::Any;
 use ::util::{ director, Size, AnchorPoint };
-use ::node::{ Node, NodeDelegate, Layer, AddChildOption, NodeLike };
+use ::node::{ Node, NodeDelegate, AddChildOption, NodeLike };
+use ::node::layer::{ Layer };
 
 pub trait Scene: NodeDelegate {
 
@@ -37,11 +38,11 @@ impl <T> NodeDelegate for T where T: Scene {
         Some(AnchorPoint::new(0.0, 0.0))
     }
 
-    fn before_add_child(&self) {
+    fn before_add_child(&self, child: Rc<dyn NodeLike>) {
         panic!("Scene には add_child ではなく add_layer メソッドを使ってください");
     }
 
-    fn before_be_added_child(&self) {
+    fn before_be_added_child(&self, parent: Rc<dyn NodeLike>) {
         panic!("Scene は他 Node の子になることはできません");
     }
 

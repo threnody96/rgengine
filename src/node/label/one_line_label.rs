@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ Node, NodeLike, NodeDelegate };
 use ::node::label::{ LabelOption };
-use ::util::{ director, Size };
+use ::util::{ director, Size, FuzzyArg };
 use ::resource::{ RFont };
 pub use sdl2::pixels::{ Color };
 
@@ -15,29 +15,40 @@ pub struct OneLineLabel {
 
 impl OneLineLabel {
 
-    pub fn create(text: &str, option: &LabelOption) -> Rc<Node<Self>> {
-        let font = director(|d| d.load_font(option));
+    pub fn create<A, B>(text: A, option: B) -> Rc<Node<Self>>
+    where
+        A: FuzzyArg<String>,
+        B: FuzzyArg<LabelOption>
+    {
+        let t = text.take();
+        let o = option.take();
+        let font = director(|d| d.load_font(&o));
         let n = Node::create(|| {
             Self {
                 size: RefCell::new(None),
-                text: RefCell::new(Self::normalize_text(text)),
+                text: RefCell::new(Self::normalize_text(&t)),
                 font: RefCell::new(font.clone()),
-                option: RefCell::new(option.clone())
+                option: RefCell::new(o.clone())
             }
         });
         n.updated();
         n
     }
 
-    pub fn set_text(&self, text: &str) {
-        self.text.replace(Self::normalize_text(text));
+    pub fn set_text<A>(&self, text: A)
+    where A: FuzzyArg<String>
+    {
+        let t = text.take();
+        self.text.replace(Self::normalize_text(&t));
         self.updated();
     }
 
-    pub fn set_point(&self, point: u16) {
+    pub fn set_point<A>(&self, point: A)
+    where A: FuzzyArg<u16>
+    {
         {
             let mut option = self.option.borrow_mut();
-            option.point = point;
+            option.point = point.take();
             self.font.replace(director(|d| d.load_font(&option.clone())));
         }
         self.updated();

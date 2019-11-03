@@ -1,0 +1,46 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+use ::util::{ director, Size, Point, FuzzyArg };
+use ::node::{ NodeDelegate, Node, NodeLike };
+use ::node::layer::{ LayerOption };
+
+pub struct Layer {
+    option: RefCell<LayerOption>
+}
+
+impl Layer {
+
+    pub fn create<A>(option: A) -> Rc<Node<Layer>>
+    where A: FuzzyArg<LayerOption>
+    {
+        let n = Node::create(|| Layer {
+            option: RefCell::new(option.take())
+        });
+        let size = n.get_size();
+        n.set_position(&Point::new(size.width() as i32 / 2, size.height() as i32 / 2));
+        n
+    }
+
+}
+
+impl NodeDelegate for Layer {
+
+    fn get_size(&self) -> Size {
+        let option = self.option.borrow();
+        if let Some(size) = option.size.clone() { return size; }
+        director(|d| d.get_resolution_size())
+    }
+
+    fn before_be_added_child(&self, parent: Rc<dyn NodeLike>) {
+        let mut option = self.option.borrow_mut();
+        if option.size.is_none() {
+            option.size = Some(parent.get_size());
+        }
+    }
+
+    fn update(&self, _parent: Rc<dyn NodeLike>) { }
+
+    fn render(&self, _parent: Rc<dyn NodeLike>) { }
+
+}
+

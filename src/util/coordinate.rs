@@ -1,4 +1,4 @@
-use ::util::{ Validation };
+use ::util::{ Validation, FuzzyArg };
 pub use sdl2::rect::{ Point, Rect };
 
 #[derive(Clone, Eq, PartialEq, Hash)]

@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::util::{ director, Point, AnchorPoint, Size };
+use ::util::{ director, Point, AnchorPoint, Size, FuzzyArg };
 use ::resource::{ RTexture, RFont, ResourceKey };
 use sdl2::pixels::{ Color };
 
@@ -126,13 +126,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
         self.before_add_child();
         node.before_be_added_child();
-        let inner_z_index = self.get_next_inner_z_index(option.z_index);
+        let o = option.take();
+        let inner_z_index = self.get_next_inner_z_index(o.z_index);
         let mut children = self.children.borrow_mut();
         children.push(NodeChild {
             id: node.id(),
-            z_index: option.z_index,
+            z_index: o.z_index,
             inner_z_index: inner_z_index,
-            tag: option.tag.clone()
+            tag: o.tag.clone()
         });
         children.sort_by(|a, b| {
             let t = a.z_index.partial_cmp(&b.z_index).unwrap();
@@ -235,6 +236,12 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             d.register_node(s.clone());
             s
         })
+    }
+
+    pub fn add_child<A>(&self, node: Rc<dyn NodeLike>, option: A)
+    where A: FuzzyArg<AddChildOption>
+    {
+        (self as &NodeLike).add_child(node, option.take());
     }
 
     fn new(delegate: T) -> Self {
