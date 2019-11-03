@@ -8,7 +8,7 @@ use ::util::parameter::{ Point, Size, AnchorPoint };
 pub use sdl2::pixels::{ Color };
 
 pub struct Label {
-    size: RefCell<Size>,
+    size: RefCell<Option<Size>>,
     text: RefCell<String>,
     labels: RefCell<Vec<Rc<Node<OneLineLabel>>>>,
     option: RefCell<LabelOption>,
@@ -23,36 +23,39 @@ impl Label {
     {
         let t = text.take();
         let o = option.take();
-        let (labels, size) = Self::build(&t, &o);
         let n = Node::create(|| {
             Self {
-                size: RefCell::new(size.clone()),
+                size: RefCell::new(None),
                 text: RefCell::new(t.clone()),
-                labels: RefCell::new(labels.clone()),
+                labels: RefCell::new(Vec::new()),
                 option: RefCell::new(o.clone())
             }
         });
-        for label in &labels {
-            n.add_child(label.clone(), ::NoOption);
-        }
+        n.build();
         n
     }
 
-    fn build(text: &str, option: &LabelOption) -> (Vec<Rc<Node<OneLineLabel>>>, Size) {
+    fn build(&self) {
+        let text = self.text.borrow().clone();
         let texts: Vec<&str> = text.split("\n").collect();
+        let option = self.option.borrow().clone();
         let mut prev_height: u32 = 0;
-        let mut result: Vec<Rc<Node<OneLineLabel>>> = Vec::new();
+        let mut labels: Vec<Rc<Node<OneLineLabel>>> = Vec::new();
         let mut max_width: u32 = 0;
         for t in texts {
-            let label = OneLineLabel::create(t, option);
-            label.set_anchor_point(&AnchorPoint::new(0.0, 0.0));
-            label.set_position(&Point::new(0, prev_height as i32));
+            let label = OneLineLabel::create(t, &option);
+            label.set_anchor_point(AnchorPoint::new(0.0, 0.0));
+            label.set_position(Point::new(0, prev_height as i32));
             let current_size = label.get_size();
             prev_height += current_size.height() + 2;
             max_width = max(current_size.width(), max_width);
-            result.push(label);
+            labels.push(label);
         }
-        (result, Size::new(max_width, prev_height))
+        self.size.replace(Some(Size::new(max_width, prev_height)));
+        self.labels.replace(labels.clone());
+        for label in labels {
+            self.add_child(label, AddChildOption::default())
+        }
     }
 
     fn clear_labels(&self) {
@@ -65,15 +68,8 @@ impl Label {
     }
 
     fn updated(&self) {
-        let text = self.text.borrow().clone();
-        let option = self.option.borrow().clone();
-        let (labels, size) = Self::build(&text, &option);
         self.clear_labels();
-        self.labels.replace(labels.clone());
-        for label in &labels {
-            self.add_child(label.clone(), AddChildOption::default());
-        }
-        self.size.replace(size);
+        self.build();
         self.clear_cache();
     }
 
@@ -99,7 +95,7 @@ impl Label {
 impl NodeDelegate for Label {
 
     fn get_size(&self) -> Size {
-        self.size.borrow().clone()
+        self.size.borrow().clone().unwrap()
     }
 
     fn use_cache(&self) -> bool {

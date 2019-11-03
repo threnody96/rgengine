@@ -169,7 +169,7 @@ impl <'a> RenderDirector<'a> {
                 can.set_blend_mode(BlendMode::None);
                 can.set_draw_color(Color::RGBA(0, 0, 0, 0));
                 can.clear();
-            });
+            }).unwrap();
             t
         });
         self.set_custom_alpha_blend_mode(&mut texture);
@@ -252,6 +252,8 @@ impl <'a> RenderDirector<'a> {
         if let Some(render_tree) = self.render_tree.clone() {
             let texture = self.render_inner_canvas(render_tree);
             context(|c| {
+                c.canvas.set_blend_mode(BlendMode::None);
+                c.canvas.set_draw_color(Color::RGBA(0, 0, 0, 255));
                 c.canvas.clear();
                 if let Some(t) = texture {
                     c.canvas.copy(&t, None, self.render_canvas_dest.clone()).unwrap();
@@ -260,6 +262,8 @@ impl <'a> RenderDirector<'a> {
             });
         } else {
             context(|c| {
+                c.canvas.set_blend_mode(BlendMode::None);
+                c.canvas.set_draw_color(Color::RGBA(0, 0, 0, 255));
                 c.canvas.clear();
                 c.canvas.present();
             });

@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::node::{ SceneLike };
+use ::node::scene::{ SceneLike };
 use ::application::{ ResolutionPolicy };
 use ::util::parameter::{ Size };
 

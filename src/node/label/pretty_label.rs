@@ -13,7 +13,8 @@ use html5ever::tendril::TendrilSink;
 use html5ever::interface::{ Attribute };
 
 pub struct PrettyLabel {
-    size: RefCell<Size>,
+    text: RefCell<String>,
+    size: RefCell<Option<Size>>,
     labels: RefCell<Vec<Rc<Node<OneLineLabel>>>>
 }
 
@@ -23,23 +24,33 @@ impl PrettyLabel {
     where A: FuzzyArg<String>
     {
         let t = text.take();
-        let labels = Self::build(&t);
-        let size = Self::measure_labels(&labels);
         let n= Node::create(|| PrettyLabel {
-            size: RefCell::new(size.clone()),
-            labels: RefCell::new(labels.clone())
+            text: RefCell::new(t.clone()),
+            size: RefCell::new(None),
+            labels: RefCell::new(Vec::new())
         });
-        for label in &labels {
-            n.add_child(label.clone(), ::NoOption);
-        }
+        n.build();
         n
     }
 
-    fn build(text: &str) -> Vec<Rc<Node<OneLineLabel>>> {
+    pub fn set_text<A>(&self, text: A)
+    where A: FuzzyArg<String>
+    {
+        self.text.replace(text.take());
+        self.updated();
+    }
+
+    fn build(&self) {
+        let text = self.text.borrow().clone();
         let mut parser = parse_document(RcDom::default(), ParseOpts::default());
         let dom = parser.one(text);
         let mut info: (i32, i32, u32) = (0, 0, 0);
-        Self::parse(&dom.document, &LabelOption::default(), &mut info)
+        let labels = Self::parse(&dom.document, &LabelOption::default(), &mut info);
+        self.labels.replace(labels.clone());
+        self.size.replace(Some(Self::measure_labels(&labels)));
+        for label in &labels {
+            self.add_child(label.clone(), AddChildOption::default());
+        }
     }
 
     fn parse(handle: &Handle, option: &LabelOption, info: &mut (i32, i32, u32)) -> Vec<Rc<Node<OneLineLabel>>> {
@@ -108,12 +119,27 @@ impl PrettyLabel {
         Size::new(max_x, max_y)
     }
 
+    fn clear_labels(&self) {
+        {
+            for label in self.labels.borrow().iter() {
+                label.destroy();
+            }
+        }
+        self.labels.replace(Vec::new());
+    }
+
+    fn updated(&self) {
+        self.clear_labels();
+        self.build();
+        self.clear_cache();
+    }
+
 }
 
 impl NodeDelegate for PrettyLabel {
 
     fn get_size(&self) -> Size {
-        self.size.borrow().clone()
+        self.size.borrow().clone().unwrap()
     }
 
     fn use_cache(&self) -> bool {

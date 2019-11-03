@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use ::application::{ Application };
-use ::node::{ SceneLike };
+use ::node::scene::{ SceneLike };
 use ::node::label::{ LabelOption };
 use ::util::parameter::{ Size };
 use rand::{ Rng };
