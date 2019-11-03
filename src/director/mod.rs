@@ -11,7 +11,7 @@ use ::util::parameter::{ Size };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
 use ::node::label::{ LabelOption };
-use ::resource::{ RTexture, RFont, ResourceKey };
+use ::resource::{ Texture, Font, ResourceKey };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
 use self::render::RenderDirector;
@@ -108,7 +108,7 @@ impl <'a> Director<'a> {
         self.node.borrow_mut().destroy(id);
     }
 
-    pub fn measure_label_size(&self, text: &str, font: Rc<RFont>) -> Size {
+    pub fn measure_label_size(&self, text: &str, font: Rc<Font>) -> Size {
         self.render.borrow().measure_label_size(text, font)
     }
 
@@ -120,11 +120,11 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().load_plain_data(path)
     }
 
-    pub fn load_texture(&self, path: &str) -> Rc<RTexture> {
+    pub fn load_texture(&self, path: &str) -> Rc<Texture> {
         self.render.borrow_mut().load_texture(path)
     }
 
-    pub fn load_font(&self, option: &LabelOption) -> Rc<RFont> {
+    pub fn load_font(&self, option: &LabelOption) -> Rc<Font> {
         self.render.borrow_mut().load_font(option)
     }
 
@@ -132,11 +132,11 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().prepare_render_tree(parent, node);
     }
 
-    pub fn render_texture(&self, node: Rc<dyn NodeLike>, texture: Rc<RTexture>) {
+    pub fn render_texture(&self, node: Rc<dyn NodeLike>, texture: Rc<Texture>) {
         self.render.borrow_mut().render_texture(node, texture);
     }
 
-    pub fn render_label(&self, node: Rc<dyn NodeLike>, text: &str, font: Rc<RFont>, color: &Color) {
+    pub fn render_label(&self, node: Rc<dyn NodeLike>, text: &str, font: Rc<Font>, color: &Color) {
         self.render.borrow_mut().render_label(node, text, font, color);
     }
 

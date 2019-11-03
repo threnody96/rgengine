@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::collections::HashMap;
 use ::node::label::{ LabelOption };
-use ::resource::{ RTexture, RFont, Storage, ResourceType, ResourceKey };
+use ::resource::{ Storage, ResourceType, ResourceKey };
 use ::util::{ context };
 use serde_json::Value;
 use sdl2::render::{ Texture };
@@ -9,7 +9,6 @@ use sdl2::ttf::{ Font };
 use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
 use uuid::Uuid;
-use sdl2::surface::Surface;
 
 pub struct ResourceDirector<'a> {
     storage: Storage,
@@ -49,8 +48,7 @@ impl <'a> ResourceDirector<'a> {
     }
 
     fn generate_resource_key(&self, path: &str, rt: ResourceType) -> ResourceKey {
-        let p = self.resolve_path(path);
-        ResourceKey::new(&p, rt)
+        ResourceKey::new(self.resolve_path(path), rt)
     }
 
     pub fn load_plain_data(&mut self, path: &str) -> Rc<Vec<u8>> {
@@ -89,34 +87,32 @@ impl <'a> ResourceDirector<'a> {
         }
     }
 
-    pub fn load_texture(&mut self, path: &str) -> Rc<RTexture> {
+    pub fn load_texture(&mut self, path: &str) -> Rc<::resource::Texture> {
         let resource_key = self.generate_resource_key(path, ResourceType::Texture);
         if let Some(current) = self.textures.get(&resource_key) {
-            let query = current.query();
-            Rc::new(RTexture::new(&resource_key, &query))
+            Rc::new(::resource::Texture::new(&resource_key, current.query()))
         } else {
             let data = self.load_plain_data(&resource_key.path());
             let rwops = RWops::from_bytes(data.as_slice()).unwrap();
             let surface = rwops.load().unwrap();
             let texture = Rc::new(context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap());
-            let query = texture.query();
-            self.textures.insert(resource_key.clone(), texture);
-            Rc::new(RTexture::new(&resource_key, &query))
+            self.textures.insert(resource_key.clone(), texture.clone());
+            Rc::new(::resource::Texture::new(&resource_key, texture.query()))
         }
     }
 
-    pub fn load_texture_from_resource_key(&self, key: Rc<RTexture>) -> Rc<Texture<'a>> {
+    pub fn load_texture_from_resource_key(&self, key: Rc<::resource::Texture>) -> Rc<Texture<'a>> {
         let resource_key = key.key();
         self.textures.get(&resource_key).unwrap().clone()
     }
 
-    pub fn load_font(&mut self, option: &LabelOption) -> Rc<RFont> {
+    pub fn load_font(&mut self, option: &LabelOption) -> Rc<::resource::Font> {
         let resource_key = self.generate_resource_key(
             &option.path,
             ResourceType::Font(option.point, option.style)
         );
         if let Some(_) = self.fonts.get(&resource_key) {
-            Rc::new(RFont::new(&resource_key))
+            Rc::new(::resource::Font::new(&resource_key))
         } else {
             let font_data = self.load_plain_data(&resource_key.path());
             context(|c| c.add_font_data(&resource_key, font_data));
@@ -125,11 +121,11 @@ impl <'a> ResourceDirector<'a> {
             let mut font = context(|c| c.ttf_context.load_font_from_rwops(rwops, option.point)).unwrap();
             font.set_style(option.style);
             self.fonts.insert(resource_key.clone(), Rc::new(font));
-            Rc::new(RFont::new(&resource_key))
+            Rc::new(::resource::Font::new(&resource_key))
         }
     }
 
-    pub fn load_font_from_resource_key(&self, key: Rc<RFont>) -> Rc<Font<'a, 'a>> {
+    pub fn load_font_from_resource_key(&self, key: Rc<::resource::Font>) -> Rc<Font<'a, 'a>> {
         let resource_key = key.key();
         self.fonts.get(&resource_key).unwrap().clone()
     }

@@ -8,6 +8,7 @@ use ::application::{ Application, Context };
 use ::util::{ FpsManager };
 use sdl2::event::{ Event };
 use backtrace::Backtrace;
+use chrono::{ Local };
 
 #[derive(Eq, PartialEq)]
 pub enum BuildMode {
@@ -76,7 +77,7 @@ fn set_panic_hook() {
         } else {
             "Unknown Error".to_owned()
         };
-        output_error_log(format!("{}\n\n{:?}", err_msg, b).as_str());
+        output_error_log(format!("[Error Report ({})]\n\n{}\n{:?}", Local::now(), err_msg, b).as_str());
     }));
 }
 

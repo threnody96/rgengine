@@ -1,19 +1,23 @@
-use ::util::parameter::{ Size };
+use ::util::{ FuzzyArg };
+use ::util::parameter::{ Size, TextureQuery };
 use ::resource::{ ResourceKey };
-use sdl2::render::{ TextureQuery };
 
 #[derive(Clone)]
-pub struct RTexture {
+pub struct Texture {
     key: ResourceKey,
     info: TextureQuery
 }
 
-impl RTexture {
+impl Texture {
 
-    pub fn new(key: &ResourceKey, info: &TextureQuery) -> Self {
+    pub fn new<A, B>(key: A, info: B) -> Self
+    where
+        A: FuzzyArg<ResourceKey>,
+        B: FuzzyArg<TextureQuery>
+    {
         Self {
-            key: key.clone(),
-            info: info.clone()
+            key: key.take(),
+            info: info.take()
         }
     }
 

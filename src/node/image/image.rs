@@ -1,11 +1,11 @@
 use std::rc::Rc;
 use ::node::{ NodeDelegate, Node, NodeLike };
-use ::resource::{ RTexture };
+use ::resource::{ Texture };
 use ::util::{ director, FuzzyArg };
 use ::util::parameter::{ Size };
 
 pub struct Image {
-    image: Rc<RTexture>
+    image: Rc<Texture>
 }
 
 impl Image {

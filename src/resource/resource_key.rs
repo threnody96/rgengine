@@ -1,3 +1,4 @@
+use ::util::{ FuzzyArg };
 use ::resource::{ ResourceType };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -8,15 +9,33 @@ pub struct ResourceKey {
 
 impl ResourceKey {
 
-    pub fn new(path: &str, rt: ResourceType) -> Self {
+    pub fn new<A>(path: A, rt: ResourceType) -> Self
+    where A: FuzzyArg<String>
+    {
         Self {
-            path: path.to_owned(),
+            path: path.take(),
             rt: rt
         }
     }
 
     pub fn path(&self) -> String {
         self.path.clone()
+    }
+
+}
+
+impl FuzzyArg<ResourceKey> for ResourceKey {
+
+    fn take(&self) -> ResourceKey {
+        self.clone()
+    }
+
+}
+
+impl FuzzyArg<ResourceKey> for &ResourceKey {
+
+    fn take(&self) -> ResourceKey {
+        (*self).clone()
     }
 
 }

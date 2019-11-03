@@ -6,7 +6,7 @@ use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
 use ::util::{ director, FuzzyArg };
 use ::util::parameter::{ Point, AnchorPoint, Size };
-use ::resource::{ RTexture, RFont, ResourceKey };
+use ::resource::{ Texture, Font, ResourceKey };
 use sdl2::pixels::{ Color };
 
 pub struct Node<T> where T: NodeDelegate + Any {
@@ -75,11 +75,11 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         )
     }
 
-    fn render_texture(&self, texture: Rc<RTexture>) {
+    fn render_texture(&self, texture: Rc<Texture>) {
         self.delegate.render_texture(texture);
     }
 
-    fn render_label(&self, text: &str, font: Rc<RFont>, color: &Color) {
+    fn render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
         self.delegate.render_label(text, font, color);
     }
 

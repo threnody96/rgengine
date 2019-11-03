@@ -20,6 +20,14 @@ impl FuzzyArg<String> for &str {
 
 }
 
+impl FuzzyArg<String> for &String {
+
+    fn take(&self) -> String {
+        self.to_string()
+    }
+
+}
+
 impl FuzzyArg<u16> for u16 {
 
     fn take(&self) -> u16 {

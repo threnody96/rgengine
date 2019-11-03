@@ -39,11 +39,11 @@ impl <T> NodeDelegate for T where T: Scene {
         Some(AnchorPoint::new(0.0, 0.0))
     }
 
-    fn before_add_child(&self, child: Rc<dyn NodeLike>) {
+    fn before_add_child(&self, _child: Rc<dyn NodeLike>) {
         panic!("Scene には add_child ではなく add_layer メソッドを使ってください");
     }
 
-    fn before_be_added_child(&self, parent: Rc<dyn NodeLike>) {
+    fn before_be_added_child(&self, _parent: Rc<dyn NodeLike>) {
         panic!("Scene は他 Node の子になることはできません");
     }
 

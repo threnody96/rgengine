@@ -8,6 +8,7 @@ extern crate serde_json;
 extern crate rand;
 extern crate backtrace;
 extern crate html5ever;
+extern crate chrono;
 
 pub mod application;
 pub mod director;

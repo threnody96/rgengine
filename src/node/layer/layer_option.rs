@@ -1,4 +1,4 @@
-use ::util::{ director, FuzzyArg, NoOption };
+use ::util::{ FuzzyArg, NoOption };
 use ::util::parameter::{ Size };
 
 #[derive(Clone)]

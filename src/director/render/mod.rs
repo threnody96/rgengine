@@ -3,21 +3,19 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use ::node::{ NodeId, NodeLike };
 use ::node::label::{ LabelOption };
-use ::resource::{ RTexture, RFont, ResourceKey };
+use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ context };
 use ::util::parameter::{ Size, Rect };
 use ::director::resource::{ ResourceDirector };
-use sdl2::render::{ Texture, BlendMode, Canvas };
+use sdl2::render::{ Texture, BlendMode };
 use sdl2::pixels::{ PixelFormatEnum, Color };
-use sdl2::video::{ Window };
-use sdl2::surface::Surface;
 use std::intrinsics::transmute;
 
 #[derive(Clone)]
 pub enum RenderOperation {
-    Image(Rc<RTexture>),
-    Label(String, Rc<RFont>, Color)
+    Image(Rc<::resource::Texture>),
+    Label(String, Rc<::resource::Font>, Color)
 }
 
 pub struct RenderTree {
@@ -107,11 +105,11 @@ impl <'a> RenderDirector<'a> {
         self.resource.load_plain_data(path)
     }
 
-    pub fn load_texture(&mut self, path: &str) -> Rc<RTexture> {
+    pub fn load_texture(&mut self, path: &str) -> Rc<::resource::Texture> {
         self.resource.load_texture(path)
     }
 
-    pub fn load_font(&mut self, option: &LabelOption) -> Rc<RFont> {
+    pub fn load_font(&mut self, option: &LabelOption) -> Rc<::resource::Font> {
         self.resource.load_font(option)
     }
 
@@ -131,17 +129,17 @@ impl <'a> RenderDirector<'a> {
         }
     }
 
-    pub fn render_texture(&mut self, node: Rc<dyn NodeLike>, texture: Rc<RTexture>) {
+    pub fn render_texture(&mut self, node: Rc<dyn NodeLike>, texture: Rc<::resource::Texture>) {
         let tree = self.render_tree_nodes.get(&node.id()).unwrap();
         tree.push_operation(RenderOperation::Image(texture));
     }
 
-    pub fn render_label(&mut self, node: Rc<dyn NodeLike>, text: &str, font: Rc<RFont>, color: &Color) {
+    pub fn render_label(&mut self, node: Rc<dyn NodeLike>, text: &str, font: Rc<::resource::Font>, color: &Color) {
         let tree = self.render_tree_nodes.get(&node.id()).unwrap();
         tree.push_operation(RenderOperation::Label(text.to_owned(), font, color.clone()));
     }
 
-    pub fn measure_label_size(&self, text: &str, font: Rc<RFont>) -> Size {
+    pub fn measure_label_size(&self, text: &str, font: Rc<::resource::Font>) -> Size {
         let f = self.resource.load_font_from_resource_key(font);
         let surface = f.render(text).blended(Color::RGBA(255, 255, 255, 255)).unwrap();
         Size::new(surface.width(), surface.height())

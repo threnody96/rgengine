@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::resource::{ RTexture, RFont };
+use ::resource::{ Texture, Font };
 use ::node::{ NodeId, NodeLike, AddChildOption };
 use ::util::{ director };
 use ::util::parameter::{ Point, AnchorPoint, Size };
@@ -81,11 +81,11 @@ pub trait NodeDelegate {
         director(|d| d.prepare_render_tree(parent, self.node()));
     }
 
-    fn render_texture(&self, texture: Rc<RTexture>) {
+    fn render_texture(&self, texture: Rc<Texture>) {
         director(|d| d.render_texture(self.node(), texture));
     }
 
-    fn render_label(&self, text: &str, font: Rc<RFont>, color: &Color) {
+    fn render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
         director(|d| d.render_label(self.node(), text, font, color));
     }
 

@@ -6,8 +6,8 @@ use ::node::{ Node, NodeDelegate, NodeLike, AddChildOption };
 use ::node::label::{ OneLineLabel, LabelOption };
 use ::util::{ FuzzyArg };
 use ::util::parameter::{ Size, Point, AnchorPoint };
-use html5ever::{ parse_document, QualName };
-use html5ever::driver::{ Parser, ParseOpts };
+use html5ever::{ parse_document };
+use html5ever::driver::{ ParseOpts };
 use html5ever::rcdom::{ Handle, RcDom, NodeData };
 use html5ever::tendril::TendrilSink;
 use html5ever::interface::{ Attribute };
@@ -42,7 +42,7 @@ impl PrettyLabel {
 
     fn build(&self) {
         let text = self.text.borrow().clone();
-        let mut parser = parse_document(RcDom::default(), ParseOpts::default());
+        let parser = parse_document(RcDom::default(), ParseOpts::default());
         let dom = parser.one(text);
         let mut info: (i32, i32, u32) = (0, 0, 0);
         let labels = Self::parse(&dom.document, &LabelOption::default(), &mut info);

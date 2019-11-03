@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
-use ::resource::{ RTexture, RFont, ResourceKey };
+use ::resource::{ Texture, Font, ResourceKey };
 use ::util::parameter::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
@@ -66,9 +66,9 @@ pub trait NodeLike {
 
     fn get_rotation(&self) -> f64;
 
-    fn render_texture(&self, texture: Rc<RTexture>);
+    fn render_texture(&self, texture: Rc<Texture>);
 
-    fn render_label(&self, text: &str, font: Rc<RFont>, color: &Color);
+    fn render_label(&self, text: &str, font: Rc<Font>, color: &Color);
 
     fn destroy(&self);
 

@@ -4,13 +4,13 @@ use ::node::{ Node, NodeLike, NodeDelegate };
 use ::node::label::{ LabelOption };
 use ::util::{ director, FuzzyArg };
 use ::util::parameter::{ Size };
-use ::resource::{ RFont };
+use ::resource::{ Font };
 pub use sdl2::pixels::{ Color };
 
 pub struct OneLineLabel {
     size: RefCell<Option<Size>>,
     text: RefCell<String>,
-    font: RefCell<Rc<RFont>>,
+    font: RefCell<Rc<Font>>,
     option: RefCell<LabelOption>
 }
 

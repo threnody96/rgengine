@@ -1,14 +1,17 @@
+use ::util::{ FuzzyArg };
 use ::resource::{ ResourceKey };
 
 #[derive(Clone)]
-pub struct RFont {
+pub struct Font {
     key: ResourceKey
 }
 
-impl RFont {
+impl Font {
 
-    pub fn new(key: &ResourceKey) -> Self {
-        Self { key: key.clone() }
+    pub fn new<A>(key: A) -> Self
+    where A: FuzzyArg<ResourceKey>
+    {
+        Self { key: key.take() }
     }
 
     pub fn key(&self) -> ResourceKey {
