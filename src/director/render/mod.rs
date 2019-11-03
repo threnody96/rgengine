@@ -177,7 +177,6 @@ impl <'a> RenderDirector<'a> {
     fn set_custom_alpha_blend_mode(&self, canvas: &mut Texture<'a>) {
         let ret = unsafe {
             let mode = sdl2::sys::SDL_ComposeCustomBlendMode(
-                // sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE_MINUS_DST_ALPHA,
                 sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
                 sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_DST_ALPHA,
                 sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,

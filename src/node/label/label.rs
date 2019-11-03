@@ -2,7 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::cmp::max;
 use ::node::{ Node, NodeLike, NodeDelegate, LabelOption, OneLineLabel, AddChildOption };
-use ::util::{ Point, Size, AnchorPoint };
+use ::node::label::label_builder::LabelBuilder;
+use ::util::{ Point, Size, AnchorPoint, FuzzyArg };
 pub use sdl2::pixels::{ Color };
 
 pub struct Label {
@@ -14,14 +15,28 @@ pub struct Label {
 
 impl Label {
 
-    pub fn create(text: &str, option: &LabelOption) -> Rc<Node<Self>> {
-        let (labels, size) = Self::build(text, option);
+    pub fn create<A>(text: A) -> Rc<Node<Self>>
+    where
+        A: FuzzyArg<String>,
+    {
+        Self::create_with_option(text.take(), None)
+    }
+
+    pub fn with_option<A>(option: A) -> LabelBuilder
+    where A: FuzzyArg<LabelOption>
+    {
+        LabelBuilder::new().with_option(option)
+    }
+
+    pub(crate) fn create_with_option(text: String, option: Option<LabelOption>) -> Rc<Node<Self>> {
+        let o = option.unwrap_or(LabelOption::default());
+        let (labels, size) = Self::build(&text, &o);
         let n = Node::create(|| {
             Self {
                 size: RefCell::new(size.clone()),
-                text: RefCell::new(text.to_owned()),
+                text: RefCell::new(text.clone()),
                 labels: RefCell::new(labels.clone()),
-                option: RefCell::new(option.clone())
+                option: RefCell::new(o.clone())
             }
         });
         for label in &labels {

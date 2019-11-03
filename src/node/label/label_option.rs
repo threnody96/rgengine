@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ::util::{ director };
+use ::util::{ director, FuzzyArg };
 use sdl2::pixels::{ Color };
 use sdl2::ttf::{ FontStyle };
 
@@ -81,3 +81,20 @@ impl Default for LabelOption {
     }
 
 }
+
+impl FuzzyArg<LabelOption> for LabelOption {
+
+    fn take(&self) -> LabelOption {
+        self.clone()
+    }
+
+}
+
+impl FuzzyArg<LabelOption> for &LabelOption {
+
+    fn take(&self) -> LabelOption {
+        (*self).clone()
+    }
+
+}
+
