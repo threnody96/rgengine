@@ -9,6 +9,7 @@ use sdl2::ttf::{ Font };
 use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
 use uuid::Uuid;
+use sdl2::surface::Surface;
 
 pub struct ResourceDirector<'a> {
     storage: Storage,

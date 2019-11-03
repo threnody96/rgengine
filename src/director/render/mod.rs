@@ -6,8 +6,11 @@ use ::resource::{ RTexture, RFont, ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ context, Size, Rect };
 use ::director::resource::{ ResourceDirector };
-use sdl2::render::{ Texture, BlendMode };
+use sdl2::render::{ Texture, BlendMode, Canvas };
 use sdl2::pixels::{ PixelFormatEnum, Color };
+use sdl2::video::{ Window };
+use sdl2::surface::Surface;
+use std::intrinsics::transmute;
 
 #[derive(Clone)]
 pub enum RenderOperation {
@@ -152,17 +155,39 @@ impl <'a> RenderDirector<'a> {
         }
     }
 
-    fn create_sub_canvas(&self, node: Rc<dyn NodeLike>) -> Texture<'a> {
+    fn create_sub_canvas(&mut self, node: Rc<dyn NodeLike>) -> Texture<'a> {
         let canvas_size = node.get_size();
         let mut texture = context(|c| {
-            c.texture_creator.create_texture_target(
+            let mut t = c.texture_creator.create_texture_target(
                 Some(PixelFormatEnum::RGBA8888),
                 canvas_size.width(),
                 canvas_size.height()
-            ).unwrap()
+            ).unwrap();
+            c.canvas.with_texture_canvas(&mut t, |can| {
+                can.set_blend_mode(BlendMode::None);
+                can.set_draw_color(Color::RGBA(0, 0, 0, 0));
+                can.clear();
+            });
+            t
         });
-        texture.set_blend_mode(BlendMode::Blend);
+        self.set_custom_alpha_blend_mode(&mut texture);
         texture
+    }
+
+    fn set_custom_alpha_blend_mode(&self, canvas: &mut Texture<'a>) {
+        let ret = unsafe {
+            let mode = sdl2::sys::SDL_ComposeCustomBlendMode(
+                // sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE_MINUS_DST_ALPHA,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_DST_ALPHA,
+                sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+                sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
+            );
+            sdl2::sys::SDL_SetTextureBlendMode(canvas.raw(), transmute(mode as u32))
+        };
+        if ret != 0 { panic!("爆発しました") }
     }
 
     fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {
@@ -177,8 +202,6 @@ impl <'a> RenderDirector<'a> {
         let mut sub_canvas = self.create_sub_canvas(node.clone());
         let canvas = context(|c| &mut c.canvas);
         canvas.with_texture_canvas(&mut sub_canvas, |c| {
-            c.set_blend_mode(BlendMode::Blend);
-            c.clear();
             for operation in render_tree.operations.borrow().iter() {
                 let t = self.exec_operation(operation);
                 let query = t.query();
