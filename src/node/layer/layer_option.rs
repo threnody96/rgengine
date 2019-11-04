@@ -30,10 +30,7 @@ impl From<Size> for LayerOption {
 impl From<&Size> for LayerOption {
 
     fn from(f: &Size) -> LayerOption {
-        LayerOption {
-            size: Some(f.clone()),
-            ..Default::default()
-        }
+        Self::from(f.clone())
     }
 
 }

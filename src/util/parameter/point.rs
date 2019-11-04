@@ -36,7 +36,7 @@ impl Into<sdl2::rect::Point> for Point {
 impl From<sdl2::rect::Point> for Point {
 
     fn from(f: sdl2::rect::Point) -> Self {
-        Self { point: f }
+        Self::new(f.x(), f.y())
     }
 
 }
@@ -44,7 +44,7 @@ impl From<sdl2::rect::Point> for Point {
 impl From<&sdl2::rect::Point> for Point {
 
     fn from(f: &sdl2::rect::Point) -> Self {
-        Self { point: f.clone() }
+        Self::from(f.clone())
     }
 
 }

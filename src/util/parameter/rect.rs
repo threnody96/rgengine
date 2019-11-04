@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use ::util::parameter::{ Point };
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -19,6 +20,16 @@ impl Rect {
         Self {
             rect: sdl2::rect::Rect::from_center(center.into(), width, height)
         }
+    }
+
+}
+
+impl Deref for Rect {
+
+    type Target = sdl2::rect::Rect;
+
+    fn deref(&self) -> &Self::Target {
+        &self.rect
     }
 
 }

@@ -52,10 +52,14 @@ impl From<&AnchorPoint> for AnchorPoint {
 
 }
 
-impl From<(f32, f32)> for AnchorPoint {
+impl <A, B> From<(A, B)> for AnchorPoint
+where
+    A: Into<f32>,
+    B: Into<f32>
+{
 
-    fn from(f: (f32, f32)) -> AnchorPoint {
-        AnchorPoint::new(f.0, f.1)
+    fn from(f: (A, B)) -> AnchorPoint {
+        AnchorPoint::new(f.0.into(), f.1.into())
     }
 
 }

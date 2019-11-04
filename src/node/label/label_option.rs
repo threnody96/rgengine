@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use ::util::{ director, NoOption };
-use ::util::parameter::{ FontStyle };
-use sdl2::pixels::{ Color };
+use ::util::parameter::{ FontStyle, Color };
 
 #[derive(Clone)]
 pub struct LabelOption {
@@ -115,10 +114,7 @@ impl From<Color> for LabelOption {
 impl From<&Color> for LabelOption {
 
     fn from(f: &Color) -> LabelOption {
-        LabelOption {
-            color: f.clone(),
-            ..Default::default()
-        }
+        Self::from(f.clone())
     }
 
 }
@@ -137,10 +133,7 @@ impl From<FontStyle> for LabelOption {
 impl From<&FontStyle> for LabelOption {
 
     fn from(f: &FontStyle) -> LabelOption {
-        LabelOption {
-            style: f.clone(),
-            ..Default::default()
-        }
+        Self::from(f.clone())
     }
 
 }

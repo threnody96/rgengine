@@ -1,3 +1,50 @@
+use std::collections::HashMap;
+use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
+
+pub struct InputCodeMap {
+    map: HashMap<String, Vec<InputCode>>
+}
+
+impl InputCodeMap {
+
+    pub fn new() -> Self {
+        Self {
+            map: HashMap::new()
+        }
+    }
+
+    pub(crate) fn convert_key<A>(&self, key: A) -> Vec<InputCode>
+    where A: Into<String>
+    {
+        self.map.get(&key.into()).cloned().unwrap_or(Vec::new())
+    }
+
+    pub fn insert<A>(&mut self, key: A, code: InputCode)
+    where A: Into<String>
+    {
+        let k = key.into();
+        if self.map.get(&k).is_none() {
+            self.map.insert(k.clone(), Vec::new());
+        }
+        self.map.get_mut(&k).unwrap().push(code);
+    }
+
+    pub fn reset<A>(&mut self, key: Option<A>)
+    where A: Into<String>
+    {
+        match key {
+            Some(k) => {
+                self.map.insert(k.into(), Vec::new());
+            },
+            None => {
+                self.map = HashMap::new();
+            }
+        }
+    }
+
+}
+
 #[derive(Clone, Copy, Hash, Eq, PartialEq)]
 pub enum InputCode {
     Backspace,
@@ -235,4 +282,277 @@ pub enum InputCode {
     KbdIllumUp,
     Eject,
     Sleep,
+    MouseUnknown,
+    MouseLeft,
+    MouseMiddle,
+    MouseRight,
+    MouseX1,
+    MouseX2,
+    MouseWheelUp,
+    MouseWheelDown,
+    JoystickButton { index: i32, button: u8 },
+    JoystickHatUp { index: i32 },
+    JoystickHatDown { index: i32 },
+    JoystickHatLeft { index: i32 },
+    JoystickHatRight { index: i32 },
+    JoystickAxis { index: i32 },
+}
+
+impl From<Keycode> for InputCode {
+
+    fn from(f: Keycode) -> Self {
+        match f {
+            Keycode::Backspace => { InputCode::Backspace },
+            Keycode::Tab => { InputCode::Tab },
+            Keycode::Return => { InputCode::Return },
+            Keycode::Escape => { InputCode::Escape },
+            Keycode::Space => { InputCode::Space },
+            Keycode::Exclaim => { InputCode::Exclaim },
+            Keycode::Quotedbl => { InputCode::Quotedbl },
+            Keycode::Hash => { InputCode::Hash },
+            Keycode::Dollar => { InputCode::Dollar },
+            Keycode::Percent => { InputCode::Percent },
+            Keycode::Ampersand => { InputCode::Ampersand },
+            Keycode::Quote => { InputCode::Quote },
+            Keycode::LeftParen => { InputCode::LeftParen },
+            Keycode::RightParen => { InputCode::RightParen },
+            Keycode::Asterisk => { InputCode::Asterisk },
+            Keycode::Plus => { InputCode::Plus },
+            Keycode::Comma => { InputCode::Comma },
+            Keycode::Minus => { InputCode::Minus },
+            Keycode::Period => { InputCode::Period },
+            Keycode::Slash => { InputCode::Slash },
+            Keycode::Num0 => { InputCode::Num0 },
+            Keycode::Num1 => { InputCode::Num1 },
+            Keycode::Num2 => { InputCode::Num2 },
+            Keycode::Num3 => { InputCode::Num3 },
+            Keycode::Num4 => { InputCode::Num4 },
+            Keycode::Num5 => { InputCode::Num5 },
+            Keycode::Num6 => { InputCode::Num6 },
+            Keycode::Num7 => { InputCode::Num7 },
+            Keycode::Num8 => { InputCode::Num8 },
+            Keycode::Num9 => { InputCode::Num9 },
+            Keycode::Colon => { InputCode::Colon },
+            Keycode::Semicolon => { InputCode::Semicolon },
+            Keycode::Less => { InputCode::Less },
+            Keycode::Equals => { InputCode::Equals },
+            Keycode::Greater => { InputCode::Greater },
+            Keycode::Question => { InputCode::Question },
+            Keycode::At => { InputCode::At },
+            Keycode::LeftBracket => { InputCode::LeftBracket },
+            Keycode::Backslash => { InputCode::Backslash },
+            Keycode::RightBracket => { InputCode::RightBracket },
+            Keycode::Caret => { InputCode::Caret },
+            Keycode::Underscore => { InputCode::Underscore },
+            Keycode::Backquote => { InputCode::Backquote },
+            Keycode::A => { InputCode::A },
+            Keycode::B => { InputCode::B },
+            Keycode::C => { InputCode::C },
+            Keycode::D => { InputCode::D },
+            Keycode::E => { InputCode::E },
+            Keycode::F => { InputCode::F },
+            Keycode::G => { InputCode::G },
+            Keycode::H => { InputCode::H },
+            Keycode::I => { InputCode::I },
+            Keycode::J => { InputCode::J },
+            Keycode::K => { InputCode::K },
+            Keycode::L => { InputCode::L },
+            Keycode::M => { InputCode::M },
+            Keycode::N => { InputCode::N },
+            Keycode::O => { InputCode::O },
+            Keycode::P => { InputCode::P },
+            Keycode::Q => { InputCode::Q },
+            Keycode::R => { InputCode::R },
+            Keycode::S => { InputCode::S },
+            Keycode::T => { InputCode::T },
+            Keycode::U => { InputCode::U },
+            Keycode::V => { InputCode::V },
+            Keycode::W => { InputCode::W },
+            Keycode::X => { InputCode::X },
+            Keycode::Y => { InputCode::Y },
+            Keycode::Z => { InputCode::Z },
+            Keycode::Delete => { InputCode::Delete },
+            Keycode::CapsLock => { InputCode::CapsLock },
+            Keycode::F1 => { InputCode::F1 },
+            Keycode::F2 => { InputCode::F2 },
+            Keycode::F3 => { InputCode::F3 },
+            Keycode::F4 => { InputCode::F4 },
+            Keycode::F5 => { InputCode::F5 },
+            Keycode::F6 => { InputCode::F6 },
+            Keycode::F7 => { InputCode::F7 },
+            Keycode::F8 => { InputCode::F8 },
+            Keycode::F9 => { InputCode::F9 },
+            Keycode::F10 => { InputCode::F10 },
+            Keycode::F11 => { InputCode::F11 },
+            Keycode::F12 => { InputCode::F12 },
+            Keycode::PrintScreen => { InputCode::PrintScreen },
+            Keycode::ScrollLock => { InputCode::ScrollLock },
+            Keycode::Pause => { InputCode::Pause },
+            Keycode::Insert => { InputCode::Insert },
+            Keycode::Home => { InputCode::Home },
+            Keycode::PageUp => { InputCode::PageUp },
+            Keycode::End => { InputCode::End },
+            Keycode::PageDown => { InputCode::PageDown },
+            Keycode::Right => { InputCode::Right },
+            Keycode::Left => { InputCode::Left },
+            Keycode::Down => { InputCode::Down },
+            Keycode::Up => { InputCode::Up },
+            Keycode::NumLockClear => { InputCode::NumLockClear },
+            Keycode::KpDivide => { InputCode::KpDivide },
+            Keycode::KpMultiply => { InputCode::KpMultiply },
+            Keycode::KpMinus => { InputCode::KpMinus },
+            Keycode::KpPlus => { InputCode::KpPlus },
+            Keycode::KpEnter => { InputCode::KpEnter },
+            Keycode::Kp1 => { InputCode::Kp1 },
+            Keycode::Kp2 => { InputCode::Kp2 },
+            Keycode::Kp3 => { InputCode::Kp3 },
+            Keycode::Kp4 => { InputCode::Kp4 },
+            Keycode::Kp5 => { InputCode::Kp5 },
+            Keycode::Kp6 => { InputCode::Kp6 },
+            Keycode::Kp7 => { InputCode::Kp7 },
+            Keycode::Kp8 => { InputCode::Kp8 },
+            Keycode::Kp9 => { InputCode::Kp9 },
+            Keycode::Kp0 => { InputCode::Kp0 },
+            Keycode::KpPeriod => { InputCode::KpPeriod },
+            Keycode::Application => { InputCode::Application },
+            Keycode::Power => { InputCode::Power },
+            Keycode::KpEquals => { InputCode::KpEquals },
+            Keycode::F13 => { InputCode::F13 },
+            Keycode::F14 => { InputCode::F14 },
+            Keycode::F15 => { InputCode::F15 },
+            Keycode::F16 => { InputCode::F16 },
+            Keycode::F17 => { InputCode::F17 },
+            Keycode::F18 => { InputCode::F18 },
+            Keycode::F19 => { InputCode::F19 },
+            Keycode::F20 => { InputCode::F20 },
+            Keycode::F21 => { InputCode::F21 },
+            Keycode::F22 => { InputCode::F22 },
+            Keycode::F23 => { InputCode::F23 },
+            Keycode::F24 => { InputCode::F24 },
+            Keycode::Execute => { InputCode::Execute },
+            Keycode::Help => { InputCode::Help },
+            Keycode::Menu => { InputCode::Menu },
+            Keycode::Select => { InputCode::Select },
+            Keycode::Stop => { InputCode::Stop },
+            Keycode::Again => { InputCode::Again },
+            Keycode::Undo => { InputCode::Undo },
+            Keycode::Cut => { InputCode::Cut },
+            Keycode::Copy => { InputCode::Copy },
+            Keycode::Paste => { InputCode::Paste },
+            Keycode::Find => { InputCode::Find },
+            Keycode::Mute => { InputCode::Mute },
+            Keycode::VolumeUp => { InputCode::VolumeUp },
+            Keycode::VolumeDown => { InputCode::VolumeDown },
+            Keycode::KpComma => { InputCode::KpComma },
+            Keycode::KpEqualsAS400 => { InputCode::KpEqualsAS400 },
+            Keycode::AltErase => { InputCode::AltErase },
+            Keycode::Sysreq => { InputCode::Sysreq },
+            Keycode::Cancel => { InputCode::Cancel },
+            Keycode::Clear => { InputCode::Clear },
+            Keycode::Prior => { InputCode::Prior },
+            Keycode::Return2 => { InputCode::Return2 },
+            Keycode::Separator => { InputCode::Separator },
+            Keycode::Out => { InputCode::Out },
+            Keycode::Oper => { InputCode::Oper },
+            Keycode::ClearAgain => { InputCode::ClearAgain },
+            Keycode::CrSel => { InputCode::CrSel },
+            Keycode::ExSel => { InputCode::ExSel },
+            Keycode::Kp00 => { InputCode::Kp00 },
+            Keycode::Kp000 => { InputCode::Kp000 },
+            Keycode::ThousandsSeparator => { InputCode::ThousandsSeparator },
+            Keycode::DecimalSeparator => { InputCode::DecimalSeparator },
+            Keycode::CurrencyUnit => { InputCode::CurrencyUnit },
+            Keycode::CurrencySubUnit => { InputCode::CurrencySubUnit },
+            Keycode::KpLeftParen => { InputCode::KpLeftParen },
+            Keycode::KpRightParen => { InputCode::KpRightParen },
+            Keycode::KpLeftBrace => { InputCode::KpLeftBrace },
+            Keycode::KpRightBrace => { InputCode::KpRightBrace },
+            Keycode::KpTab => { InputCode::KpTab },
+            Keycode::KpBackspace => { InputCode::KpBackspace },
+            Keycode::KpA => { InputCode::KpA },
+            Keycode::KpB => { InputCode::KpB },
+            Keycode::KpC => { InputCode::KpC },
+            Keycode::KpD => { InputCode::KpD },
+            Keycode::KpE => { InputCode::KpE },
+            Keycode::KpF => { InputCode::KpF },
+            Keycode::KpXor => { InputCode::KpXor },
+            Keycode::KpPower => { InputCode::KpPower },
+            Keycode::KpPercent => { InputCode::KpPercent },
+            Keycode::KpLess => { InputCode::KpLess },
+            Keycode::KpGreater => { InputCode::KpGreater },
+            Keycode::KpAmpersand => { InputCode::KpAmpersand },
+            Keycode::KpDblAmpersand => { InputCode::KpDblAmpersand },
+            Keycode::KpVerticalBar => { InputCode::KpVerticalBar },
+            Keycode::KpDblVerticalBar => { InputCode::KpDblVerticalBar },
+            Keycode::KpColon => { InputCode::KpColon },
+            Keycode::KpHash => { InputCode::KpHash },
+            Keycode::KpSpace => { InputCode::KpSpace },
+            Keycode::KpAt => { InputCode::KpAt },
+            Keycode::KpExclam => { InputCode::KpExclam },
+            Keycode::KpMemStore => { InputCode::KpMemStore },
+            Keycode::KpMemRecall => { InputCode::KpMemRecall },
+            Keycode::KpMemClear => { InputCode::KpMemClear },
+            Keycode::KpMemAdd => { InputCode::KpMemAdd },
+            Keycode::KpMemSubtract => { InputCode::KpMemSubtract },
+            Keycode::KpMemMultiply => { InputCode::KpMemMultiply },
+            Keycode::KpMemDivide => { InputCode::KpMemDivide },
+            Keycode::KpPlusMinus => { InputCode::KpPlusMinus },
+            Keycode::KpClear => { InputCode::KpClear },
+            Keycode::KpClearEntry => { InputCode::KpClearEntry },
+            Keycode::KpBinary => { InputCode::KpBinary },
+            Keycode::KpOctal => { InputCode::KpOctal },
+            Keycode::KpDecimal => { InputCode::KpDecimal },
+            Keycode::KpHexadecimal => { InputCode::KpHexadecimal },
+            Keycode::LCtrl => { InputCode::LCtrl },
+            Keycode::LShift => { InputCode::LShift },
+            Keycode::LAlt => { InputCode::LAlt },
+            Keycode::LGui => { InputCode::LGui },
+            Keycode::RCtrl => { InputCode::RCtrl },
+            Keycode::RShift => { InputCode::RShift },
+            Keycode::RAlt => { InputCode::RAlt },
+            Keycode::RGui => { InputCode::RGui },
+            Keycode::Mode => { InputCode::Mode },
+            Keycode::AudioNext => { InputCode::AudioNext },
+            Keycode::AudioPrev => { InputCode::AudioPrev },
+            Keycode::AudioStop => { InputCode::AudioStop },
+            Keycode::AudioPlay => { InputCode::AudioPlay },
+            Keycode::AudioMute => { InputCode::AudioMute },
+            Keycode::MediaSelect => { InputCode::MediaSelect },
+            Keycode::Www => { InputCode::Www },
+            Keycode::Mail => { InputCode::Mail },
+            Keycode::Calculator => { InputCode::Calculator },
+            Keycode::Computer => { InputCode::Computer },
+            Keycode::AcSearch => { InputCode::AcSearch },
+            Keycode::AcHome => { InputCode::AcHome },
+            Keycode::AcBack => { InputCode::AcBack },
+            Keycode::AcForward => { InputCode::AcForward },
+            Keycode::AcStop => { InputCode::AcStop },
+            Keycode::AcRefresh => { InputCode::AcRefresh },
+            Keycode::AcBookmarks => { InputCode::AcBookmarks },
+            Keycode::BrightnessDown => { InputCode::BrightnessDown },
+            Keycode::BrightnessUp => { InputCode::BrightnessUp },
+            Keycode::DisplaySwitch => { InputCode::DisplaySwitch },
+            Keycode::KbdIllumToggle => { InputCode::KbdIllumToggle },
+            Keycode::KbdIllumDown => { InputCode::KbdIllumDown },
+            Keycode::KbdIllumUp => { InputCode::KbdIllumUp },
+            Keycode::Eject => { InputCode::Eject },
+            Keycode::Sleep => { InputCode::Sleep },
+        }
+    }
+
+}
+
+impl From<MouseButton> for InputCode {
+
+    fn from(f: MouseButton) -> InputCode {
+        match f {
+            MouseButton::Unknown => { InputCode::MouseUnknown },
+            MouseButton::Left => { InputCode::MouseLeft },
+            MouseButton::Middle => { InputCode::MouseMiddle },
+            MouseButton::Right => { InputCode::MouseRight },
+            MouseButton::X1 => { InputCode::MouseX1 },
+            MouseButton::X2 => { InputCode::MouseX2 },
+        }
+    }
+
 }

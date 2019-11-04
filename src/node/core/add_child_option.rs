@@ -36,23 +36,14 @@ impl From<i32> for AddChildOption {
 
 }
 
-impl From<(i32, &str)> for AddChildOption {
+impl <A> From<(i32, A)> for AddChildOption
+where A: Into<String>
+{
 
-    fn from(f: (i32, &str)) -> AddChildOption {
+    fn from(f: (i32, A)) -> AddChildOption {
         AddChildOption {
             z_index: f.0,
-            tag: Some(f.1.to_string())
-        }
-    }
-
-}
-
-impl From<(i32, String)> for AddChildOption {
-
-    fn from(f: (i32, String)) -> AddChildOption {
-        AddChildOption {
-            z_index: f.0,
-            tag: Some(f.1.clone())
+            tag: Some(f.1.into())
         }
     }
 

@@ -49,23 +49,34 @@ impl From<sdl2::pixels::Color> for Color {
 impl From<&sdl2::pixels::Color> for Color {
 
     fn from(f: &sdl2::pixels::Color) -> Self {
-        Self { color: f.clone() }
+        Self::from(f.clone())
     }
 
 }
 
-impl From<(u8, u8, u8)> for Color {
+impl <A, B, C> From<(A, B, C)> for Color
+where
+    A: Into<u8>,
+    B: Into<u8>,
+    C: Into<u8>
+{
 
-    fn from(f: (u8, u8, u8)) -> Self {
-        Self::RGB(f.0, f.1, f.2)
+    fn from(f: (A, B, C)) -> Self {
+        Self::RGB(f.0.into(), f.1.into(), f.2.into())
     }
 
 }
 
-impl From<(u8, u8, u8, u8)> for Color {
+impl <A, B, C, D> From<(A, B, C, D)> for Color
+where
+    A: Into<u8>,
+    B: Into<u8>,
+    C: Into<u8>,
+    D: Into<u8>
+{
 
-    fn from(f: (u8, u8, u8, u8)) -> Self {
-        Self::RGBA(f.0, f.1, f.2, f.3)
+    fn from(f: (A, B, C, D)) -> Self {
+        Self::RGBA(f.0.into(), f.1.into(), f.2.into(), f.3.into())
     }
 
 }
