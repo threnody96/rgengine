@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::node::scene::{ SceneLike };
 use ::application::{ ResolutionPolicy };
+use ::util::{ director };
 use ::util::parameter::{ Size };
 
 pub trait Application {
@@ -27,6 +28,10 @@ pub trait Application {
 
     fn resolution_policy(&self) -> ResolutionPolicy {
         ResolutionPolicy::ExactFit
+    }
+
+    fn on_quit(&self) {
+        director(|d| d.set_continuing(false));
     }
 
 }

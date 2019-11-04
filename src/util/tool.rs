@@ -100,14 +100,7 @@ pub fn run(application: Rc<dyn Application>) {
         prev_sleep_time = fps_manager.run(
             prev_sleep_time,
             || {
-                for event in event_pump.poll_iter() {
-                    match event {
-                        Event::Quit {..} => {
-                            director(|d| d.set_continuing(false));
-                        },
-                        _ => {}
-                    }
-                }
+                director(|d| d.update_input_state(event_pump));
             },
             || {
                 let prev_scene = director(|d| d.get_scene());
@@ -122,5 +115,8 @@ pub fn run(application: Rc<dyn Application>) {
             }
         );
         director(|d| d.set_current_fps(fps_manager.fps()));
+        if director(|d| d.is_quit()) {
+            application.on_quit();
+        }
     }
 }

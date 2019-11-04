@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use ::util::parameter::{ Point };
+use ::util::parameter::{ Point, InputCodeMap, InputCode, InputInfo };
 use sdl2::{ EventPump };
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::{ MouseButton, MouseWheelDirection };
@@ -69,6 +69,7 @@ impl JoystickState {
 
 pub struct InputDirector {
     quit: bool,
+    input_code_map: InputCodeMap,
     prev_state: InputState,
     state: InputState
 }
@@ -78,9 +79,74 @@ impl InputDirector {
     pub fn new() -> Self {
         Self {
             quit: false,
+            input_code_map: InputCodeMap::new(),
             prev_state: InputState::new(),
             state: InputState::new()
         }
+    }
+
+    pub fn get_input_info<A>(&self, key: A) -> InputInfo
+    where A: Into<String>
+    {
+        let mut info = InputInfo::new();
+        for k in self.input_code_map.convert_key(key) {
+            let keycode: Result<Keycode, String> = k.clone().try_into();
+            if let Ok(k) = keycode {
+                info.update_press_state(self.get_keyboard_state(&k));
+                continue;
+            }
+            let mouse: Result<MouseButton, String> = k.clone().try_into();
+            if let Ok(k) = mouse {
+                let status = self.get_mouse_button_state(&k);
+                info.update_press_state(status.clone());
+                if status.0 || status.1 || status.2 { info.mouse_position = self.get_mouse_pointer(); }
+                continue;
+            }
+            match k.clone() {
+                InputCode::MouseWheelUp => {
+                    let status = self.get_mouse_wheel_state(MouseWheelDirection::Normal);
+                    info.update_press_state(status.clone());
+                    if status.0 || status.1 || status.2 { info.mouse_position = self.get_mouse_pointer(); }
+                },
+                InputCode::MouseWheelDown => {
+                    let status = self.get_mouse_wheel_state(MouseWheelDirection::Flipped);
+                    info.update_press_state(status.clone());
+                    if status.0 || status.1 || status.2 { info.mouse_position = self.get_mouse_pointer(); }
+                },
+                InputCode::JoystickButton { index, button } => {
+                    info.update_press_state(self.get_joystick_button_state(index, button));
+                },
+                InputCode::JoystickHatUp { index } => {
+                    info.update_press_state(self.get_joystick_hat_state(index, HatState::Up));
+                },
+                InputCode::JoystickHatDown { index } => {
+                    info.update_press_state(self.get_joystick_hat_state(index, HatState::Down));
+                },
+                InputCode::JoystickHatLeft { index} => {
+                    info.update_press_state(self.get_joystick_hat_state(index, HatState::Left));
+                },
+                InputCode::JoystickHatRight { index } => {
+                    info.update_press_state(self.get_joystick_hat_state(index, HatState::Right));
+                },
+                InputCode::JoystickAxis { index } => {
+                    info.axis_position = self.get_joystick_axis(index);
+                },
+                _ => {}
+            }
+        }
+        info
+    }
+
+    pub fn insert_key_code<A>(&mut self, key: A, code: InputCode)
+    where A: Into<String>
+    {
+        self.input_code_map.insert(key, code);
+    }
+
+    pub fn reset_key_code<A>(&mut self, key: Option<A>)
+        where A: Into<String>
+    {
+        self.input_code_map.reset(key);
     }
 
     pub fn update_state(&mut self, events: &mut EventPump) {
@@ -151,56 +217,22 @@ impl InputDirector {
         self.state.mouse_pointer.clone()
     }
 
-    fn get_mouse_button_state(&self, button: &MouseButton) -> (bool, bool) {
+    fn get_mouse_button_state(&self, button: &MouseButton) -> (bool, bool, bool) {
         let prev_state = self.prev_state.mouses.get(button).cloned().unwrap_or(false);
         let state = self.state.mouses.get(button).cloned().unwrap_or(false);
-        (prev_state, state)
+        (!prev_state && state, state, prev_state && !state)
     }
 
-    fn is_mouse_button_press_start(&self, button: MouseButton) -> Option<Point> {
-        let (prev_state, state) = self.get_mouse_button_state(&button);
-        if !prev_state && state { return Some(self.get_mouse_pointer()); }
-        None
+    fn get_mouse_wheel_state(&self, direction: MouseWheelDirection) -> (bool, bool, bool) {
+        let prev_state = self.prev_state.mousewheels.get(&direction).cloned().unwrap_or(false);
+        let state = self.state.mousewheels.get(&direction).cloned().unwrap_or(false);
+        (!prev_state && state, state, prev_state && !state)
     }
 
-    fn is_mouse_button_pressed(&self, button: MouseButton) -> Option<Point> {
-        let (prev_state, state) = self.get_mouse_button_state(&button);
-        if prev_state && !state { return Some(self.get_mouse_pointer()); }
-        None
-    }
-
-    fn is_mouse_button_pressing(&self, button: MouseButton) -> Option<Point> {
-        let (_, state) = self.get_mouse_button_state(&button);
-        if state { return Some(self.get_mouse_pointer()); }
-        None
-    }
-
-    fn is_mouse_wheel_up(&self) -> bool {
-        self.state.mousewheels.get(&MouseWheelDirection::Normal).cloned().unwrap_or(false)
-    }
-
-    fn is_mouse_wheel_down(&self) -> bool {
-        self.state.mousewheels.get(&MouseWheelDirection::Flipped).cloned().unwrap_or(false)
-    }
-
-    fn get_keyboard_state(&self, key: &Keycode) -> (bool, bool) {
+    fn get_keyboard_state(&self, key: &Keycode) -> (bool, bool, bool) {
         let prev_state = self.prev_state.keys.get(key).cloned().unwrap_or(false);
         let state = self.state.keys.get(key).cloned().unwrap_or(false);
-        (prev_state, state)
-    }
-
-    fn is_keyboard_press_start(&self, key: Keycode) -> bool {
-        let (prev_state, state) = self.get_keyboard_state(&key);
-        !prev_state && state
-    }
-
-    fn is_keyboard_pressed(&self, key: Keycode) -> bool {
-        let (prev_state, state) = self.get_keyboard_state(&key);
-        prev_state && !state
-    }
-
-    fn is_keyboard_pressing(&self, key: Keycode) -> bool {
-        self.state.keys.get(&key).cloned().unwrap_or(false)
+        (!prev_state && state, state, prev_state && !state)
     }
 
     fn get_joystick_state(&self, index: i32) -> (Option<&JoystickState>, Option<&JoystickState>) {
@@ -209,48 +241,18 @@ impl InputDirector {
         (prev_state, state)
     }
 
-    fn get_joystick_hat_state(&self, index: i32, hat: &HatState) -> (bool, bool) {
+    fn get_joystick_hat_state(&self, index: i32, hat: HatState) -> (bool, bool, bool) {
         let (prev_state, state) = self.get_joystick_state(index);
-        let p = prev_state.map(|e| e.hats.get(hat).cloned().unwrap_or(false)).unwrap_or(false);
-        let s = state.map(|e| e.hats.get(hat).cloned().unwrap_or(false)).unwrap_or(false);
-        (p, s)
+        let p = prev_state.map(|e| e.hats.get(&hat).cloned().unwrap_or(false)).unwrap_or(false);
+        let s = state.map(|e| e.hats.get(&hat).cloned().unwrap_or(false)).unwrap_or(false);
+        (!p && s, s, p && !s)
     }
 
-    fn is_joystick_hat_press_start(&self, index: i32, hat: HatState) -> bool {
-        let (prev_state, state) = self.get_joystick_hat_state(index, &hat);
-        !prev_state && state
-    }
-
-    fn is_joystick_hat_pressing(&self, index: i32, hat: HatState) -> bool {
-        let (_, state) = self.get_joystick_hat_state(index, &hat);
-        state
-    }
-
-    fn is_joystick_hat_pressed(&self, index: i32, hat: HatState) -> bool {
-        let (prev_state, state) = self.get_joystick_hat_state(index, &hat);
-        prev_state && !state
-    }
-
-    fn get_joystick_button_state(&self, index: i32, button: u8) -> (bool, bool) {
+    fn get_joystick_button_state(&self, index: i32, button: u8) -> (bool, bool, bool) {
         let (prev_state, state) = self.get_joystick_state(index);
         let p = prev_state.map(|e| e.buttons.get(&button).cloned().unwrap_or(false)).unwrap_or(false);
         let s = state.map(|e| e.buttons.get(&button).cloned().unwrap_or(false)).unwrap_or(false);
-        (p, s)
-    }
-
-    fn is_joystick_button_press_start(&self, index: i32, button: u8) -> bool {
-        let (prev_state, state) = self.get_joystick_button_state(index, button);
-        !prev_state && state
-    }
-
-    fn is_joystick_button_pressing(&self, index: i32, button: u8) -> bool {
-        let (_, state) = self.get_joystick_button_state(index, button);
-        state
-    }
-
-    fn is_joystick_button_pressed(&self, index: i32, button: u8) -> bool {
-        let (prev_state, state) = self.get_joystick_button_state(index, button);
-        prev_state && !state
+        (!p && s, s, p && !s)
     }
 
     fn get_joystick_axis(&self, index: i32) -> Point {
@@ -262,6 +264,10 @@ impl InputDirector {
 
     pub fn is_quit(&self) -> bool {
         self.quit
+    }
+
+    pub fn reset_is_quit(&mut self) {
+        self.quit = false;
     }
 
 }
