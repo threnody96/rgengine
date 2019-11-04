@@ -204,14 +204,14 @@ impl <'a> RenderDirector<'a> {
             for operation in render_tree.operations.borrow().iter() {
                 let t = self.exec_operation(operation);
                 let query = t.query();
-                c.copy(&t, None, Some(Rect::new(0, 0, query.width, query.height))).unwrap();
+                c.copy(&t, None, Some(Rect::new(0, 0, query.width, query.height).into())).unwrap();
             }
             for (child_node, child_texture) in children {
                 if let Some(ct) = child_texture {
                     let point = child_node.get_render_point();
                     let angle = child_node.get_rotation();
                     let query = ct.query();
-                    c.copy_ex(&ct, None, Some(Rect::new(point.x(), point.y(), query.width, query.height)), angle, None, false, false).unwrap();
+                    c.copy_ex(&ct, None, Some(Rect::new(point.x(), point.y(), query.width, query.height).into()), angle, None, false, false).unwrap();
                 }
             }
         }).unwrap();
@@ -254,7 +254,8 @@ impl <'a> RenderDirector<'a> {
                 c.canvas.set_draw_color(Color::RGBA(0, 0, 0, 255));
                 c.canvas.clear();
                 if let Some(t) = texture {
-                    c.canvas.copy(&t, None, self.render_canvas_dest.clone()).unwrap();
+                    let rect = self.render_canvas_dest.as_ref().map(|e| e.clone().into());
+                    c.canvas.copy(&t, None, rect).unwrap();
                 }
                 c.canvas.present();
             });

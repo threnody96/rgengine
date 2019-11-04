@@ -3,7 +3,6 @@ use std::cell::RefCell;
 use std::cmp::max;
 use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
 use ::node::label::{ LabelOption, OneLineLabel };
-use ::util::{ FuzzyArg };
 use ::util::parameter::{ Point, Size, AnchorPoint };
 pub use sdl2::pixels::{ Color };
 
@@ -18,11 +17,11 @@ impl Label {
 
     pub fn create<A, B>(text: A, option: B) -> Rc<Node<Self>>
     where
-        A: FuzzyArg<String>,
-        B: FuzzyArg<LabelOption>
+        A: Into<String>,
+        B: Into<LabelOption>
     {
-        let t = text.take();
-        let o = option.take();
+        let t = text.into();
+        let o = option.into();
         let n = Node::create(|| {
             Self {
                 size: RefCell::new(None),
@@ -74,18 +73,18 @@ impl Label {
     }
 
     pub fn set_text<A>(&self, text: A)
-    where A: FuzzyArg<String>
+    where A: Into<String>
     {
-        self.text.replace(text.take());
+        self.text.replace(text.into());
         self.updated();
     }
 
     pub fn set_point<A>(&self, point: A)
-    where A: FuzzyArg<u16>
+    where A: Into<u16>
     {
         {
             let mut option = self.option.borrow_mut();
-            option.point = point.take();
+            option.point = point.into();
         }
         self.updated();
     }

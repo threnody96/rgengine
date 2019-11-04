@@ -1,5 +1,3 @@
-use ::util::{ FuzzyArg };
-
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct Size {
     width: u32,
@@ -25,26 +23,18 @@ impl Size {
 
 }
 
-impl FuzzyArg<Size> for Size {
+impl From<&Size> for Size {
 
-    fn take(&self) -> Size {
-        self.clone()
+    fn from(f: &Size) -> Size {
+        f.clone()
     }
 
 }
 
-impl FuzzyArg<Size> for &Size {
+impl From<(u32, u32)> for Size {
 
-    fn take(&self) -> Size {
-        (*self).clone()
-    }
-
-}
-
-impl FuzzyArg<Size> for (u32, u32) {
-
-    fn take(&self) -> Size {
-        Size::new(self.0, self.1)
+    fn from(f: (u32, u32)) -> Size {
+        Size::new(f.0, f.1)
     }
 
 }

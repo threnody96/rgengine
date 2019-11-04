@@ -119,7 +119,7 @@ impl <'a> ResourceDirector<'a> {
             let data = context(|c| c.get_font_data(&resource_key));
             let rwops = RWops::from_bytes(data).unwrap();
             let mut font = context(|c| c.ttf_context.load_font_from_rwops(rwops, option.point)).unwrap();
-            font.set_style(option.style);
+            font.set_style(option.style.into());
             self.fonts.insert(resource_key.clone(), Rc::new(font));
             Rc::new(::resource::Font::new(&resource_key))
         }

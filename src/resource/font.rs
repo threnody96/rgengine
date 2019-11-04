@@ -1,4 +1,3 @@
-use ::util::{ FuzzyArg };
 use ::resource::{ ResourceKey };
 
 #[derive(Clone)]
@@ -9,9 +8,9 @@ pub struct Font {
 impl Font {
 
     pub fn new<A>(key: A) -> Self
-    where A: FuzzyArg<ResourceKey>
+    where A: Into<ResourceKey>
     {
-        Self { key: key.take() }
+        Self { key: key.into() }
     }
 
     pub fn key(&self) -> ResourceKey {

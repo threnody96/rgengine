@@ -1,4 +1,4 @@
-use ::util::{ Validation, FuzzyArg };
+use ::util::{ Validation, NoOption };
 
 #[derive(Clone)]
 pub struct AnchorPoint {
@@ -44,26 +44,26 @@ impl Default for AnchorPoint {
 
 }
 
-impl FuzzyArg<AnchorPoint> for AnchorPoint {
+impl From<&AnchorPoint> for AnchorPoint {
 
-    fn take(&self) -> AnchorPoint {
-        self.clone()
+    fn from(f: &AnchorPoint) -> Self {
+        f.clone()
     }
 
 }
 
-impl FuzzyArg<AnchorPoint> for &AnchorPoint {
+impl From<(f32, f32)> for AnchorPoint {
 
-    fn take(&self) -> AnchorPoint {
-        (*self).clone()
+    fn from(f: (f32, f32)) -> AnchorPoint {
+        AnchorPoint::new(f.0, f.1)
     }
 
 }
 
-impl FuzzyArg<AnchorPoint> for (f32, f32) {
+impl From<NoOption> for AnchorPoint {
 
-    fn take(&self) -> AnchorPoint {
-        AnchorPoint::new(self.0, self.1)
+    fn from(_: NoOption) -> AnchorPoint {
+        AnchorPoint::default()
     }
 
 }

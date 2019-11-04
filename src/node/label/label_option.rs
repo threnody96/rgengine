@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ::util::{ director, FuzzyArg, NoOption };
+use ::util::{ director, NoOption };
 use ::util::parameter::{ FontStyle };
 use sdl2::pixels::{ Color };
 
@@ -74,7 +74,7 @@ impl Default for LabelOption {
                     path: "default.ttf".to_owned(),
                     point: 30,
                     color: Color::RGBA(255, 255,255, 255),
-                    style: FontStyle::NORMAL
+                    style: FontStyle::normal()
                 }
             }
         }
@@ -82,80 +82,72 @@ impl Default for LabelOption {
 
 }
 
-impl FuzzyArg<LabelOption> for LabelOption {
+impl From<&LabelOption> for LabelOption {
 
-    fn take(&self) -> LabelOption {
-        self.clone()
+    fn from(f: &LabelOption) -> LabelOption {
+        f.clone()
     }
 
 }
 
-impl FuzzyArg<LabelOption> for &LabelOption {
+impl From<u16> for LabelOption {
 
-    fn take(&self) -> LabelOption {
-        (*self).clone()
-    }
-
-}
-
-impl FuzzyArg<LabelOption> for u16 {
-
-    fn take(&self) -> LabelOption {
+    fn from(f: u16) -> LabelOption {
         LabelOption {
-            point: (*self),
+            point: f,
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LabelOption> for Color {
+impl From<Color> for LabelOption {
 
-    fn take(&self) -> LabelOption {
+    fn from(f: Color) -> LabelOption {
         LabelOption {
-            color: self.clone(),
+            color: f,
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LabelOption> for &Color {
+impl From<&Color> for LabelOption {
 
-    fn take(&self) -> LabelOption {
+    fn from(f: &Color) -> LabelOption {
         LabelOption {
-            color: (*self).clone(),
+            color: f.clone(),
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LabelOption> for FontStyle {
+impl From<FontStyle> for LabelOption {
 
-    fn take(&self) -> LabelOption {
+    fn from(f: FontStyle) -> LabelOption {
         LabelOption {
-            style: self.clone(),
+            style: f,
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LabelOption> for &FontStyle {
+impl From<&FontStyle> for LabelOption {
 
-    fn take(&self) -> LabelOption {
+    fn from(f: &FontStyle) -> LabelOption {
         LabelOption {
-            style: (*self).clone(),
+            style: f.clone(),
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LabelOption> for NoOption {
+impl From<NoOption> for LabelOption {
 
-    fn take(&self) -> LabelOption {
+    fn from(_: NoOption) -> LabelOption {
         LabelOption::default()
     }
 

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use ::util::{ director, FuzzyArg };
+use ::util::{ director };
 use ::util::parameter::{ Size, Point };
 use ::node::{ NodeDelegate, Node, NodeLike };
 use ::node::layer::{ LayerOption };
@@ -12,10 +12,11 @@ pub struct Layer {
 impl Layer {
 
     pub fn create<A>(option: A) -> Rc<Node<Layer>>
-    where A: FuzzyArg<LayerOption>
+    where A: Into<LayerOption>
     {
+        let o = option.into();
         let n = Node::create(|| Layer {
-            option: RefCell::new(option.take())
+            option: RefCell::new(o.clone())
         });
         let size = n.get_size();
         n.set_position(&Point::new(size.width() as i32 / 2, size.height() as i32 / 2));

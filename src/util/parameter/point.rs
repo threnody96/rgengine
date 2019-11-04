@@ -1,26 +1,59 @@
-use ::util::{ FuzzyArg };
-pub use sdl2::rect::{ Point };
+use std::ops::{ Deref };
 
-impl FuzzyArg<Point> for Point {
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct Point {
+    point: sdl2::rect::Point
+}
 
-    fn take(&self) -> Point {
-        self.clone()
+impl Point {
+
+    pub fn new(x: i32, y: i32) -> Self {
+        Self {
+            point: sdl2::rect::Point::new(x, y)
+        }
     }
 
 }
 
-impl FuzzyArg<Point> for &Point {
+impl Deref for Point {
 
-    fn take(&self) -> Point {
-        (*self).clone()
+    type Target = sdl2::rect::Point;
+
+    fn deref(&self) -> &Self::Target {
+        &self.point
     }
 
 }
 
-impl FuzzyArg<Point> for (i32, i32) {
+impl Into<sdl2::rect::Point> for Point {
 
-    fn take(&self) -> Point {
-        Point::new(self.0, self.1)
+    fn into(self) -> sdl2::rect::Point {
+        self.point
     }
 
 }
+
+impl From<sdl2::rect::Point> for Point {
+
+    fn from(f: sdl2::rect::Point) -> Self {
+        Self { point: f }
+    }
+
+}
+
+impl From<&sdl2::rect::Point> for Point {
+
+    fn from(f: &sdl2::rect::Point) -> Self {
+        Self { point: f.clone() }
+    }
+
+}
+
+impl From<&Point> for Point {
+
+    fn from(f: &Point) -> Point {
+        f.clone()
+    }
+
+}
+

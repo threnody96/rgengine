@@ -1,26 +1,41 @@
-use ::util::{ FuzzyArg };
-pub use sdl2::rect::{ Rect };
+use ::util::parameter::{ Point };
 
-impl FuzzyArg<Rect> for Rect {
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct Rect {
+    rect: sdl2::rect::Rect
+}
 
-    fn take(&self) -> Rect {
-        self.clone()
+impl Rect {
+
+    pub fn new(x: i32, y: i32, width: u32, height: u32) -> Self {
+        Self {
+            rect: sdl2::rect::Rect::new(x, y, width, height)
+        }
+    }
+
+    pub fn from_center<P>(center: P, width: u32, height: u32) -> Self
+    where P: Into<Point>
+    {
+        Self {
+            rect: sdl2::rect::Rect::from_center(center.into(), width, height)
+        }
     }
 
 }
 
-impl FuzzyArg<Rect> for &Rect {
+impl Into<sdl2::rect::Rect> for Rect {
 
-    fn take(&self) -> Rect {
-        (*self).clone()
+    fn into(self) -> sdl2::rect::Rect {
+        self.rect
     }
 
 }
 
-impl FuzzyArg<Rect> for (i32, i32, u32, u32) {
+impl From<&Rect> for Rect {
 
-    fn take(&self) -> Rect {
-        Rect::new(self.0, self.1, self.2, self.3)
+    fn from(f: &Rect) -> Rect {
+        f.clone()
     }
 
 }
+

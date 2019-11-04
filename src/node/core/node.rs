@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::util::{ director, FuzzyArg };
+use ::util::{ director };
 use ::util::parameter::{ Point, AnchorPoint, Size };
 use ::resource::{ Texture, Font, ResourceKey };
 use sdl2::pixels::{ Color };
@@ -127,14 +127,13 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
         self.before_add_child();
         node.before_be_added_child();
-        let o = option.take();
-        let inner_z_index = self.get_next_inner_z_index(o.z_index);
+        let inner_z_index = self.get_next_inner_z_index(option.z_index);
         let mut children = self.children.borrow_mut();
         children.push(NodeChild {
             id: node.id(),
-            z_index: o.z_index,
+            z_index: option.z_index,
             inner_z_index: inner_z_index,
-            tag: o.tag.clone()
+            tag: option.tag.clone()
         });
         children.sort_by(|a, b| {
             let t = a.z_index.partial_cmp(&b.z_index).unwrap();
@@ -240,21 +239,21 @@ impl <T> Node<T> where T: NodeDelegate + Any {
     }
 
     pub fn add_child<A>(&self, node: Rc<dyn NodeLike>, option: A)
-    where A: FuzzyArg<AddChildOption>
+    where A: Into<AddChildOption>
     {
-        (self as &NodeLike).add_child(node, option.take());
+        (self as &NodeLike).add_child(node, option.into());
     }
 
     pub fn set_position<A>(&self, position: A)
-    where A: FuzzyArg<Point>
+    where A: Into<Point>
     {
-        (self as &NodeLike).set_position(&position.take())
+        (self as &NodeLike).set_position(&position.into())
     }
 
     pub fn set_anchor_point<A>(&self, anchor_point: A)
-    where A: FuzzyArg<AnchorPoint>
+    where A: Into<AnchorPoint>
     {
-        (self as &NodeLike).set_anchor_point(&anchor_point.take())
+        (self as &NodeLike).set_anchor_point(&anchor_point.into())
     }
 
     fn new(delegate: T) -> Self {

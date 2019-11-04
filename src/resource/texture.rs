@@ -1,4 +1,3 @@
-use ::util::{ FuzzyArg };
 use ::util::parameter::{ Size, TextureQuery };
 use ::resource::{ ResourceKey };
 
@@ -12,12 +11,12 @@ impl Texture {
 
     pub fn new<A, B>(key: A, info: B) -> Self
     where
-        A: FuzzyArg<ResourceKey>,
-        B: FuzzyArg<TextureQuery>
+        A: Into<ResourceKey>,
+        B: Into<TextureQuery>
     {
         Self {
-            key: key.take(),
-            info: info.take()
+            key: key.into(),
+            info: info.into()
         }
     }
 

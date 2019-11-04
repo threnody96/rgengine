@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ Node, NodeLike, NodeDelegate };
 use ::node::label::{ LabelOption };
-use ::util::{ director, FuzzyArg };
+use ::util::{ director };
 use ::util::parameter::{ Size };
 use ::resource::{ Font };
 pub use sdl2::pixels::{ Color };
@@ -18,11 +18,11 @@ impl OneLineLabel {
 
     pub fn create<A, B>(text: A, option: B) -> Rc<Node<Self>>
     where
-        A: FuzzyArg<String>,
-        B: FuzzyArg<LabelOption>
+        A: Into<String>,
+        B: Into<LabelOption>
     {
-        let t = text.take();
-        let o = option.take();
+        let t = text.into();
+        let o = option.into();
         let font = director(|d| d.load_font(&o));
         let n = Node::create(|| {
             Self {
@@ -37,19 +37,19 @@ impl OneLineLabel {
     }
 
     pub fn set_text<A>(&self, text: A)
-    where A: FuzzyArg<String>
+    where A: Into<String>
     {
-        let t = text.take();
+        let t = text.into();
         self.text.replace(Self::normalize_text(&t));
         self.updated();
     }
 
     pub fn set_point<A>(&self, point: A)
-    where A: FuzzyArg<u16>
+    where A: Into<u16>
     {
         {
             let mut option = self.option.borrow_mut();
-            option.point = point.take();
+            option.point = point.into();
             self.font.replace(director(|d| d.load_font(&option.clone())));
         }
         self.updated();

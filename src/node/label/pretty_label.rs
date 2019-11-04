@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::cmp::max;
 use ::node::{ Node, NodeDelegate, NodeLike, AddChildOption };
 use ::node::label::{ OneLineLabel, LabelOption };
-use ::util::{ FuzzyArg };
 use ::util::parameter::{ Size, Point, AnchorPoint };
 use html5ever::{ parse_document };
 use html5ever::driver::{ ParseOpts };
@@ -21,9 +20,9 @@ pub struct PrettyLabel {
 impl PrettyLabel {
 
     pub fn create<A>(text: A) -> Rc<Node<Self>>
-    where A: FuzzyArg<String>
+    where A: Into<String>
     {
-        let t = text.take();
+        let t = text.into();
         let n= Node::create(|| PrettyLabel {
             text: RefCell::new(t.clone()),
             size: RefCell::new(None),
@@ -34,9 +33,9 @@ impl PrettyLabel {
     }
 
     pub fn set_text<A>(&self, text: A)
-    where A: FuzzyArg<String>
+    where A: Into<String>
     {
-        self.text.replace(text.take());
+        self.text.replace(text.into());
         self.updated();
     }
 

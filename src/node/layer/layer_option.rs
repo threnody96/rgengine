@@ -1,4 +1,4 @@
-use ::util::{ FuzzyArg, NoOption };
+use ::util::{ NoOption };
 use ::util::parameter::{ Size };
 
 #[derive(Clone)]
@@ -16,31 +16,31 @@ impl Default for LayerOption {
 
 }
 
-impl FuzzyArg<LayerOption> for Size {
+impl From<Size> for LayerOption {
 
-    fn take(&self) -> LayerOption {
+    fn from(f: Size) -> LayerOption {
         LayerOption {
-            size: Some(self.clone()),
+            size: Some(f),
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LayerOption> for &Size {
+impl From<&Size> for LayerOption {
 
-    fn take(&self) -> LayerOption {
+    fn from(f: &Size) -> LayerOption {
         LayerOption {
-            size: Some((*self).clone()),
+            size: Some(f.clone()),
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<LayerOption> for NoOption {
+impl From<NoOption> for LayerOption {
 
-    fn take(&self) -> LayerOption {
+    fn from(_: NoOption) -> LayerOption {
         LayerOption::default()
     }
 

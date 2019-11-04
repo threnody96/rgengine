@@ -16,6 +16,9 @@ pub enum BuildMode {
     Development
 }
 
+#[derive(Clone, Copy)]
+pub struct NoOption {}
+
 #[cfg(not(debug_assertions))]
 pub fn build_mode() -> BuildMode { BuildMode::Release }
 

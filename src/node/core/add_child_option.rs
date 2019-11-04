@@ -1,4 +1,4 @@
-use ::util::{ NoOption, FuzzyArg };
+use ::util::{ NoOption };
 
 #[derive(Clone)]
 pub struct AddChildOption {
@@ -17,58 +17,50 @@ impl Default for AddChildOption {
 
 }
 
-impl FuzzyArg<AddChildOption> for AddChildOption {
+impl From<&AddChildOption> for AddChildOption {
 
-    fn take(&self) -> AddChildOption {
-        self.clone()
+    fn from(f: &AddChildOption) -> AddChildOption {
+        f.clone()
     }
 
 }
 
-impl FuzzyArg<AddChildOption> for &AddChildOption {
+impl From<i32> for AddChildOption {
 
-    fn take(&self) -> AddChildOption {
-        (*self).clone()
-    }
-
-}
-
-impl FuzzyArg<AddChildOption> for i32 {
-
-    fn take(&self) -> AddChildOption {
+    fn from(f: i32) -> AddChildOption {
         AddChildOption {
-            z_index: *self,
+            z_index: f,
             ..Default::default()
         }
     }
 
 }
 
-impl FuzzyArg<AddChildOption> for (i32, &str) {
+impl From<(i32, &str)> for AddChildOption {
 
-    fn take(&self) -> AddChildOption {
+    fn from(f: (i32, &str)) -> AddChildOption {
         AddChildOption {
-            z_index: self.0,
-            tag: Some(self.1.to_string())
+            z_index: f.0,
+            tag: Some(f.1.to_string())
         }
     }
 
 }
 
-impl FuzzyArg<AddChildOption> for (i32, String) {
+impl From<(i32, String)> for AddChildOption {
 
-    fn take(&self) -> AddChildOption {
+    fn from(f: (i32, String)) -> AddChildOption {
         AddChildOption {
-            z_index: self.0,
-            tag: Some(self.1.clone())
+            z_index: f.0,
+            tag: Some(f.1.clone())
         }
     }
 
 }
 
-impl FuzzyArg<AddChildOption> for NoOption {
+impl From<NoOption> for AddChildOption {
 
-    fn take(&self) -> AddChildOption {
+    fn from(_: NoOption) -> AddChildOption {
         AddChildOption::default()
     }
 
