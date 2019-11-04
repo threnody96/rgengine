@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
-use ::util::parameter::{ Size, InputCode, InputInfo };
+use ::util::parameter::{ Size, InputCode, InputInfo, Point };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
 use ::node::label::{ LabelOption };
@@ -155,6 +155,10 @@ impl <'a> Director<'a> {
 
     pub fn destroy_render_cache(&self, key: &ResourceKey) {
         self.render.borrow_mut().destroy_render_cache(key);
+    }
+
+    pub fn get_mouse_position(&self) -> Point {
+        self.input.borrow().get_mouse_pointer()
     }
 
     pub fn get_input_info<A>(&self, key: A) -> InputInfo

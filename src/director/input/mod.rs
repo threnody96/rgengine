@@ -213,7 +213,7 @@ impl InputDirector {
         }
     }
 
-    fn get_mouse_pointer(&self) -> Point {
+    pub fn get_mouse_pointer(&self) -> Point {
         self.state.mouse_pointer.clone()
     }
 

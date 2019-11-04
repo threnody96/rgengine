@@ -15,7 +15,7 @@ impl InputInfo {
             press_start: false,
             pressing: false,
             pressed: false,
-            mouse_position: Point::new(0, 0),
+            mouse_position: Point::new(-1, -1),
             axis_position: Point::new(0, 0)
         }
     }
