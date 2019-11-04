@@ -5,6 +5,7 @@ mod anchor_point;
 mod point;
 mod rect;
 mod texture_query;
+mod input_code;
 
 pub use self::color::*;
 pub use self::font_style::*;
@@ -13,3 +14,4 @@ pub use self::anchor_point::*;
 pub use self::point::*;
 pub use self::rect::*;
 pub use self::texture_query::*;
+pub use self::input_code::*;
