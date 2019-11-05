@@ -129,7 +129,7 @@ fn factorial(n: i32) -> i32 {
     }
 }
 
-pub(crate) fn calc_bezier_curve(points: Vec<(f32, f32)>, t: f32) -> (f32, f32) {
+pub(crate) fn calc_bezier_curve(points: &Vec<(f32, f32)>, t: f32) -> (f32, f32) {
     let mut result: (f32, f32) = (0.0, 0.0);
     for i in 0i32..(points.len() as i32) {
         let n = points.len() as i32 - 1;

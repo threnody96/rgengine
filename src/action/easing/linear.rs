@@ -1,27 +1,14 @@
 use std::rc::Rc;
-use ::node::{ NodeLike };
-use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
+use ::action::easing::{ BezierEase };
+use ::action::{ ParentAction, ActionLike };
 
-pub struct Linear {
-    action: Rc<dyn ActionLike>
-}
+pub struct Linear { }
 
 impl Linear {
 
-    pub fn create(action: Rc<dyn ActionLike>) -> Rc<ParentAction<Linear>> {
-        ParentAction::create(|| {
-            Self {
-                action: action.clone()
-            }
-        })
+    pub fn create(action: Rc<dyn ActionLike>) -> Rc<ParentAction<BezierEase>> {
+        BezierEase::create(action, vec!((0.0, 0.0), (1.0, 1.0)))
     }
 
 }
 
-impl ParentActionDelegate for Linear {
-
-    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
-        self.action.run(node, Some(Box::new(|f| f)))
-    }
-
-}
