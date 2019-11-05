@@ -31,9 +31,9 @@ impl NodeDelegate for Image {
         true
     }
 
-    fn update(&self, _parent: Rc<dyn NodeLike>) { }
+    fn update(&self) { }
 
-    fn render(&self, _parent: Rc<dyn NodeLike>) {
+    fn render(&self) {
         self.render_texture(self.image.clone());
     }
 

@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::resource::{ Texture, Font };
 use ::node::{ NodeId, NodeLike, AddChildOption };
+use ::action::{ ActionLike };
 use ::util::{ director };
 use ::util::parameter::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
@@ -9,9 +10,9 @@ pub trait NodeDelegate {
 
     fn get_size(&self) -> Size;
 
-    fn update(&self, parent: Rc<dyn NodeLike>);
+    fn update(&self);
 
-    fn render(&self, parent: Rc<dyn NodeLike>) { }
+    fn render(&self) { }
 
     fn before_add_child(&self, child: Rc<dyn NodeLike>) { }
 
@@ -37,7 +38,11 @@ pub trait NodeDelegate {
         self.node().add_child(node, option);
     }
 
-    fn get_children(&self) -> Vec<NodeId> {
+    fn get_parent(&self) -> Option<Rc<dyn NodeLike>> {
+        self.node().get_parent()
+    }
+
+    fn get_children(&self) -> Vec<Rc<dyn NodeLike>> {
         self.node().get_children()
     }
 
@@ -77,8 +82,8 @@ pub trait NodeDelegate {
         None
     }
 
-    fn prepare_render_tree(&self, parent: &Option<Rc<dyn NodeLike>>) {
-        director(|d| d.prepare_render_tree(parent, self.node()));
+    fn prepare_render_tree(&self) {
+        director(|d| d.prepare_render_tree(&self.get_parent(), self.node()));
     }
 
     fn render_texture(&self, texture: Rc<Texture>) {
@@ -87,6 +92,18 @@ pub trait NodeDelegate {
 
     fn render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
         director(|d| d.render_label(self.node(), text, font, color));
+    }
+
+    fn is_mouse_hover(&self) -> bool {
+        self.node().is_mouse_hover()
+    }
+
+    fn is_conflict(&self, other: Rc<dyn NodeLike>) -> bool {
+        self.node().is_conflict(other)
+    }
+
+    fn run_action(&self, action: Rc<dyn ActionLike>) {
+        self.node().run_action(action);
     }
 
 }

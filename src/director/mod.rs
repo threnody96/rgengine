@@ -158,13 +158,17 @@ impl <'a> Director<'a> {
     }
 
     pub fn get_mouse_position(&self) -> Point {
-        self.input.borrow().get_mouse_pointer()
+        let p = self.input.borrow().get_mouse_pointer();
+        self.render.borrow().convert_window_point_to_resolution_point(&p)
     }
 
     pub fn get_input_info<A>(&self, key: A) -> InputInfo
     where A: Into<String>
     {
-        self.input.borrow().get_input_info(key)
+        let mut info = self.input.borrow().get_input_info(key);
+        let p = self.render.borrow().convert_window_point_to_resolution_point(&info.mouse_position);
+        info.mouse_position = p;
+        info
     }
 
     pub fn update_input_state(&self, event_pump: &mut EventPump) {

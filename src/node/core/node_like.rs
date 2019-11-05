@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
 use ::resource::{ Texture, Font, ResourceKey };
+use ::action::{ ActionLike };
 use ::util::parameter::{ Point, AnchorPoint, Size };
 use sdl2::pixels::{ Color };
 
@@ -14,13 +15,15 @@ pub trait NodeLike {
 
     fn get_render_point(&self) -> Point;
 
-    fn update(&self, parent: Rc<dyn NodeLike>);
+    fn get_absolute_render_point(&self) -> Point;
 
-    fn update_children(&self, parent: Rc<dyn NodeLike>);
+    fn update(&self);
 
-    fn render(&self, parent: Rc<dyn NodeLike>);
+    fn update_children(&self);
 
-    fn render_children(&self, parent: Rc<dyn NodeLike>);
+    fn render(&self);
+
+    fn render_children(&self);
 
     fn use_cache(&self) -> bool;
 
@@ -30,13 +33,13 @@ pub trait NodeLike {
 
     fn clear_cache(&self);
 
-    fn add_parent(&self, id: &NodeId);
+    fn set_parent(&self, id: &NodeId);
 
-    fn remove_parent(&self, id: &NodeId);
+    fn remove_parent(&self);
 
-    fn get_parents(&self) -> Vec<NodeId>;
+    fn get_parent(&self) -> Option<Rc<dyn NodeLike>>;
 
-    fn get_children(&self) -> Vec<NodeId>;
+    fn get_children(&self) -> Vec<Rc<dyn NodeLike>>;
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption);
 
@@ -49,6 +52,10 @@ pub trait NodeLike {
     fn set_position(&self, point: &Point);
 
     fn get_position(&self) -> Point;
+
+    fn update_absolute_position(&self);
+
+    fn get_absolute_position(&self) -> Point;
 
     fn set_anchor_point(&self, anchor_point: &AnchorPoint);
 
@@ -66,9 +73,19 @@ pub trait NodeLike {
 
     fn get_rotation(&self) -> f64;
 
+    fn is_additive_blend(&self) -> bool;
+
+    fn set_additive_blend(&self, additive_blend: bool);
+
     fn render_texture(&self, texture: Rc<Texture>);
 
     fn render_label(&self, text: &str, font: Rc<Font>, color: &Color);
+
+    fn is_mouse_hover(&self) -> bool;
+
+    fn is_conflict(&self, other: Rc<dyn NodeLike>) -> bool;
+
+    fn run_action(&self, action: Rc<dyn ActionLike>);
 
     fn destroy(&self);
 

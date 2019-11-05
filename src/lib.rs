@@ -15,6 +15,7 @@ pub mod director;
 pub mod util;
 pub mod node;
 pub mod resource;
+pub mod action;
 
 use ::director::Director;
 use ::application::Context;

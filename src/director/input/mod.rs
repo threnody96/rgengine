@@ -168,8 +168,8 @@ impl InputDirector {
                         self.state.keys.insert(k.clone(), false);
                     }
                 },
-                Event::MouseMotion { mousestate, .. } => {
-                    self.state.mouse_pointer = Point::new(mousestate.x(), mousestate.y());
+                Event::MouseMotion { x, y, .. } => {
+                    self.state.mouse_pointer = Point::new(x, y);
                 },
                 Event::MouseButtonDown { mouse_btn, .. } => {
                     self.state.mouses.insert(mouse_btn.clone(), true);
@@ -177,8 +177,12 @@ impl InputDirector {
                 Event::MouseButtonUp { mouse_btn, .. } => {
                     self.state.mouses.insert(mouse_btn.clone(), false);
                 },
-                Event::MouseWheel { direction, .. } => {
-                    self.state.mousewheels.insert(direction, true);
+                Event::MouseWheel { y, .. } => {
+                    if y == 1 {
+                        self.state.mousewheels.insert(MouseWheelDirection::Normal, true);
+                    } else {
+                        self.state.mousewheels.insert(MouseWheelDirection::Flipped, true);
+                    }
                 },
                 Event::JoyHatMotion { which, state, .. } => {
                     self.state.init_joysticks(which);

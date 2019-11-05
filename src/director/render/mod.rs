@@ -6,7 +6,7 @@ use ::node::label::{ LabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ context };
-use ::util::parameter::{ Size, Rect };
+use ::util::parameter::{ Size, Rect, Point };
 use ::director::resource::{ ResourceDirector };
 use sdl2::render::{ Texture, BlendMode };
 use sdl2::pixels::{ PixelFormatEnum, Color };
@@ -90,11 +90,31 @@ impl <'a> RenderDirector<'a> {
         }
     }
 
+    pub fn convert_window_point_to_resolution_point(&self, point: &Point) -> Point {
+        if point.x() < 0 && point.y() < 0 { return point.clone(); }
+        let application = self.get_application();
+        let window_size = application.window_size();
+        let render_dest = self.render_canvas_dest.clone().unwrap_or(Rect::new(0, 0, window_size.width(), window_size.height()));
+        if render_dest.x() > point.x() ||
+            render_dest.x() + (render_dest.width() as i32) < point.x() ||
+            render_dest.y() > point.y() ||
+            render_dest.y() + (render_dest.height() as i32) < point.y() {
+            return Point::new(-1, -1);
+        }
+        let normalized_point = Point::new(point.x() - render_dest.x(), point.y() - render_dest.y());
+        let magni: (f32, f32) = (self.resolution_size.width() as f32 / render_dest.width() as f32, self.resolution_size.height() as f32 / render_dest.height() as f32);
+        Point::new((normalized_point.x() as f32 * magni.0) as i32, (normalized_point.y() as f32 * magni.1) as i32)
+    }
+
     pub fn set_application(&mut self, application: Rc<dyn Application>) {
         self.application = Some(application.clone());
         self.resolution_size = application.resolution_size();
         self.resolution_policy = application.resolution_policy();
         self.render_canvas_dest = Self::generate_render_canvas_dest(application);
+    }
+
+    fn get_application(&self) -> Rc<dyn Application> {
+        self.application.clone().unwrap()
     }
 
     pub fn add_alias(&mut self, name: &str, path: &str) {
@@ -146,7 +166,7 @@ impl <'a> RenderDirector<'a> {
     }
 
     pub fn update_resolution_size(&mut self) {
-        let application = self.application.clone().unwrap();
+        let application = self.get_application();
         let (resolution_size, resolution_policy) = (application.resolution_size(), application.resolution_policy());
         if self.resolution_size != resolution_size || self.resolution_policy != resolution_policy {
             self.resolution_size = resolution_size;
@@ -186,7 +206,7 @@ impl <'a> RenderDirector<'a> {
             );
             sdl2::sys::SDL_SetTextureBlendMode(canvas.raw(), transmute(mode as u32))
         };
-        if ret != 0 { panic!("爆発しました") }
+        if ret != 0 { panic!("合成モードの設定が失敗しました") }
     }
 
     fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {
@@ -216,6 +236,7 @@ impl <'a> RenderDirector<'a> {
             }
         }).unwrap();
         sub_canvas.set_alpha_mod(node.get_opacity());
+        if node.is_additive_blend() { sub_canvas.set_blend_mode(BlendMode::Add); }
         let r = Rc::new(sub_canvas);
         if node.use_cache() {
             let key = self.resource.set_render_cache(r.clone());

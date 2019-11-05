@@ -29,7 +29,7 @@ impl Validation for AnchorPoint {
 
     fn validate(self) -> AnchorPoint {
         if self.x < 0.0 || self.x > 1.0 || self.y < 0.0 || self.y > 1.0 {
-            panic!(format!("invalid anchor_point: {}, {}", self.x, self.y));
+            panic!(format!("anchor_point が不正な値です: {}, {}", self.x, self.y));
         }
         self
     }

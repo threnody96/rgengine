@@ -4,21 +4,25 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::util::{ director };
-use ::util::parameter::{ Point, AnchorPoint, Size };
+use ::action::{ ActionLike, ActionStatus, linear };
+use ::util::{ director, get_mouse_position };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect };
 use ::resource::{ Texture, Font, ResourceKey };
 use sdl2::pixels::{ Color };
 
 pub struct Node<T> where T: NodeDelegate + Any {
     delegate: T,
+    additive_blend: RefCell<bool>,
+    absolute_position: RefCell<Point>,
     position: RefCell<Point>,
     anchor_point: RefCell<AnchorPoint>,
     visible: RefCell<bool>,
     opacity: RefCell<u8>,
     rotation: RefCell<f64>,
     render_cache: RefCell<Option<ResourceKey>>,
-    parents: RefCell<Vec<NodeId>>,
-    children: RefCell<Vec<NodeChild>>
+    parent: RefCell<Option<NodeId>>,
+    children: RefCell<Vec<NodeChild>>,
+    actions: RefCell<Vec<Rc<dyn ActionLike>>>
 }
 
 impl <T> Deref for Node<T> where T: NodeDelegate + Any {
@@ -58,7 +62,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             director(|d| d.destroy_render_cache(&cache_key));
             self.set_cache(None);
         }
-        self.clear_parents_cache();
+        self.clear_parent_cache();
     }
 
     fn get_size(&self) -> Size {
@@ -66,13 +70,11 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     }
 
     fn get_render_point(&self) -> Point {
-        let p = self.get_position();
-        let ap = self.get_anchor_point();
-        let s = self.get_size();
-        Point::new(
-            p.x() - ((s.width() as f32 * ap.x()).round() as i32),
-            p.y() - ((s.height() as f32 * ap.y()).round() as i32)
-        )
+        self.generate_render_point(&self.get_position())
+    }
+
+    fn get_absolute_render_point(&self) -> Point {
+        self.generate_render_point(&self.get_absolute_position())
     }
 
     fn render_texture(&self, texture: Rc<Texture>) {
@@ -83,45 +85,51 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.delegate.render_label(text, font, color);
     }
 
-    fn update(&self, parent: Rc<dyn NodeLike>) {
-        self.delegate.update(parent);
-        self.update_children(self.node());
+    fn update(&self) {
+        self.delegate.update();
+        for action in self.actions.borrow().iter() {
+            action.run(self.node(), linear());
+        }
+        self.remove_finished_actions();
+        self.update_children();
     }
 
-    fn update_children(&self, parent: Rc<dyn NodeLike>) {
-        for child in &*self.children.borrow() {
-            let c = director(|d| d.get_nodelike(&child.id));
-            c.update(parent.clone());
+    fn update_children(&self) {
+        for child in self.get_children() {
+            child.update();
         }
     }
 
-    fn render(&self, parent: Rc<dyn NodeLike>) {
-        self.prepare_render_tree(&Some(parent.clone()));
-        self.delegate.render(parent);
-        self.render_children(self.node());
+    fn render(&self) {
+        self.prepare_render_tree();
+        self.delegate.render();
+        self.render_children();
     }
 
-    fn render_children(&self, parent: Rc<dyn NodeLike>) {
-        for child in &*self.children.borrow() {
-            let c = director(|d| d.get_nodelike(&child.id));
-            c.render(parent.clone());
+    fn render_children(&self) {
+        for child in self.get_children() {
+            child.render();
         }
     }
 
-    fn add_parent(&self, id: &NodeId) {
-        self.parents.borrow_mut().push(id.clone());
-    }
-
-    fn remove_parent(&self, id: &NodeId) {
-        let mut next_parents = Vec::new();
-        for parent in &*self.parents.borrow() {
-            if id != parent { next_parents.push(parent.clone()); }
+    fn set_parent(&self, id: &NodeId) {
+        if self.get_parent().is_some() {
+            panic!("既に親が存在する node です");
         }
-        self.parents.replace(next_parents);
+        self.parent.replace(Some(id.clone()));
     }
 
-    fn get_parents(&self) -> Vec<NodeId> {
-        self.parents.borrow().clone()
+    fn remove_parent(&self) {
+        self.parent.replace(None);
+        self.absolute_position.replace(self.get_position());
+    }
+
+    fn get_parent(&self) -> Option<Rc<dyn NodeLike>> {
+        if let Some(id) = self.parent.borrow().clone() {
+            Some(director(|d| d.get_nodelike(&id)))
+        } else {
+            None
+        }
     }
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
@@ -140,15 +148,15 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             if t != Ordering::Equal { return t; }
             a.inner_z_index.partial_cmp(&b.inner_z_index).unwrap()
         });
-        let id = self.id();
-        node.add_parent(&id);
+        node.set_parent(&self.id());
+        node.update_absolute_position();
     }
 
-    fn get_children(&self) -> Vec<NodeId> {
-        let mut output: Vec<NodeId> = Vec::new();
+    fn get_children(&self) -> Vec<Rc<dyn NodeLike>> {
+        let mut output: Vec<Rc<dyn NodeLike>> = Vec::new();
         let children = self.children.borrow();
         for child in &*children {
-            output.push(child.id.clone());
+            output.push(director(|d| d.get_nodelike(&child.id)));
         }
         output
     }
@@ -160,22 +168,42 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         }
         self.children.replace(next_children);
         let node = director(|d| d.get_nodelike(id));
-        let pid = self.id();
-        node.remove_parent(&pid)
+        node.remove_parent()
     }
 
     fn set_position(&self, point: &Point) {
         self.position.replace(point.clone());
-        self.clear_parents_cache();
+        self.update_absolute_position();
+        self.clear_parent_cache();
     }
 
     fn get_position(&self) -> Point {
         self.position.borrow().clone()
     }
 
+    fn update_absolute_position(&self) {
+        let position = self.get_position();
+        let parent_position = if let Some(parent) = self.get_parent() {
+            parent.get_absolute_position()
+        } else {
+            Point::new(0, 0)
+        };
+        self.absolute_position.replace(Point::new(
+            parent_position.x() + position.x(),
+            parent_position.y() + position.y()
+        ));
+        for child in self.get_children() {
+            child.update_absolute_position();
+        }
+    }
+
+    fn get_absolute_position(&self) -> Point {
+        self.absolute_position.borrow().clone()
+    }
+
     fn set_anchor_point(&self, anchor_point: &AnchorPoint) {
         self.anchor_point.replace(anchor_point.clone());
-        self.clear_parents_cache();
+        self.clear_parent_cache();
     }
 
     fn get_anchor_point(&self) -> AnchorPoint {
@@ -205,22 +233,50 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn set_rotation(&self, rotation: f64) {
         self.rotation.replace(rotation);
-        self.clear_parents_cache();
+        self.clear_parent_cache();
     }
 
     fn get_rotation(&self) -> f64 {
         self.rotation.borrow().clone()
     }
 
+    fn is_additive_blend(&self) -> bool {
+        self.additive_blend.borrow().clone()
+    }
+
+    fn set_additive_blend(&self, additive_blend: bool) {
+        self.additive_blend.replace(additive_blend);
+    }
+
+    fn is_mouse_hover(&self) -> bool {
+        let p = get_mouse_position();
+        let ap = self.get_absolute_render_point();
+        let size = self.get_size();
+        ap.x() <= p.x() && ap.x() + (size.width() as i32) >= p.x() &&
+        ap.y() <= p.y() && ap.y() + (size.height() as i32) >= p.y()
+    }
+
+    fn is_conflict(&self, other: Rc<dyn NodeLike>) -> bool {
+        let (p1, p2) = (self.get_absolute_render_point(), other.get_absolute_render_point());
+        let (s1, s2) = (self.get_size(), other.get_size());
+        let (r1, r2) = (
+            Rect::new(p1.x(), p1.y(), s1.width(), s1.height()),
+            Rect::new(p2.x(), p2.y(), s2.width(), s2.height()),
+        );
+        r1.has_intersection(*r2)
+    }
+
+    fn run_action(&self, action: Rc<dyn ActionLike>) {
+        self.actions.borrow_mut().push(action);
+    }
+
     fn destroy(&self) {
         self.clear_cache();
         let id = self.id();
-        for parent_id in self.get_parents() {
-            let parent = director(|d| d.get_nodelike(&parent_id));
+        if let Some(parent) = self.get_parent() {
             parent.remove_child(&id);
         }
-        for child_id in self.get_children() {
-            let child = director(|d| d.get_nodelike(&child_id));
+        for child in self.get_children() {
             child.destroy();
         }
         director(|d| d.destroy_node(&id));
@@ -259,14 +315,17 @@ impl <T> Node<T> where T: NodeDelegate + Any {
     fn new(delegate: T) -> Self {
         Self {
             delegate: delegate,
+            additive_blend: RefCell::new(false),
+            absolute_position: RefCell::new(Point::new(0, 0)),
             position: RefCell::new(Point::new(0, 0)),
             anchor_point: RefCell::new(AnchorPoint::default()),
-            parents: RefCell::new(Vec::new()),
+            parent: RefCell::new(None),
             opacity: RefCell::new(255),
             rotation: RefCell::new(0.0),
             visible: RefCell::new(true),
             render_cache: RefCell::new(None),
-            children: RefCell::new(Vec::new())
+            children: RefCell::new(Vec::new()),
+            actions: RefCell::new(Vec::new())
         }
     }
 
@@ -280,11 +339,29 @@ impl <T> Node<T> where T: NodeDelegate + Any {
         inner_z_index + 1
     }
 
-    fn clear_parents_cache(&self) {
-        for parent_id in self.get_parents() {
-            let parent = director(|d| d.get_nodelike(&parent_id));
+    fn clear_parent_cache(&self) {
+        if let Some(parent) = self.get_parent() {
             parent.clear_cache();
         }
+    }
+
+    fn generate_render_point(&self, position: &Point) -> Point {
+        let ap = self.get_anchor_point();
+        let s = self.get_size();
+        Point::new(
+            position.x() - ((s.width() as f32 * ap.x()).round() as i32),
+            position.y() - ((s.height() as f32 * ap.y()).round() as i32)
+        )
+    }
+
+    fn remove_finished_actions(&self) {
+        let mut next_actions: Vec<Rc<dyn ActionLike>> = Vec::new();
+        for action in self.actions.borrow().iter() {
+            if action.get_status() != ActionStatus::End {
+                next_actions.push(action.clone());
+            }
+        }
+        self.actions.replace(next_actions);
     }
 
 }

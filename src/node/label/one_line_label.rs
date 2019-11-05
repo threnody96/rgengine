@@ -79,9 +79,9 @@ impl NodeDelegate for OneLineLabel {
         true
     }
 
-    fn update(&self, _parent: Rc<dyn NodeLike>) { }
+    fn update(&self) { }
 
-    fn render(&self, _parent: Rc<dyn NodeLike>) {
+    fn render(&self) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
         let option = self.option.borrow().clone();
