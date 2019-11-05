@@ -120,3 +120,24 @@ pub fn run(application: Rc<dyn Application>) {
         }
     }
 }
+
+fn factorial(n: i32) -> i32 {
+    if n <= 1 {
+        1
+    } else {
+        n * factorial(n - 1)
+    }
+}
+
+pub(crate) fn calc_bezier_curve(points: Vec<(f32, f32)>, t: f32) -> (f32, f32) {
+    let mut result: (f32, f32) = (0.0, 0.0);
+    for i in 0i32..(points.len() as i32) {
+        let n = points.len() as i32 - 1;
+        let f = factorial(n) / (factorial(i) * factorial(n - i));
+        let j = (f as f32) * t.powi(i) * (1.0 - t).powi(n - i);
+        let p = points.get(i as usize).unwrap();
+        result.0 += p.0 * j;
+        result.1 += p.1 * j;
+    }
+    result
+}
