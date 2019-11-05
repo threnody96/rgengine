@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
-use ::action::{ ActionLike, ActionStatus, linear };
+use ::action::{ ActionLike, ActionStatus };
 use ::util::{ director, get_mouse_position };
 use ::util::parameter::{ Point, AnchorPoint, Size, Rect };
 use ::resource::{ Texture, Font, ResourceKey };
@@ -88,7 +88,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn update(&self) {
         self.delegate.update();
         for action in self.actions.borrow().iter() {
-            action.run(self.node(), linear());
+            action.run(self.node(), None);
         }
         self.remove_finished_actions();
         self.update_children();

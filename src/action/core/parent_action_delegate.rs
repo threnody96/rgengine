@@ -4,6 +4,6 @@ use ::action::{ ActionStatus };
 
 pub trait ParentActionDelegate {
 
-    fn run<C>(&self, node: Rc<dyn NodeLike>, easing: C) -> ActionStatus where C: Fn(f32) -> f32;
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Box<Fn(f32) -> f32>>) -> ActionStatus;
 
 }

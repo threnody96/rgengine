@@ -4,7 +4,7 @@ use ::action::{ ActionStatus };
 
 pub trait ActionLike {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: Box<Fn(f32) -> f32>) -> ActionStatus;
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Box<Fn(f32) -> f32>>) -> ActionStatus;
 
     fn get_status(&self) -> ActionStatus;
 

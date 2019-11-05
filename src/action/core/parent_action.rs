@@ -11,7 +11,7 @@ pub struct ParentAction<T> where T: ParentActionDelegate + Any {
 
 impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: Box<Fn(f32) -> f32>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
         if self.initialize() {
             let status = self.delegate.run(node, easing);
             if status == ActionStatus::End {

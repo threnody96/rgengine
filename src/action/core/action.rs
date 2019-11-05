@@ -15,10 +15,11 @@ pub struct Action<T> where T: ActionDelegate + Any {
 
 impl <T> ActionLike for Action<T> where T: ActionDelegate + Any {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: Box<Fn(f32) -> f32>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
         if let Some(now) = self.initialize() {
-            let progress = self.generate_progress(now);
-            let status = self.delegate.run(node, easing(progress));
+            let time_progress = self.generate_progress(now);
+            let progress = easing.map(|e| e(time_progress)).unwrap_or(time_progress);
+            let status = self.delegate.run(node, progress);
             if progress == 1.0 || (status.is_some() && status.unwrap() == ActionStatus::End) {
                 self.status.replace(ActionStatus::End);
             }
