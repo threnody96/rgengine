@@ -5,5 +5,4 @@ pub struct NodeChild {
     pub id: NodeId,
     pub z_index: i32,
     pub inner_z_index: u32,
-    pub tag: Option<String>
 }

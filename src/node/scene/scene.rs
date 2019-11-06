@@ -7,10 +7,6 @@ use ::node::layer::{ Layer };
 
 pub trait Scene: NodeDelegate {
 
-    fn add_layer(&self, node: Rc<Node<Layer>>, option: AddChildOption) {
-        self.add_child(node, option);
-    }
-
     fn update_scene(&self) {}
 
     fn render_scene(&self) {}
@@ -39,8 +35,11 @@ impl <T> NodeDelegate for T where T: Scene {
         Some(AnchorPoint::new(0.0, 0.0))
     }
 
-    fn before_add_child(&self, _child: Rc<dyn NodeLike>) {
-        panic!("Scene には add_child ではなく add_layer メソッドを使ってください");
+    fn before_add_child(&self, child: Rc<dyn NodeLike>) {
+        let id = child.id();
+        if director(|d| d.get_node::<Layer>(&id)).is_none() {
+            panic!("Scene に add_child できるのは Layer Node だけです");
+        }
     }
 
     fn before_be_added_child(&self, _parent: Rc<dyn NodeLike>) {

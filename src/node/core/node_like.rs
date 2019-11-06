@@ -47,9 +47,9 @@ pub trait NodeLike {
 
     fn remove_child(&self, id: &NodeId);
 
-    fn before_add_child(&self) { }
+    fn before_add_child(&self, child: Rc<dyn NodeLike>);
 
-    fn before_be_added_child(&self) { }
+    fn before_be_added_child(&self, parent: Rc<dyn NodeLike>);
 
     fn set_position(&self, point: &Point);
 

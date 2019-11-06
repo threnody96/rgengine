@@ -23,7 +23,8 @@ pub struct Node<T> where T: NodeDelegate + Any {
     render_cache: RefCell<Option<ResourceKey>>,
     parent: RefCell<Option<NodeId>>,
     children: RefCell<Vec<NodeChild>>,
-    actions: RefCell<Vec<Rc<dyn ActionLike>>>
+    actions: RefCell<Vec<Rc<dyn ActionLike>>>,
+    next_actions: RefCell<Vec<Rc<dyn ActionLike>>>
 }
 
 impl <T> Deref for Node<T> where T: NodeDelegate + Any {
@@ -56,6 +57,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn set_cache(&self, key: Option<ResourceKey>) {
         self.render_cache.replace(key);
+    }
+
+    fn before_add_child(&self, child: Rc<dyn NodeLike>) {
+        self.delegate.before_add_child(child);
+    }
+
+    fn before_be_added_child(&self, parent: Rc<dyn NodeLike>) {
+        self.delegate.before_be_added_child(parent);
     }
 
     fn clear_cache(&self) {
@@ -94,6 +103,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn update(&self) {
         self.delegate.update();
+        self.restore_next_action();
         for action in self.actions.borrow().iter() {
             action.run(self.node(), &None);
         }
@@ -140,15 +150,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     }
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
-        self.before_add_child();
-        node.before_be_added_child();
+        self.before_add_child(node.clone());
+        node.before_be_added_child(self.node());
         let inner_z_index = self.get_next_inner_z_index(option.z_index);
         let mut children = self.children.borrow_mut();
         children.push(NodeChild {
             id: node.id(),
             z_index: option.z_index,
             inner_z_index: inner_z_index,
-            tag: option.tag.clone()
         });
         children.sort_by(|a, b| {
             let t = a.z_index.partial_cmp(&b.z_index).unwrap();
@@ -280,7 +289,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     }
 
     fn run_action(&self, action: Rc<dyn ActionLike>) {
-        self.actions.borrow_mut().push(action);
+        self.next_actions.borrow_mut().push(action);
     }
 
     fn destroy(&self) {
@@ -339,7 +348,8 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             scale: RefCell::new(1.0),
             render_cache: RefCell::new(None),
             children: RefCell::new(Vec::new()),
-            actions: RefCell::new(Vec::new())
+            actions: RefCell::new(Vec::new()),
+            next_actions: RefCell::new(Vec::new())
         }
     }
 
@@ -378,6 +388,12 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             }
         }
         self.actions.replace(next_actions);
+    }
+
+    fn restore_next_action(&self) {
+        let mut actions = self.actions.borrow_mut();
+        let mut next_actions = self.next_actions.borrow_mut();
+        actions.append(&mut next_actions);
     }
 
 }
