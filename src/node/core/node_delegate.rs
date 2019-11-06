@@ -70,6 +70,14 @@ pub trait NodeDelegate {
         self.node().get_rotation()
     }
 
+    fn set_scale(&self, scale: f64) {
+        self.node().set_scale(scale);
+    }
+
+    fn get_scale(&self) -> f64 {
+        self.node().get_scale()
+    }
+
     fn set_anchor_point(&self, anchor_point: &AnchorPoint) {
         self.node().set_anchor_point(anchor_point);
     }

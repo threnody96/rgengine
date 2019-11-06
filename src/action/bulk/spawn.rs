@@ -25,11 +25,11 @@ impl ParentActionDelegate for Spawn {
             e.run(node.clone(), easing)
         }).collect();
         for status in &statuses {
-            if status != &ActionStatus::End {
+            if status != &ActionStatus::Finish {
                 return ActionStatus::Processing;
             }
         }
-        ActionStatus::End
+        ActionStatus::Finish
     }
 
 }

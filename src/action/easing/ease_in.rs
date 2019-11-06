@@ -7,7 +7,7 @@ pub struct EaseIn { }
 impl EaseIn {
 
     pub fn create(action: Rc<dyn ActionLike>) -> Rc<ParentAction<BezierEase>> {
-        BezierEase::create(action, vec!((0.0, 0.0), (0.42, 0.0), (1.0, 1.0), (1.0, 1.0)))
+        BezierEase::create(action, vec!((0.42, 0.0), (1.0, 1.0)))
     }
 
 }

@@ -19,6 +19,7 @@ pub struct Node<T> where T: NodeDelegate + Any {
     visible: RefCell<bool>,
     opacity: RefCell<u8>,
     rotation: RefCell<f64>,
+    scale: RefCell<f64>,
     render_cache: RefCell<Option<ResourceKey>>,
     parent: RefCell<Option<NodeId>>,
     children: RefCell<Vec<NodeChild>>,
@@ -69,12 +70,18 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.delegate.get_size()
     }
 
-    fn get_render_point(&self) -> Point {
-        self.generate_render_point(&self.get_position())
+    fn get_scaled_size(&self) -> Size {
+        let size = self.get_size();
+        let scale = self.get_scale();
+        Size::new((size.width() as f64 * scale) as u32, (size.height() as f64 * scale) as u32)
     }
 
-    fn get_absolute_render_point(&self) -> Point {
-        self.generate_render_point(&self.get_absolute_position())
+    fn get_render_rect(&self) -> Rect {
+        self.generate_render_rect(&self.get_position())
+    }
+
+    fn get_absolute_render_rect(&self) -> Rect {
+        self.generate_render_rect(&self.get_absolute_position())
     }
 
     fn render_texture(&self, texture: Rc<Texture>) {
@@ -184,7 +191,8 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn update_absolute_position(&self) {
         let position = self.get_position();
         let parent_position = if let Some(parent) = self.get_parent() {
-            parent.get_absolute_position()
+            let r = parent.get_absolute_render_rect();
+            Point::new(r.x(), r.y())
         } else {
             Point::new(0, 0)
         };
@@ -231,8 +239,19 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.visible.borrow().clone()
     }
 
+    fn set_scale(&self, scale: f64) {
+        let s = if scale > 0.0 { scale } else { 0.0 };
+        self.scale.replace(s);
+    }
+
+    fn get_scale(&self) -> f64 {
+        self.scale.borrow().clone()
+    }
+
     fn set_rotation(&self, rotation: f64) {
-        self.rotation.replace(rotation);
+        let mut r = rotation % 360.0;
+        if r < 0.0 { r += 360.0 }
+        self.rotation.replace(r);
         self.clear_parent_cache();
     }
 
@@ -250,19 +269,13 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn is_mouse_hover(&self) -> bool {
         let p = get_mouse_position();
-        let ap = self.get_absolute_render_point();
-        let size = self.get_size();
-        ap.x() <= p.x() && ap.x() + (size.width() as i32) >= p.x() &&
-        ap.y() <= p.y() && ap.y() + (size.height() as i32) >= p.y()
+        let ap = self.get_absolute_render_rect();
+        ap.x() <= p.x() && ap.x() + (ap.width() as i32) >= p.x() &&
+        ap.y() <= p.y() && ap.y() + (ap.height() as i32) >= p.y()
     }
 
     fn is_conflict(&self, other: Rc<dyn NodeLike>) -> bool {
-        let (p1, p2) = (self.get_absolute_render_point(), other.get_absolute_render_point());
-        let (s1, s2) = (self.get_size(), other.get_size());
-        let (r1, r2) = (
-            Rect::new(p1.x(), p1.y(), s1.width(), s1.height()),
-            Rect::new(p2.x(), p2.y(), s2.width(), s2.height()),
-        );
+        let (r1, r2) = (self.get_absolute_render_rect(), other.get_absolute_render_rect());
         r1.has_intersection(*r2)
     }
 
@@ -323,6 +336,7 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             opacity: RefCell::new(255),
             rotation: RefCell::new(0.0),
             visible: RefCell::new(true),
+            scale: RefCell::new(1.0),
             render_cache: RefCell::new(None),
             children: RefCell::new(Vec::new()),
             actions: RefCell::new(Vec::new())
@@ -345,19 +359,21 @@ impl <T> Node<T> where T: NodeDelegate + Any {
         }
     }
 
-    fn generate_render_point(&self, position: &Point) -> Point {
+    fn generate_render_rect(&self, position: &Point) -> Rect {
         let ap = self.get_anchor_point();
-        let s = self.get_size();
-        Point::new(
+        let s = self.get_scaled_size();
+        Rect::new(
             position.x() - ((s.width() as f32 * ap.x()).round() as i32),
-            position.y() - ((s.height() as f32 * ap.y()).round() as i32)
+            position.y() - ((s.height() as f32 * ap.y()).round() as i32),
+            s.width(),
+            s.height()
         )
     }
 
     fn remove_finished_actions(&self) {
         let mut next_actions: Vec<Rc<dyn ActionLike>> = Vec::new();
         for action in self.actions.borrow().iter() {
-            if action.get_status() != ActionStatus::End {
+            if action.get_status() != ActionStatus::Finish {
                 next_actions.push(action.clone());
             }
         }

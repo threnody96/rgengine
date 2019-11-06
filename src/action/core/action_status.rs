@@ -2,7 +2,7 @@
 pub enum ActionStatus {
     Wait,
     Processing,
-    End
+    Finish
 }
 
 

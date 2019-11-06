@@ -14,8 +14,8 @@ impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
     fn run(&self, node: Rc<dyn NodeLike>, easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
         if self.initialize() {
             let status = self.delegate.run(node, easing);
-            if status == ActionStatus::End {
-                self.status.replace(ActionStatus::End);
+            if status == ActionStatus::Finish {
+                self.status.replace(ActionStatus::Finish);
             }
         }
         self.get_status()
@@ -42,7 +42,7 @@ impl <T> ParentAction<T> where T: ParentActionDelegate + Any {
             ActionStatus::Processing => {
                 true
             },
-            ActionStatus::End => {
+            ActionStatus::Finish => {
                 false
             }
         }

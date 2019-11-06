@@ -2,12 +2,12 @@ use std::rc::Rc;
 use ::action::easing::{ BezierEase };
 use ::action::{ ParentAction, ActionLike };
 
-pub struct Ease { }
+pub struct EaseInSine { }
 
-impl Ease {
+impl EaseInSine {
 
     pub fn create(action: Rc<dyn ActionLike>) -> Rc<ParentAction<BezierEase>> {
-        BezierEase::create(action, vec!((0.25, 0.1), (0.25, 1.0)))
+        BezierEase::create(action, vec!((0.47, 0.0), (0.745, 0.715)))
     }
 
 }

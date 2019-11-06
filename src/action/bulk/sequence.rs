@@ -23,11 +23,11 @@ impl ParentActionDelegate for Sequence {
     fn run(&self, node: Rc<dyn NodeLike>, easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
         for action in &self.actions {
             let status = action.run(node.clone(), easing);
-            if status != ActionStatus::End {
+            if status != ActionStatus::Finish {
                 return ActionStatus::Processing;
             }
         }
-        ActionStatus::End
+        ActionStatus::Finish
     }
 
 }

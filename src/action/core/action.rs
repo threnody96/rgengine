@@ -20,8 +20,8 @@ impl <T> ActionLike for Action<T> where T: ActionDelegate + Any {
             let time_progress = self.generate_progress(now);
             let progress = easing.as_ref().map(|e| e(time_progress)).unwrap_or(time_progress);
             let status = self.delegate.run(node, progress);
-            if time_progress == 1.0 || (status.is_some() && status.unwrap() == ActionStatus::End) {
-                self.status.replace(ActionStatus::End);
+            if time_progress == 1.0 || (status.is_some() && status.unwrap() == ActionStatus::Finish) {
+                self.status.replace(ActionStatus::Finish);
             }
         }
         self.get_status()
@@ -58,7 +58,7 @@ impl <T> Action<T> where T: ActionDelegate + Any {
             ActionStatus::Processing => {
                 Some(time::now())
             },
-            ActionStatus::End => {
+            ActionStatus::Finish => {
                 None
             }
         }

@@ -2,7 +2,7 @@ use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption };
 use ::resource::{ Texture, Font, ResourceKey };
 use ::action::{ ActionLike };
-use ::util::parameter::{ Point, AnchorPoint, Size };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect };
 use sdl2::pixels::{ Color };
 
 pub trait NodeLike {
@@ -13,9 +13,11 @@ pub trait NodeLike {
 
     fn get_size(&self) -> Size;
 
-    fn get_render_point(&self) -> Point;
+    fn get_scaled_size(&self) -> Size;
 
-    fn get_absolute_render_point(&self) -> Point;
+    fn get_render_rect(&self) -> Rect;
+
+    fn get_absolute_render_rect(&self) -> Rect;
 
     fn update(&self);
 
@@ -52,6 +54,10 @@ pub trait NodeLike {
     fn set_position(&self, point: &Point);
 
     fn get_position(&self) -> Point;
+
+    fn set_scale(&self, scale: f64);
+
+    fn get_scale(&self) -> f64;
 
     fn update_absolute_position(&self);
 

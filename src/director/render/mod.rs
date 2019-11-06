@@ -228,10 +228,9 @@ impl <'a> RenderDirector<'a> {
             }
             for (child_node, child_texture) in children {
                 if let Some(ct) = child_texture {
-                    let point = child_node.get_render_point();
+                    let rect = child_node.get_render_rect();
                     let angle = child_node.get_rotation();
-                    let query = ct.query();
-                    c.copy_ex(&ct, None, Some(Rect::new(point.x(), point.y(), query.width, query.height).into()), angle, None, false, false).unwrap();
+                    c.copy_ex(&ct, None, Some(rect.into()), angle, None, false, false).unwrap();
                 }
             }
         }).unwrap();
