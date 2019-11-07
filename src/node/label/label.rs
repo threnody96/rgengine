@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::cmp::max;
+use std::cmp::{ min, max };
 use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
 use ::node::label::{ LabelOption, OneLineLabel };
 use ::util::parameter::{ Point, Size, AnchorPoint };
@@ -41,13 +41,26 @@ impl Label {
         let mut prev_height: u32 = 0;
         let mut labels: Vec<Rc<Node<OneLineLabel>>> = Vec::new();
         let mut max_width: u32 = 0;
+        let border_width = self.generate_border_width();
         for t in texts {
             let label = OneLineLabel::create(t, &option);
             label.set_anchor_point(AnchorPoint::new(0.0, 0.0));
             label.set_position(Point::new(0, prev_height as i32));
+            if let Some(border) = &option.border {
+                for offset in self.generate_border_points(border_width) {
+                    let l = OneLineLabel::create(t, LabelOption {
+                        color: border.clone(),
+                        border: None,
+                        ..option.clone()
+                    });
+                    l.set_anchor_point(AnchorPoint::new(0.0, 0.0));
+                    l.set_position(Point::new(offset.0, prev_height as i32 + offset.1));
+                    labels.push(l);
+                }
+            }
             let current_size = label.get_size();
-            prev_height += current_size.height() + 2;
-            max_width = max(current_size.width(), max_width);
+            prev_height += current_size.height() + 2 + border_width as u32 * 2;
+            max_width = max(current_size.width() + border_width as u32 * 2, max_width);
             labels.push(label);
         }
         self.size.replace(Some(Size::new(max_width, prev_height)));
@@ -55,6 +68,29 @@ impl Label {
         for label in labels {
             self.add_child(label, AddChildOption::default())
         }
+    }
+
+    fn generate_border_width(&self) -> i32 {
+        let option = self.option.borrow().clone();
+        match &option.border {
+            None => { 0 },
+            Some(_) => {
+                min(3, max((option.point / 20) as i32, 1))
+            }
+        }
+    }
+
+    fn generate_border_points(&self, border_width: i32) -> Vec<(i32, i32)> {
+        vec!(
+            (-border_width, -border_width),
+            (-border_width, 0),
+            (-border_width, border_width),
+            (0, -border_width),
+            (0, border_width),
+            (border_width, -border_width),
+            (border_width, 0),
+            (border_width, border_width),
+        )
     }
 
     fn clear_labels(&self) {

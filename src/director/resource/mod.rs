@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::collections::HashMap;
-use ::node::label::{ LabelOption };
+use ::node::label::{ OneLineLabelOption };
 use ::resource::{ Storage, ResourceType, ResourceKey };
 use ::util::{ context };
 use serde_json::Value;
@@ -106,7 +106,7 @@ impl <'a> ResourceDirector<'a> {
         self.textures.get(&resource_key).unwrap().clone()
     }
 
-    pub fn load_font(&mut self, option: &LabelOption) -> Rc<::resource::Font> {
+    pub fn load_font(&mut self, option: &OneLineLabelOption) -> Rc<::resource::Font> {
         let resource_key = self.generate_resource_key(
             &option.path,
             ResourceType::Font(option.point, option.style)

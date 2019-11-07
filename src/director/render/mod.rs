@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use ::node::{ NodeId, NodeLike };
-use ::node::label::{ LabelOption };
+use ::node::label::{ OneLineLabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ context };
@@ -127,7 +127,7 @@ impl <'a> RenderDirector<'a> {
         self.resource.load_texture(path)
     }
 
-    pub fn load_font(&mut self, option: &LabelOption) -> Rc<::resource::Font> {
+    pub fn load_font(&mut self, option: &OneLineLabelOption) -> Rc<::resource::Font> {
         self.resource.load_font(option)
     }
 
@@ -182,11 +182,10 @@ impl <'a> RenderDirector<'a> {
             }).unwrap();
             t
         });
-        texture.set_blend_mode(BlendMode::Blend);
         texture
     }
 
-    fn set_custom_alpha_blend_mode(&self, canvas: &mut Texture<'a>) {
+    fn set_alpha_blend_mode(&self, canvas: &mut Texture<'a>) {
         let ret = unsafe {
             let mode = sdl2::sys::SDL_ComposeCustomBlendMode(
                 sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
@@ -201,22 +200,37 @@ impl <'a> RenderDirector<'a> {
         if ret != 0 { panic!("合成モードの設定が失敗しました") }
     }
 
+    fn set_apply_src_alpha_mode(&self, canvas: &mut Texture<'a>) {
+        let ret = unsafe {
+            let mode = sdl2::sys::SDL_ComposeCustomBlendMode(
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_SRC_ALPHA,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ZERO,
+                sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ZERO,
+                sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
+            );
+            sdl2::sys::SDL_SetTextureBlendMode(canvas.raw(), transmute(mode as u32))
+        };
+        if ret != 0 { panic!("合成モードの設定が失敗しました") }
+    }
+
     fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {
         let node = render_tree.node.clone();
         if !node.get_visible() { return None; }
-        // if let Some(cache) = self.load_by_render_cache(node.clone()) {
-        //     return Some(cache);
-        // }
+        if let Some(cache) = self.load_by_render_cache(node.clone()) {
+            return Some(cache);
+        }
         let mut sub_canvas = if let Some(operation) = &*render_tree.operation.borrow() {
             self.render_operation(node.clone(), operation)
         } else {
             self.render_children(render_tree.clone())
         };
         let r = Rc::new(sub_canvas);
-        // if node.use_cache() {
-        //     let key = self.resource.set_render_cache(r.clone());
-        //     node.set_cache(Some(key));
-        // }
+        if node.use_cache() {
+            let key = self.resource.set_render_cache(r.clone());
+            node.set_cache(Some(key));
+        }
         Some(r)
     }
 
@@ -231,8 +245,8 @@ impl <'a> RenderDirector<'a> {
     fn render_operation(&mut self, node: Rc<dyn NodeLike>, operation: &RenderOperation) -> Texture<'a> {
         let texture = self.exec_operation(operation);
         let mut ct = self.clone_texture(&texture);
-        ct.set_alpha_mod(node.get_opacity());
-        ct
+        if node.get_opacity() == 255 { return ct; }
+        self.apply_alpha_mod(&mut ct, node.get_opacity())
     }
 
     fn exec_operation(&mut self, operation: &RenderOperation) -> Rc<Texture<'a>> {
@@ -254,7 +268,7 @@ impl <'a> RenderDirector<'a> {
             (child.node.clone(), self.render_inner_canvas(child.clone()))
         }).collect();
         let mut ct = self.create_sub_canvas(render_tree.node.get_size());
-        self.set_custom_alpha_blend_mode(&mut ct);
+        self.set_alpha_blend_mode(&mut ct);
         context(|c| &mut c.canvas).with_texture_canvas(&mut ct, |c| {
             for (child_node, child_texture) in children {
                 if let Some(t) = child_texture {
@@ -264,8 +278,8 @@ impl <'a> RenderDirector<'a> {
                 }
             }
         });
-        ct.set_alpha_mod(render_tree.node.get_opacity());
-        ct
+        if render_tree.node.get_opacity() == 255 { return ct; }
+        self.apply_alpha_mod(&mut ct, render_tree.node.get_opacity())
     }
 
     fn clone_texture(&self, texture: &Texture<'a>) -> Texture<'a> {
@@ -275,6 +289,19 @@ impl <'a> RenderDirector<'a> {
         context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();
         });
+        self.set_alpha_blend_mode(&mut sub_canvas);
+        sub_canvas
+    }
+
+    fn apply_alpha_mod(&self, texture: &mut Texture<'a>, alpha: u8) -> Texture<'a> {
+        let query = texture.query();
+        let mut sub_canvas = self.create_sub_canvas(Size::new(query.width, query.height));
+        texture.set_alpha_mod(alpha);
+        self.set_apply_src_alpha_mode(&mut sub_canvas);
+        context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
+            c.copy(texture, None, None).unwrap();
+        });
+        self.set_alpha_blend_mode(&mut sub_canvas);
         sub_canvas
     }
 

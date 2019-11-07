@@ -8,6 +8,7 @@ pub struct LabelOption {
     pub point: u16,
     pub color: Color,
     pub style: FontStyle,
+    pub border: Option<Color>
 }
 
 impl LabelOption {
@@ -19,6 +20,7 @@ impl LabelOption {
         Self::attach_absolute_scale(&mut option, attrs.get("absolute-scale").cloned());
         Self::attach_font(&mut option, attrs.get("font").cloned());
         Self::attach_color(&mut option, attrs.get("color").cloned());
+        Self::attach_border(&mut option, attrs.get("border").cloned());
         option
     }
 
@@ -41,8 +43,26 @@ impl LabelOption {
         option.path = font.unwrap();
     }
 
-    fn attach_color(option: &mut LabelOption, color: Option<String>) -> Result<(), ()> {
-        if color.is_none() { return Ok(()); }
+    fn attach_color(option: &mut LabelOption, color: Option<String>) {
+        if let Ok(c) = Self::parse_color(color) {
+            option.color = c;
+        }
+    }
+
+    fn attach_border(option: &mut LabelOption, color: Option<String>) {
+        if let Some(c) = color.clone() {
+            if &c == "" {
+                option.border = None;
+                return;
+            }
+        }
+        if let Ok(c) = Self::parse_color(color) {
+            option.border = Some(c);
+        }
+    }
+
+    fn parse_color(color: Option<String>) -> Result<Color, ()> {
+        if color.is_none() { return Err(()); }
         let c = color.clone().unwrap();
         let color_codes: Vec<&str> = c.split(",").collect();
         if color_codes.len() != 3 && color_codes.len() != 4 { return Err(()); }
@@ -52,13 +72,12 @@ impl LabelOption {
             color_codes.get(2).cloned().ok_or(())?,
             color_codes.get(3).cloned().unwrap_or("255")
         );
-        option.color = Color::RGBA(
+        Ok(Color::RGBA(
             codes.0.parse::<u8>().map_err(|_| ())?,
             codes.1.parse::<u8>().map_err(|_| ())?,
             codes.2.parse::<u8>().map_err(|_| ())?,
             codes.3.parse::<u8>().map_err(|_| ())?,
-        );
-        Ok(())
+        ))
     }
 
 }
@@ -73,7 +92,8 @@ impl Default for LabelOption {
                     path: "default.ttf".to_owned(),
                     point: 30,
                     color: Color::RGBA(255, 255,255, 255),
-                    style: FontStyle::normal()
+                    style: FontStyle::normal(),
+                    border: None
                 }
             }
         }

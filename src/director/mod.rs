@@ -11,7 +11,7 @@ use ::application::{ Application };
 use ::util::parameter::{ Size, InputCode, InputInfo, Point };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
-use ::node::label::{ LabelOption };
+use ::node::label::{ LabelOption, OneLineLabelOption };
 use ::resource::{ Texture, Font, ResourceKey };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
@@ -129,7 +129,7 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().load_texture(path)
     }
 
-    pub fn load_font(&self, option: &LabelOption) -> Rc<Font> {
+    pub fn load_font(&self, option: &OneLineLabelOption) -> Rc<Font> {
         self.render.borrow_mut().load_font(option)
     }
 

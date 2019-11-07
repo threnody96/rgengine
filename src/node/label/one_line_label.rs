@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ Node, NodeLike, NodeDelegate };
-use ::node::label::{ LabelOption };
+use ::node::label::{ OneLineLabelOption };
 use ::util::{ director };
 use ::util::parameter::{ Size };
 use ::resource::{ Font };
@@ -11,7 +11,7 @@ pub struct OneLineLabel {
     size: RefCell<Option<Size>>,
     text: RefCell<String>,
     font: RefCell<Rc<Font>>,
-    option: RefCell<LabelOption>
+    option: RefCell<OneLineLabelOption>
 }
 
 impl OneLineLabel {
@@ -19,7 +19,7 @@ impl OneLineLabel {
     pub fn create<A, B>(text: A, option: B) -> Rc<Node<Self>>
     where
         A: Into<String>,
-        B: Into<LabelOption>
+        B: Into<OneLineLabelOption>
     {
         let t = text.into();
         let o = option.into();

@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::cmp::max;
 use ::node::{ Node, NodeDelegate, NodeLike, AddChildOption };
-use ::node::label::{ OneLineLabel, LabelOption };
+use ::node::label::{ Label, LabelOption };
 use ::util::parameter::{ Size, Point, AnchorPoint };
 use html5ever::{ parse_document };
 use html5ever::driver::{ ParseOpts };
@@ -14,7 +14,7 @@ use html5ever::interface::{ Attribute };
 pub struct PrettyLabel {
     text: RefCell<String>,
     size: RefCell<Option<Size>>,
-    labels: RefCell<Vec<Rc<Node<OneLineLabel>>>>
+    labels: RefCell<Vec<Rc<Node<Label>>>>
 }
 
 impl PrettyLabel {
@@ -52,7 +52,7 @@ impl PrettyLabel {
         }
     }
 
-    fn parse(handle: &Handle, option: &LabelOption, info: &mut (i32, i32, u32)) -> Vec<Rc<Node<OneLineLabel>>> {
+    fn parse(handle: &Handle, option: &LabelOption, info: &mut (i32, i32, u32)) -> Vec<Rc<Node<Label>>> {
         let (mut labels, next_option) = match handle.data {
             NodeData::Text { ref contents } => {
                 let text = contents.borrow().to_string()
@@ -75,11 +75,11 @@ impl PrettyLabel {
         labels
     }
 
-    fn parse_text(texts: Vec<&str>, option: &LabelOption, info: &mut (i32, i32, u32)) -> Vec<Rc<Node<OneLineLabel>>> {
-        let mut result: Vec<Rc<Node<OneLineLabel>>> = Vec::new();
+    fn parse_text(texts: Vec<&str>, option: &LabelOption, info: &mut (i32, i32, u32)) -> Vec<Rc<Node<Label>>> {
+        let mut result: Vec<Rc<Node<Label>>> = Vec::new();
         for i in 0..texts.len() {
             let t = texts.get(i).unwrap().to_string();
-            let label = OneLineLabel::create(t.as_str(), option);
+            let label = Label::create(t.as_str(), option);
             let size = label.get_size();
             label.set_anchor_point(AnchorPoint::new(0.0, 0.0));
             if i == 0 {
@@ -105,7 +105,7 @@ impl PrettyLabel {
         LabelOption::parse(option, name.to_lowercase(), attr_map)
     }
 
-    fn measure_labels(labels: &Vec<Rc<Node<OneLineLabel>>>) -> Size {
+    fn measure_labels(labels: &Vec<Rc<Node<Label>>>) -> Size {
         let mut max_x: u32 = 0;
         let mut max_y: u32 = 0;
         for label in labels {
