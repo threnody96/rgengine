@@ -20,7 +20,7 @@ pub enum RenderOperation {
 
 pub struct RenderTree {
     node: Rc<dyn NodeLike>,
-    operations: RefCell<Vec<RenderOperation>>,
+    operation: RefCell<Option<RenderOperation>>,
     children: RefCell<Vec<Rc<RenderTree>>>
 }
 
@@ -29,13 +29,13 @@ impl RenderTree {
     pub fn new(node: Rc<dyn NodeLike>) -> Rc<Self> {
         Rc::new(Self {
             node: node,
-            operations: RefCell::new(Vec::new()),
+            operation: RefCell::new(None),
             children: RefCell::new(Vec::new())
         })
     }
 
-    pub fn push_operation(&self, operation: RenderOperation) {
-        self.operations.borrow_mut().push(operation);
+    pub fn set_operation(&self, operation: RenderOperation) {
+        self.operation.replace(Some(operation));
     }
 
     pub fn push_child(&self, child: Rc<RenderTree>) {
@@ -51,7 +51,6 @@ pub struct RenderDirector<'a> {
     resolution_policy: ResolutionPolicy,
     render_canvas_dest: Option<Rect>,
     render_tree_nodes: HashMap<NodeId, Rc<RenderTree>>,
-    render_tree: Option<Rc<RenderTree>>,
 }
 
 impl <'a> RenderDirector<'a> {
@@ -64,7 +63,6 @@ impl <'a> RenderDirector<'a> {
             resolution_policy: ResolutionPolicy::ExactFit,
             render_canvas_dest: None,
             render_tree_nodes: HashMap::new(),
-            render_tree: None,
         }
     }
 
@@ -133,30 +131,25 @@ impl <'a> RenderDirector<'a> {
         self.resource.load_font(option)
     }
 
-    pub fn prepare_render_tree(&mut self, parent: &Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
+    pub fn prepare_render_tree(&mut self, parent: Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
         let id = node.id();
         if self.render_tree_nodes.get(&id).is_none() {
             let tree_node = RenderTree::new(node.clone());
             self.render_tree_nodes.insert(id.clone(), tree_node.clone());
-            match parent {
-                None => {
-                    self.render_tree = Some(tree_node);
-                },
-                Some(p) => {
-                    self.render_tree_nodes.get(&p.id()).unwrap().push_child(tree_node.clone());
-                }
+            if let Some(p) = parent {
+                self.render_tree_nodes.get(&p.id()).unwrap().push_child(tree_node.clone());
             }
         }
     }
 
     pub fn render_texture(&mut self, node: Rc<dyn NodeLike>, texture: Rc<::resource::Texture>) {
         let tree = self.render_tree_nodes.get(&node.id()).unwrap();
-        tree.push_operation(RenderOperation::Image(texture));
+        tree.set_operation(RenderOperation::Image(texture));
     }
 
     pub fn render_label(&mut self, node: Rc<dyn NodeLike>, text: &str, font: Rc<::resource::Font>, color: &Color) {
         let tree = self.render_tree_nodes.get(&node.id()).unwrap();
-        tree.push_operation(RenderOperation::Label(text.to_owned(), font, color.clone()));
+        tree.set_operation(RenderOperation::Label(text.to_owned(), font, color.clone()));
     }
 
     pub fn measure_label_size(&self, text: &str, font: Rc<::resource::Font>) -> Size {
@@ -175,13 +168,12 @@ impl <'a> RenderDirector<'a> {
         }
     }
 
-    fn create_sub_canvas(&mut self, node: Rc<dyn NodeLike>) -> Texture<'a> {
-        let canvas_size = node.get_size();
+    fn create_sub_canvas(&self, size: Size) -> Texture<'a> {
         let mut texture = context(|c| {
             let mut t = c.texture_creator.create_texture_target(
                 Some(PixelFormatEnum::RGBA8888),
-                canvas_size.width(),
-                canvas_size.height()
+                size.width(),
+                size.height()
             ).unwrap();
             c.canvas.with_texture_canvas(&mut t, |can| {
                 can.set_blend_mode(BlendMode::None);
@@ -190,7 +182,7 @@ impl <'a> RenderDirector<'a> {
             }).unwrap();
             t
         });
-        self.set_custom_alpha_blend_mode(&mut texture);
+        texture.set_blend_mode(BlendMode::Blend);
         texture
     }
 
@@ -198,7 +190,7 @@ impl <'a> RenderDirector<'a> {
         let ret = unsafe {
             let mode = sdl2::sys::SDL_ComposeCustomBlendMode(
                 sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
-                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_DST_ALPHA,
+                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
                 sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
                 sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
                 sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
@@ -212,35 +204,19 @@ impl <'a> RenderDirector<'a> {
     fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {
         let node = render_tree.node.clone();
         if !node.get_visible() { return None; }
-        if let Some(cache) = self.load_by_render_cache(node.clone()) {
-            return Some(cache);
-        }
-        let children: Vec<(Rc<dyn NodeLike>, Option<Rc<Texture<'a>>>)> = render_tree.children.borrow().iter().map(|child| {
-            (child.node.clone(), self.render_inner_canvas(child.clone()))
-        }).collect();
-        let mut sub_canvas = self.create_sub_canvas(node.clone());
-        let canvas = context(|c| &mut c.canvas);
-        canvas.with_texture_canvas(&mut sub_canvas, |c| {
-            for operation in render_tree.operations.borrow().iter() {
-                let t = self.exec_operation(operation);
-                let query = t.query();
-                c.copy(&t, None, Some(Rect::new(0, 0, query.width, query.height).into())).unwrap();
-            }
-            for (child_node, child_texture) in children {
-                if let Some(ct) = child_texture {
-                    let rect = child_node.get_render_rect();
-                    let angle = child_node.get_rotation();
-                    c.copy_ex(&ct, None, Some(rect.into()), angle, None, false, false).unwrap();
-                }
-            }
-        }).unwrap();
-        sub_canvas.set_alpha_mod(node.get_opacity());
-        if node.is_additive_blend() { sub_canvas.set_blend_mode(BlendMode::Add); }
+        // if let Some(cache) = self.load_by_render_cache(node.clone()) {
+        //     return Some(cache);
+        // }
+        let mut sub_canvas = if let Some(operation) = &*render_tree.operation.borrow() {
+            self.render_operation(node.clone(), operation)
+        } else {
+            self.render_children(render_tree.clone())
+        };
         let r = Rc::new(sub_canvas);
-        if node.use_cache() {
-            let key = self.resource.set_render_cache(r.clone());
-            node.set_cache(Some(key));
-        }
+        // if node.use_cache() {
+        //     let key = self.resource.set_render_cache(r.clone());
+        //     node.set_cache(Some(key));
+        // }
         Some(r)
     }
 
@@ -252,7 +228,14 @@ impl <'a> RenderDirector<'a> {
         None
     }
 
-    fn exec_operation(&self, operation: &RenderOperation) -> Rc<Texture<'a>> {
+    fn render_operation(&mut self, node: Rc<dyn NodeLike>, operation: &RenderOperation) -> Texture<'a> {
+        let texture = self.exec_operation(operation);
+        let mut ct = self.clone_texture(&texture);
+        ct.set_alpha_mod(node.get_opacity());
+        ct
+    }
+
+    fn exec_operation(&mut self, operation: &RenderOperation) -> Rc<Texture<'a>> {
         match operation {
             RenderOperation::Image(texture) => {
                 self.resource.load_texture_from_resource_key(texture.clone())
@@ -266,28 +249,53 @@ impl <'a> RenderDirector<'a> {
         }
     }
 
-    pub fn render_canvas(&mut self) {
-        if let Some(render_tree) = self.render_tree.clone() {
-            let texture = self.render_inner_canvas(render_tree);
-            context(|c| {
-                c.canvas.set_blend_mode(BlendMode::None);
-                c.canvas.set_draw_color(Color::RGBA(0, 0, 0, 255));
-                c.canvas.clear();
-                if let Some(t) = texture {
-                    let rect = self.render_canvas_dest.as_ref().map(|e| e.clone().into());
-                    c.canvas.copy(&t, None, rect).unwrap();
+    fn render_children(&mut self, render_tree: Rc<RenderTree>) -> Texture<'a> {
+        let children: Vec<(Rc<dyn NodeLike>, Option<Rc<Texture<'a>>>)> = render_tree.children.borrow().iter().map(|child| {
+            (child.node.clone(), self.render_inner_canvas(child.clone()))
+        }).collect();
+        let mut ct = self.create_sub_canvas(render_tree.node.get_size());
+        self.set_custom_alpha_blend_mode(&mut ct);
+        context(|c| &mut c.canvas).with_texture_canvas(&mut ct, |c| {
+            for (child_node, child_texture) in children {
+                if let Some(t) = child_texture {
+                    let rect = child_node.get_render_rect();
+                    let angle = child_node.get_rotation();
+                    c.copy_ex(&t, None, Some(rect.into()), angle, None, false, false).unwrap();
                 }
-                c.canvas.present();
-            });
+            }
+        });
+        ct.set_alpha_mod(render_tree.node.get_opacity());
+        ct
+    }
+
+    fn clone_texture(&self, texture: &Texture<'a>) -> Texture<'a> {
+        let query = texture.query();
+        let mut sub_canvas = self.create_sub_canvas(Size::new(query.width, query.height));
+        sub_canvas.set_blend_mode(BlendMode::None);
+        context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
+            c.copy(texture, None, None).unwrap();
+        });
+        sub_canvas
+    }
+
+    pub fn render_scene(&mut self, scene_id: NodeId) {
+        let render_tree = self.render_tree_nodes.get(&scene_id).cloned().unwrap();
+        let mut s = if let Some(texture) = self.render_inner_canvas(render_tree.clone()) {
+            self.clone_texture(&texture)
         } else {
-            context(|c| {
-                c.canvas.set_blend_mode(BlendMode::None);
-                c.canvas.set_draw_color(Color::RGBA(0, 0, 0, 255));
-                c.canvas.clear();
-                c.canvas.present();
-            });
-        }
-        self.render_tree = None;
+            self.create_sub_canvas(render_tree.node.get_size())
+        };
+        self.render_canvas(s);
+    }
+
+    fn render_canvas(&mut self, canvas: Texture<'a>) {
+        context(|c| {
+            let can = &mut c.canvas;
+            can.set_draw_color(Color::RGBA(0, 0, 0, 255));
+            can.clear();
+            can.copy(&canvas, None, self.render_canvas_dest.clone().map(|e| e.into()));
+            can.present();
+        });
         self.render_tree_nodes = HashMap::new();
     }
 

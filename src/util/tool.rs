@@ -110,8 +110,9 @@ pub fn run(application: Rc<dyn Application>) {
             },
             || {
                 director(|d| d.update_resolution_size());
-                director(|d| d.get_scene()).start_render();
-                director(|d| d.render_canvas());
+                let scene = director(|d| d.get_scene());
+                scene.start_render();
+                director(|d| d.render_scene(scene.id()));
             }
         );
         director(|d| d.set_current_fps(fps_manager.fps()));

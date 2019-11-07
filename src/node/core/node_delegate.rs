@@ -91,7 +91,7 @@ pub trait NodeDelegate {
     }
 
     fn prepare_render_tree(&self) {
-        director(|d| d.prepare_render_tree(&self.get_parent(), self.node()));
+        director(|d| d.prepare_render_tree(self.get_parent(), self.node()));
     }
 
     fn render_texture(&self, texture: Rc<Texture>) {

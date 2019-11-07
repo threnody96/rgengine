@@ -133,7 +133,7 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().load_font(option)
     }
 
-    pub fn prepare_render_tree(&self, parent: &Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
+    pub fn prepare_render_tree(&self, parent: Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
         self.render.borrow_mut().prepare_render_tree(parent, node);
     }
 
@@ -149,8 +149,8 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().update_resolution_size();
     }
 
-    pub fn render_canvas(&self) {
-        self.render.borrow_mut().render_canvas();
+    pub fn render_scene(&self, id: NodeId) {
+        self.render.borrow_mut().render_scene(id)
     }
 
     pub fn destroy_render_cache(&self, key: &ResourceKey) {
