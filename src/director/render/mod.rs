@@ -200,21 +200,6 @@ impl <'a> RenderDirector<'a> {
         if ret != 0 { panic!("合成モードの設定が失敗しました") }
     }
 
-    fn set_apply_src_alpha_mode(&self, canvas: &mut Texture<'a>) {
-        let ret = unsafe {
-            let mode = sdl2::sys::SDL_ComposeCustomBlendMode(
-                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_SRC_ALPHA,
-                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ZERO,
-                sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
-                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ONE,
-                sdl2::sys::SDL_BlendFactor::SDL_BLENDFACTOR_ZERO,
-                sdl2::sys::SDL_BlendOperation::SDL_BLENDOPERATION_ADD,
-            );
-            sdl2::sys::SDL_SetTextureBlendMode(canvas.raw(), transmute(mode as u32))
-        };
-        if ret != 0 { panic!("合成モードの設定が失敗しました") }
-    }
-
     fn render_inner_canvas(&mut self, render_tree: Rc<RenderTree>) -> Option<Rc<Texture<'a>>> {
         let node = render_tree.node.clone();
         if !node.get_visible() { return None; }
@@ -297,11 +282,10 @@ impl <'a> RenderDirector<'a> {
         let query = texture.query();
         let mut sub_canvas = self.create_sub_canvas(Size::new(query.width, query.height));
         texture.set_alpha_mod(alpha);
-        self.set_apply_src_alpha_mode(&mut sub_canvas);
+        sub_canvas.set_blend_mode(BlendMode::Blend);
         context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();
         });
-        self.set_alpha_blend_mode(&mut sub_canvas);
         sub_canvas
     }
 
