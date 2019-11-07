@@ -1,163 +1,206 @@
-pub mod node;
-pub mod application;
-pub mod resource;
+mod application;
+mod node;
+mod resource;
+mod render;
+mod input;
 
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
-use std::cell::RefCell;
-use self::node::{ NodeDirector };
-use self::application::{ ApplicationDerector };
-use self::resource::{ ResourceDirector };
-use ::node::{ Node, NodeDelegate, SceneLike, NodeId, NodeLike, LabelTextOption };
-use ::application::{ AppDelegate, ResolutionPolicy, ResolutionSize };
-use ::util::{ must, Size };
-use ggez::{ Context };
-use ggez::graphics::{ Scale, Image, Font, Color };
-use serde_json::{ Value };
+use ::application::{ Application };
+use ::util::parameter::{ Size, InputCode, InputInfo, Point };
+use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
+use ::node::scene::{ SceneLike };
+use ::node::label::{ LabelOption, OneLineLabelOption };
+use ::resource::{ Texture, Font, ResourceKey };
+use self::application::ApplicationDirector;
+use self::node::NodeDirector;
+use self::render::RenderDirector;
+use self::input::InputDirector;
+use sdl2::{ EventPump };
+use sdl2::pixels::{ Color };
+use rand::distributions::{ Standard, Distribution };
 
-pub struct Director {
-    node: NodeDirector,
-    application: ApplicationDerector,
-    resource: ResourceDirector,
-    context: RefCell<Option<Context>>
+pub struct Director<'a> {
+    application: RefCell<ApplicationDirector>,
+    node: RefCell<NodeDirector>,
+    render: RefCell<RenderDirector<'a>>,
+    input: RefCell<InputDirector>
 }
 
-impl Director {
+impl <'a> Director<'a> {
 
     pub fn new() -> Self {
         Self {
-            node: NodeDirector::new(),
-            application: ApplicationDerector::new(),
-            resource: ResourceDirector::new(),
-            context: RefCell::new(None)
+            application: RefCell::new(ApplicationDirector::new()),
+            node: RefCell::new(NodeDirector::new()),
+            render: RefCell::new(RenderDirector::new()),
+            input: RefCell::new(InputDirector::new())
         }
     }
 
-    pub fn run_with_scene(&self, app_delegate: Rc<dyn AppDelegate>, scene: Rc<dyn SceneLike>) {
-        let (ctx, mut event_loop) = self.application.init(app_delegate, scene);
-        self.set_context(ctx);
-        self.application.run(&mut event_loop);
+    pub fn window_size(&self) -> Size {
+        self.application.borrow().window_size()
     }
 
-    pub fn set_context(&self, ctx: Context) {
-        self.context.replace(Some(ctx));
+    pub fn get_resolution_size(&self) -> Size {
+        self.application.borrow().get_resolution_size()
     }
 
-    pub fn with_context<T, R>(&self, callback: T) -> R where T: FnOnce(&mut Context) -> R {
-        let mut ctx = self.context.borrow_mut();
-        if ctx.is_none() { must::<String, String>(Err("ゲームが実行されていません".to_owned())); }
-        callback(ctx.as_mut().unwrap())
+    pub fn rand<T>(&self) -> T where Standard: Distribution<T> {
+        self.application.borrow_mut().rand()
+    }
+
+    pub fn is_continuing(&self) -> bool {
+        self.application.borrow().is_continuing()
+    }
+
+    pub fn set_continuing(&self, continuing: bool) {
+        self.application.borrow_mut().set_continuing(continuing);
     }
 
     pub fn get_scene(&self) -> Rc<dyn SceneLike> {
-        self.application.get_scene()
+        self.application.borrow().get_scene()
     }
 
-    pub fn set_scene(&self, scene: Rc<dyn SceneLike>) {
-        if self.application.get_scene().id() != scene.id() {
-            self.destroy_node(self.application.get_scene().id());
+    pub fn replace_scene(&self, scene: Rc<dyn SceneLike>) {
+        let current_scene = { self.application.borrow().get_scene() };
+        if current_scene.id() != scene.id() {
+            let id = current_scene.id();
+            self.destroy_node(&id);
         }
-        self.application.set_scene(scene);
+        self.application.borrow_mut().set_scene(scene);
     }
 
-    pub fn add_font_size(&self, name: String, scale: f32) {
-        self.application.add_font_size(name, scale);
+    pub fn set_application(&self, application: Rc<dyn Application>) {
+        self.application.borrow_mut().set_application(application.clone());
+        self.render.borrow_mut().set_application(application.clone());
     }
 
-    pub fn get_font_size(&self, name: String) -> Option<Scale> {
-        self.application.get_font_size(name)
+    pub(crate) fn set_scene(&self, scene: Rc<dyn SceneLike>) {
+        self.application.borrow_mut().set_scene(scene);
     }
 
-    pub fn add_font(&self, name: String, path: String) {
-        self.application.add_font(name, path);
+    pub(crate) fn set_current_fps(&self, fps: usize) {
+        self.application.borrow_mut().set_current_fps(fps);
     }
 
-    pub fn get_font(&self, name: String) -> Option<String> {
-        self.application.get_font(name)
+    pub fn default_label_option(&self) -> Option<LabelOption> {
+        self.application.borrow().default_label_option()
     }
 
-    pub fn add_color(&self, name: String, color: Color) {
-        self.application.add_color(name, color);
+    pub fn set_default_label_option(&self, option: &LabelOption) {
+        self.application.borrow_mut().set_default_label_option(option);
     }
 
-    pub fn get_color(&self, name: String) -> Option<Color> {
-        self.application.get_color(name)
-    }
-
-    pub fn get_default_label_option(&self) -> LabelTextOption {
-        self.application.get_default_label_option()
-    }
-
-    pub fn get_visible_size(&self) -> Size {
-        self.application.get_visible_size()
-    }
-
-    pub fn set_visible_size(&self, size: Size) {
-        self.application.set_visible_size(size);
-    }
-
-    pub fn get_resolution_size(&self) -> ResolutionSize {
-        self.application.get_resolution_size()
-    }
-
-    pub fn set_resolution_size(&self, size: Size, policy: ResolutionPolicy) {
-        self.application.set_resolution_size(size, policy);
-    }
-
-    pub fn get_display_stats(&self) -> bool {
-        self.application.get_display_stats()
-    }
-
-    pub fn set_display_stats(&self, display_stats: bool) {
-        self.application.set_display_stats(display_stats);
+    pub fn current_fps(&self) -> usize {
+        self.application.borrow().current_fps()
     }
 
     pub fn register_node<T>(&self, node: Rc<Node<T>>) where T: NodeDelegate + Any {
-        self.node.register_node(node);
+        self.node.borrow_mut().register_node(node);
     }
 
-    pub fn get_node<T>(&self, id: NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
-        self.node.get_node(id)
+    pub fn get_node<T>(&self, id: &NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
+        self.node.borrow().get_node(id)
     }
 
-    pub fn get_nodelike(&self, id: NodeId) -> Option<Rc<dyn NodeLike>> {
-        self.node.get_nodelike(id)
+    pub fn get_nodelike(&self, id: &NodeId) -> Rc<dyn NodeLike> {
+        self.node.borrow().get_nodelike(id)
     }
 
-    pub fn update_node(&self, id: NodeId) {
-        self.node.update(id);
+    pub fn destroy_node(&self, id: &NodeId) {
+        self.node.borrow_mut().destroy(id);
     }
 
-    pub fn render_node(&self, id: NodeId) {
-        self.node.render(id);
+    pub fn measure_label_size(&self, text: &str, font: Rc<Font>) -> Size {
+        self.render.borrow().measure_label_size(text, font)
     }
 
-    pub fn destroy_node(&self, id: NodeId) {
-        self.node.destroy(id);
+    pub fn add_alias(&self, name: &str, path: &str) {
+        self.render.borrow_mut().add_alias(name, path);
     }
 
-    pub fn load_plain_data(&self, path: String) -> Rc<Vec<u8>> {
-        self.resource.load_plain_data(path)
+    pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
+        self.render.borrow_mut().load_plain_data(path)
     }
 
-    pub fn load_string(&self, path: String) -> Rc<String> {
-        self.resource.load_string(path)
+    pub fn load_texture(&self, path: &str) -> Rc<Texture> {
+        self.render.borrow_mut().load_texture(path)
     }
 
-    pub fn load_json(&self, path: String) -> Rc<Value> {
-        self.resource.load_json(path)
+    pub fn load_font(&self, option: &OneLineLabelOption) -> Rc<Font> {
+        self.render.borrow_mut().load_font(option)
     }
 
-    pub fn load_image(&self, path: String) -> Rc<Image> {
-        self.with_context(|ctx| {
-            self.resource.load_image(ctx, path)
-        })
+    pub fn prepare_render_tree(&self, parent: Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
+        self.render.borrow_mut().prepare_render_tree(parent, node);
     }
 
-    pub fn load_font(&self, path: String) -> Rc<Font> {
-        self.with_context(|ctx| {
-            self.resource.load_font(ctx, path)
-        })
+    pub fn render_texture(&self, node: Rc<dyn NodeLike>, texture: Rc<Texture>) {
+        self.render.borrow_mut().render_texture(node, texture);
+    }
+
+    pub fn render_label(&self, node: Rc<dyn NodeLike>, text: &str, font: Rc<Font>, color: &Color) {
+        self.render.borrow_mut().render_label(node, text, font, color);
+    }
+
+    pub fn update_resolution_size(&self) {
+        self.render.borrow_mut().update_resolution_size();
+    }
+
+    pub fn render_scene(&self, id: NodeId) {
+        self.render.borrow_mut().render_scene(id)
+    }
+
+    pub fn destroy_render_cache(&self, key: &ResourceKey) {
+        self.render.borrow_mut().destroy_render_cache(key);
+    }
+
+    pub fn get_mouse_position(&self) -> Point {
+        let p = self.input.borrow().get_mouse_pointer();
+        self.render.borrow().convert_window_point_to_resolution_point(&p)
+    }
+
+    pub fn get_input_info<A>(&self, key: A) -> InputInfo
+    where A: Into<String>
+    {
+        let mut info = self.input.borrow().get_input_info(key);
+        let p = self.render.borrow().convert_window_point_to_resolution_point(&info.mouse_position);
+        info.mouse_position = p;
+        info
+    }
+
+    pub fn update_input_state(&self, event_pump: &mut EventPump) {
+        self.input.borrow_mut().update_state(event_pump)
+    }
+
+    pub fn add_key_code<A>(&self, key: A, code: InputCode)
+    where A: Into<String>
+    {
+        self.input.borrow_mut().insert_key_code(key, code);
+    }
+
+    pub fn add_key_codes<A>(&self, codes: Vec<(A, InputCode)>)
+    where A: Into<String>
+    {
+        for (key, code) in codes {
+            self.add_key_code(key, code);
+        }
+    }
+
+    pub fn reset_key_code<A>(&self, key: Option<A>)
+    where A: Into<String>
+    {
+        self.input.borrow_mut().reset_key_code(key);
+    }
+
+    pub fn is_quit(&self) -> bool {
+        self.input.borrow().is_quit()
+    }
+
+    pub fn reset_is_quit(&self) {
+        self.input.borrow_mut().reset_is_quit();
     }
 
 }

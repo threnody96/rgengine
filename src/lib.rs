@@ -1,20 +1,29 @@
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-extern crate serde;
-extern crate image; 
-pub extern crate ggez;
+extern crate sdl2;
+extern crate time;
 extern crate crypto;
-extern crate rusqlite;
 extern crate base64;
+extern crate rusqlite;
+extern crate uuid;
+extern crate serde_json;
+extern crate rand;
+extern crate backtrace;
 extern crate html5ever;
+extern crate chrono;
 
-pub mod director;
-pub mod resource;
-pub mod util;
 pub mod application;
+pub mod director;
+pub mod util;
 pub mod node;
+pub mod resource;
+pub mod action;
+
+use ::director::Director;
+use ::application::Context;
 
 thread_local! {
-    pub static DIRECTOR: ::director::Director = ::director::Director::new();
+    pub static DIRECTOR: Director<'static> = Director::new();
 }
+
+pub(crate) static mut CONTEXT: Option<Context> = None;
+
+pub static NoOption: ::util::NoOption = ::util::NoOption {};

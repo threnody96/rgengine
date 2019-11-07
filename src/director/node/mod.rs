@@ -1,33 +1,29 @@
 use std::any::Any;
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use ::node::{ Node, NodeDelegate, NodeId, NodeLike };
 
 pub struct NodeDirector {
-    nodelikes: RefCell<HashMap<NodeId, Rc<dyn NodeLike>>>,
-    anynodes: RefCell<HashMap<NodeId, Rc<dyn Any>>>
+    nodelikes: HashMap<NodeId, Rc<dyn NodeLike>>,
+    anynodes: HashMap<NodeId, Rc<dyn Any>>,
 }
 
 impl NodeDirector {
 
     pub fn new() -> Self {
         Self {
-            nodelikes: RefCell::new(HashMap::new()),
-            anynodes: RefCell::new(HashMap::new())
+            nodelikes: HashMap::new(),
+            anynodes: HashMap::new(),
         }
     }
 
-    pub fn register_node<T>(&self, node: Rc<Node<T>>) where T: NodeDelegate + Any {
-        let mut nodelikes = self.nodelikes.borrow_mut();
-        let mut anynodes = self.anynodes.borrow_mut();
-        nodelikes.insert(node.id(), node.clone());
-        anynodes.insert(node.id(), node.clone());
+    pub fn register_node<T>(&mut self, node: Rc<Node<T>>) where T: NodeDelegate + Any {
+        self.nodelikes.insert(node.id(), node.clone());
+        self.anynodes.insert(node.id(), node.clone());
     }
 
-    pub fn get_node<T>(&self, id: NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
-        let anynodes = self.anynodes.borrow();
-        let node = anynodes.get(&id);
+    pub fn get_node<T>(&self, id: &NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
+        let node = self.anynodes.get(id);
         if node.is_none() { return None; }
         if let Ok(n) = node.unwrap().clone().downcast::<Node<T>>() {
             return Some(n);
@@ -35,42 +31,14 @@ impl NodeDirector {
         None
     }
 
-    pub fn get_nodelike(&self, id: NodeId) -> Option<Rc<dyn NodeLike>> {
-        let nodelikes = self.nodelikes.borrow();
-        let node = nodelikes.get(&id);
-        if node.is_none() { return None; }
-        Some(node.unwrap().clone())
+    pub fn get_nodelike(&self, id: &NodeId) -> Rc<dyn NodeLike> {
+        let node = self.nodelikes.get(id);
+        node.cloned().unwrap()
     }
 
-    pub fn update(&self, id: NodeId) {
-        let nodelikes = self.nodelikes.borrow();
-        let node = nodelikes.get(&id);
-        if node.is_none() { return; }
-        node.unwrap().update();
-    }
-
-    pub fn render(&self, id: NodeId) {
-        let nodelikes = self.nodelikes.borrow();
-        let node = nodelikes.get(&id);
-        if node.is_none() { return; }
-        node.unwrap().render();
-    }
-
-    pub fn destroy(&self, id: NodeId) {
-        let nodelike = {
-            let mut nodelikes = self.nodelikes.borrow_mut();
-            let mut anynodes = self.anynodes.borrow_mut();
-            anynodes.remove(&id);
-            nodelikes.remove(&id)
-        };
-        if let Some(node) = nodelike {
-            for parent in node.get_parents() {
-                self.get_nodelike(parent).unwrap().remove_child(id.clone());
-            }
-            for child in node.get_children() {
-                self.destroy(child);
-            }
-        }
+    pub fn destroy(&mut self, id: &NodeId) {
+        self.anynodes.remove(id);
+        self.nodelikes.remove(id);
     }
 
 }
