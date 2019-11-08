@@ -24,6 +24,6 @@ thread_local! {
     pub static DIRECTOR: Director<'static> = Director::new();
 }
 
-pub(crate) static mut CONTEXT: Option<Context> = None;
+pub(crate) static mut CONTEXT: Option<Context<'static>> = None;
 
 pub static NoOption: ::util::NoOption = ::util::NoOption {};

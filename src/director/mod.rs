@@ -3,21 +3,23 @@ mod node;
 mod resource;
 mod render;
 mod input;
+mod sound;
 
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
-use ::util::parameter::{ Size, InputCode, InputInfo, Point };
+use ::util::parameter::{ Size, InputCode, InputInfo, Point, MusicOption };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
 use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ LabelOption, OneLineLabelOption };
-use ::resource::{ Texture, Font, ResourceKey };
+use ::resource::{ Texture, Font, ResourceKey, SE };
 use self::application::ApplicationDirector;
 use self::node::NodeDirector;
 use self::render::RenderDirector;
 use self::input::InputDirector;
+use self::sound::SoundDirector;
 use sdl2::{ EventPump };
 use sdl2::pixels::{ Color };
 use rand::distributions::{ Standard, Distribution };
@@ -26,7 +28,8 @@ pub struct Director<'a> {
     application: RefCell<ApplicationDirector>,
     node: RefCell<NodeDirector>,
     render: RefCell<RenderDirector<'a>>,
-    input: RefCell<InputDirector>
+    input: RefCell<InputDirector>,
+    sound: RefCell<SoundDirector<'a>>
 }
 
 impl <'a> Director<'a> {
@@ -36,7 +39,8 @@ impl <'a> Director<'a> {
             application: RefCell::new(ApplicationDirector::new()),
             node: RefCell::new(NodeDirector::new()),
             render: RefCell::new(RenderDirector::new()),
-            input: RefCell::new(InputDirector::new())
+            input: RefCell::new(InputDirector::new()),
+            sound: RefCell::new(SoundDirector::new())
         }
     }
 
@@ -137,6 +141,7 @@ impl <'a> Director<'a> {
 
     pub fn add_alias(&self, name: &str, path: &str) {
         self.render.borrow_mut().add_alias(name, path);
+        self.sound.borrow_mut().add_alias(name, path);
     }
 
     pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
@@ -219,6 +224,29 @@ impl <'a> Director<'a> {
 
     pub fn reset_is_quit(&self) {
         self.input.borrow_mut().reset_is_quit();
+    }
+
+    pub fn play_music<A, B>(&self, path: A, option: B)
+    where A: Into<String>, B: Into<MusicOption>
+    {
+        let p = path.into();
+        self.sound.borrow_mut().play_music(&p, option.into());
+    }
+
+    pub fn halt_music(&self) {
+        self.sound.borrow().halt_music();
+    }
+
+    pub fn play_se<A>(&self, path: A, loops: i32) -> Rc<SE>
+    where A: Into<String>
+    {
+        let p = path.into();
+        self.sound.borrow_mut().play_se(&p, loops)
+    }
+
+    pub fn clean_se(&self) {
+        let seed: usize = self.rand();
+        self.sound.borrow_mut().clean_se(seed);
     }
 
 }

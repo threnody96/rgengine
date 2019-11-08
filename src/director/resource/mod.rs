@@ -8,6 +8,7 @@ use sdl2::render::{ Texture };
 use sdl2::ttf::{ Font };
 use sdl2::rwops::{ RWops };
 use sdl2::image::{ ImageRWops };
+use sdl2::mixer::{ Music, LoaderRWops, Chunk };
 use uuid::Uuid;
 
 pub struct ResourceDirector<'a> {
@@ -18,6 +19,8 @@ pub struct ResourceDirector<'a> {
     jsons: HashMap<ResourceKey, Rc<Value>>,
     textures: HashMap<ResourceKey, Rc<Texture<'a>>>,
     fonts: HashMap<ResourceKey, Rc<Font<'a, 'a>>>,
+    musics: HashMap<ResourceKey, Rc<Music<'a>>>,
+    ses: HashMap<ResourceKey, Rc<Chunk>>,
     render_caches: HashMap<ResourceKey, Rc<Texture<'a>>>,
 }
 
@@ -32,6 +35,8 @@ impl <'a> ResourceDirector<'a> {
             jsons: HashMap::new(),
             textures: HashMap::new(),
             fonts: HashMap::new(),
+            musics: HashMap::new(),
+            ses: HashMap::new(),
             render_caches: HashMap::new(),
         }
     }
@@ -115,13 +120,51 @@ impl <'a> ResourceDirector<'a> {
             Rc::new(::resource::Font::new(&resource_key))
         } else {
             let font_data = self.load_plain_data(&resource_key.path());
-            context(|c| c.add_font_data(&resource_key, font_data));
-            let data = context(|c| c.get_font_data(&resource_key));
+            context(|c| c.add_static_data(&resource_key, font_data));
+            let data = context(|c| c.get_static_data(&resource_key)).unwrap();
             let rwops = RWops::from_bytes(data).unwrap();
             let mut font = context(|c| c.ttf_context.load_font_from_rwops(rwops, option.point)).unwrap();
             font.set_style(option.style.into());
             self.fonts.insert(resource_key.clone(), Rc::new(font));
             Rc::new(::resource::Font::new(&resource_key))
+        }
+    }
+
+    pub fn load_music(&mut self, path: &str) -> Rc<Music<'a>> {
+        let resource_key = self.generate_resource_key(
+            path,
+            ResourceType::Music
+        );
+        if let Some(music) = self.musics.get(&resource_key) {
+            music.clone()
+        } else {
+            let plain_data = self.load_plain_data(&resource_key.path());
+            context(|c| c.add_static_data(&resource_key, plain_data));
+            let data = context(|c| c.get_static_data(&resource_key)).unwrap();
+            let rwops = RWops::from_bytes(data).unwrap();
+            context(|c| c.add_static_rwops(&resource_key, rwops));
+            let r = context(|c| c.get_static_rwops(&resource_key)).unwrap();
+            let music = Rc::new(r.load_music().unwrap());
+            self.musics.insert(resource_key, music.clone());
+            music
+        }
+    }
+
+    pub fn load_se(&mut self, path: &str) -> Rc<Chunk> {
+        let resource_key = self.generate_resource_key(
+            path,
+            ResourceType::SE
+        );
+        if let Some(se) = self.ses.get(&resource_key) {
+            se.clone()
+        } else {
+            let plain_data = self.load_plain_data(&resource_key.path());
+            context(|c| c.add_static_data(&resource_key, plain_data));
+            let data = context(|c| c.get_static_data(&resource_key)).unwrap();
+            let rwops = RWops::from_bytes(data).unwrap();
+            let se = Rc::new(rwops.load_wav().unwrap());
+            self.ses.insert(resource_key, se.clone());
+            se
         }
     }
 

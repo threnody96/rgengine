@@ -8,6 +8,7 @@ mod texture_query;
 mod input_code;
 mod input_code_map;
 mod input_info;
+mod music_option;
 
 pub use self::color::*;
 pub use self::font_style::*;
@@ -19,3 +20,4 @@ pub use self::texture_query::*;
 pub use self::input_code::*;
 pub(crate) use self::input_code_map::*;
 pub use self::input_info::*;
+pub use self::music_option::*;

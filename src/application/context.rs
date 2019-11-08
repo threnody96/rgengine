@@ -9,16 +9,18 @@ use sdl2::{ EventPump };
 use sdl2::ttf::{ Sdl2TtfContext };
 use sdl2::render::{ Texture, BlendMode };
 use sdl2::pixels::{ PixelFormatEnum, Color };
+use sdl2::rwops::{ RWops };
 
-pub struct Context {
+pub struct Context<'a> {
     pub canvas: Canvas<Window>,
     pub event_pump: EventPump,
     pub texture_creator: TextureCreator<WindowContext>,
     pub ttf_context: Sdl2TtfContext,
-    pub font_datas: HashMap<ResourceKey, Box<[u8]>>
+    pub static_datas: HashMap<ResourceKey, Box<[u8]>>,
+    pub static_rwops: HashMap<ResourceKey, RWops<'a>>
 }
 
-impl Context {
+impl <'a> Context<'a> {
 
     pub fn new(application: Rc<dyn Application>) -> Self {
         let (canvas, event_pump) = Self::build(application);
@@ -28,12 +30,16 @@ impl Context {
             event_pump: event_pump,
             texture_creator: texture_creator,
             ttf_context: sdl2::ttf::init().unwrap(),
-            font_datas: HashMap::new()
+            static_datas: HashMap::new(),
+            static_rwops: HashMap::new()
         }
     }
 
     fn build(application: Rc<dyn Application>) -> (Canvas<Window>, EventPump) {
         let sdl_context = sdl2::init().unwrap();
+        sdl_context.audio().unwrap();
+        sdl2::mixer::init(sdl2::mixer::InitFlag::all()).unwrap();
+        sdl2::mixer::open_audio(22050, sdl2::mixer::AUDIO_S16SYS, 2, 4096).unwrap();
         let video_subsystem = sdl_context.video().unwrap();
         let window_size = application.window_size();
         let window = video_subsystem
@@ -58,18 +64,26 @@ impl Context {
         Err("OpenGL の初期化に失敗しました".to_owned())
     }
 
-    pub fn get_font_data(&self, resource_key: &ResourceKey) -> &Box<[u8]> {
-        self.font_datas.get(resource_key).unwrap()
+    pub fn get_static_data(&self, resource_key: &ResourceKey) -> Option<&Box<[u8]>> {
+        self.static_datas.get(resource_key)
     }
 
-    pub fn add_font_data(&mut self, resource_key: &ResourceKey, data: Rc<Vec<u8>>) {
-        if self.font_datas.get(resource_key).is_none() {
+    pub fn get_static_rwops(&mut self, resource_key: &ResourceKey) -> Option<&RWops<'a>> {
+        self.static_rwops.get(resource_key)
+    }
+
+    pub fn add_static_rwops(&mut self, resource_key: &ResourceKey, rwops: RWops<'a>) {
+        self.static_rwops.insert(resource_key.clone(), rwops);
+    }
+
+    pub fn add_static_data(&mut self, resource_key: &ResourceKey, data: Rc<Vec<u8>>) {
+        if self.static_datas.get(resource_key).is_none() {
             let d = (&*data).clone();
-            self.font_datas.insert(resource_key.clone(), d.into_boxed_slice());
+            self.static_datas.insert(resource_key.clone(), d.into_boxed_slice());
         }
     }
 
-    pub fn create_sub_canvas<'a>(&'a mut self, size: Size) -> Texture<'a> {
+    pub fn create_sub_canvas(&'a mut self, size: Size) -> Texture<'a> {
         let mut texture = self.texture_creator.create_texture_target(
             Some(PixelFormatEnum::RGBA8888),
             size.width(),

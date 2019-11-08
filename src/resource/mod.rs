@@ -2,6 +2,7 @@ mod file_storage;
 mod encrypt_storage;
 mod texture;
 mod font;
+mod se;
 mod resource_key;
 mod resource_type;
 
@@ -13,5 +14,6 @@ pub type Storage = self::file_storage::FileStorage;
 
 pub use self::texture::*;
 pub use self::font::*;
+pub use self::se::*;
 pub use self::resource_key::*;
 pub use self::resource_type::*;

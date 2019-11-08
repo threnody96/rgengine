@@ -29,7 +29,7 @@ features = ["v4"]
 [dependencies.sdl2]
 version = "^0.32"
 default-features = false
-features = ["image", "ttf"]
+features = ["image", "ttf", "mixer"]
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"

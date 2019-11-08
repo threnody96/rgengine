@@ -7,5 +7,7 @@ pub enum ResourceType {
     Json,
     Texture,
     Font(u16, FontStyle),
+    Music,
+    SE,
     RenderCache
 }
