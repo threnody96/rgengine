@@ -5,6 +5,7 @@ use std::rc::Rc;
 use std::io::{BufReader, Read, Write, stdout};
 use ::director::{ Director };
 use ::application::{ Application, Context };
+use ::node::scene::transition::{ TransitionStatus };
 use ::util::{ FpsManager };
 use sdl2::event::{ Event };
 use backtrace::Backtrace;
@@ -92,27 +93,37 @@ pub fn run(application: Rc<dyn Application>) {
     let mut fps_manager = FpsManager::new(application.fps());
     director(|d| {
         let scene = application.application_did_finish_launching();
-        d.set_scene(scene);
+        d.replace_scene(scene, ::NoOption);
         d.get_scene().start_update();
     });
     let mut prev_sleep_time: i64 = 0;
     while director(|d| d.is_continuing()) {
+        let (scene, mut prev_scene, transition) = director(|d| {
+            (d.get_scene(), d.get_prev_scene(), d.get_scene_transition())
+        });
         prev_sleep_time = fps_manager.run(
             prev_sleep_time,
             || {
                 director(|d| d.update_input_state(event_pump));
             },
             || {
-                let prev_scene = director(|d| d.get_scene());
-                prev_scene.start_update();
+                scene.start_update();
                 let next_scene = director(|d| d.get_scene());
-                prev_scene.id() == next_scene.id()
+                if next_scene.id() != scene.id() { next_scene.start_update(); }
             },
             || {
                 director(|d| d.update_resolution_size());
-                let scene = director(|d| d.get_scene());
                 scene.start_render();
-                director(|d| d.render_scene(scene.id()));
+                if let Some(p) = prev_scene.clone() {
+                    p.start_render();
+                }
+                director(|d| {
+                    let status = d.render_canvas(scene.clone(), prev_scene.clone(), transition.clone());
+                    if status == TransitionStatus::Finish && prev_scene.is_some() {
+                        d.destroy_prev_scene();
+                        prev_scene = None;
+                    }
+                });
             }
         );
         director(|d| d.set_current_fps(fps_manager.fps()));

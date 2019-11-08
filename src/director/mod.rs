@@ -11,6 +11,7 @@ use ::application::{ Application };
 use ::util::parameter::{ Size, InputCode, InputInfo, Point };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
+use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ LabelOption, OneLineLabelOption };
 use ::resource::{ Texture, Font, ResourceKey };
 use self::application::ApplicationDirector;
@@ -63,22 +64,39 @@ impl <'a> Director<'a> {
         self.application.borrow().get_scene()
     }
 
-    pub fn replace_scene(&self, scene: Rc<dyn SceneLike>) {
-        let current_scene = { self.application.borrow().get_scene() };
-        if current_scene.id() != scene.id() {
-            let id = current_scene.id();
-            self.destroy_node(&id);
-        }
-        self.application.borrow_mut().set_scene(scene);
+    pub fn get_prev_scene(&self) -> Option<Rc<dyn SceneLike>> {
+        self.application.borrow().get_prev_scene()
+    }
+
+    pub fn get_scene_transition(&self) -> Rc<SceneTransition> {
+        self.application.borrow().get_scene_transition()
+    }
+
+    pub fn replace_scene<T>(&self, scene: Rc<dyn SceneLike>, transition: T)
+    where T: Into<Rc<SceneTransition>>
+    {
+        self.application.borrow_mut().replace_scene(scene, transition.into());
+    }
+
+    pub fn push_scene<T>(&self, scene: Rc<dyn SceneLike>, transition: T)
+        where T: Into<Rc<SceneTransition>>
+    {
+        self.application.borrow_mut().push_scene(scene, transition.into());
+    }
+
+    pub fn pop_scene<T>(&self, transition: T)
+        where T: Into<Rc<SceneTransition>>
+    {
+        self.application.borrow_mut().pop_scene(transition.into());
+    }
+
+    pub fn destroy_prev_scene(&self) {
+        self.application.borrow_mut().destroy_prev_scene();
     }
 
     pub fn set_application(&self, application: Rc<dyn Application>) {
         self.application.borrow_mut().set_application(application.clone());
         self.render.borrow_mut().set_application(application.clone());
-    }
-
-    pub(crate) fn set_scene(&self, scene: Rc<dyn SceneLike>) {
-        self.application.borrow_mut().set_scene(scene);
     }
 
     pub(crate) fn set_current_fps(&self, fps: usize) {
@@ -149,8 +167,8 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().update_resolution_size();
     }
 
-    pub fn render_scene(&self, id: NodeId) {
-        self.render.borrow_mut().render_scene(id)
+    pub fn render_canvas(&self, scene: Rc<dyn SceneLike>, prev_scene: Option<Rc<dyn SceneLike>>, transition: Rc<SceneTransition>) -> TransitionStatus {
+        self.render.borrow_mut().render_canvas(scene, prev_scene, transition)
     }
 
     pub fn destroy_render_cache(&self, key: &ResourceKey) {

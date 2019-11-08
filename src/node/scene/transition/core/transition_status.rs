@@ -2,5 +2,5 @@
 pub enum TransitionStatus {
     Wait,
     Processing,
-    Finished
+    Finish
 }

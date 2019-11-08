@@ -2,6 +2,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use ::node::{ NodeId, NodeLike };
+use ::node::scene::{ SceneLike };
+use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ OneLineLabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
@@ -277,17 +279,24 @@ impl <'a> RenderDirector<'a> {
         sub_canvas
     }
 
-    pub fn render_scene(&mut self, scene_id: NodeId) {
+    fn render_scene(&mut self, scene_id: NodeId) -> Texture<'a> {
         let render_tree = self.render_tree_nodes.get(&scene_id).cloned().unwrap();
-        let mut s = if let Some(texture) = self.render_inner_canvas(render_tree.clone()) {
+        if let Some(texture) = self.render_inner_canvas(render_tree.clone()) {
             self.clone_texture(&texture)
         } else {
             self.create_sub_canvas(render_tree.node.get_size())
-        };
-        self.render_canvas(s);
+        }
     }
 
-    fn render_canvas(&mut self, canvas: Texture<'a>) {
+    pub fn render_canvas(&mut self, scene: Rc<dyn SceneLike>, prev_scene: Option<Rc<dyn SceneLike>>, transition: Rc<SceneTransition>) -> TransitionStatus {
+        let mut scene_canvas = self.render_scene(scene.id());
+        let (canvas, status) = if let Some(prev_scene) = prev_scene.clone() {
+            let mut prev_canvas = self.render_scene(prev_scene.id());
+            let t = transition.render(scene_canvas, prev_canvas);
+            (t, transition.get_status())
+        } else {
+            (scene_canvas, TransitionStatus::Wait)
+        };
         context(|c| {
             let can = &mut c.canvas;
             can.set_draw_color(Color::RGBA(0, 0, 0, 255));
@@ -296,6 +305,7 @@ impl <'a> RenderDirector<'a> {
             can.present();
         });
         self.render_tree_nodes = HashMap::new();
+        status
     }
 
     pub fn destroy_render_cache(&mut self, key: &ResourceKey) {

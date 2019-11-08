@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::application::{ Application };
 use ::node::scene::{ SceneLike };
+use ::node::scene::transition::{ SceneTransition, TransitionNone };
 use ::node::label::{ LabelOption };
 use ::util::parameter::{ Size };
 use rand::{ Rng };
@@ -8,7 +9,9 @@ use rand::rngs::{ ThreadRng };
 use rand::distributions::{ Standard, Distribution };
 
 pub struct ApplicationDirector {
-    scene: Option<Rc<dyn SceneLike>>,
+    scenes: Vec<Rc<dyn SceneLike>>,
+    prev_scene: Option<Rc<dyn SceneLike>>,
+    scene_transition: Rc<SceneTransition>,
     application: Option<Rc<dyn Application>>,
     default_label_option: Option<LabelOption>,
     current_fps: usize,
@@ -20,7 +23,9 @@ impl ApplicationDirector {
 
     pub fn new() -> Self {
         Self {
-            scene: None,
+            scenes: Vec::new(),
+            prev_scene: None,
+            scene_transition: TransitionNone::create(),
             application: None,
             default_label_option: None,
             current_fps: 0,
@@ -57,12 +62,57 @@ impl ApplicationDirector {
         self.default_label_option = Some(option.clone());
     }
 
-    pub fn set_scene(&mut self, scene: Rc<dyn SceneLike>) {
-        self.scene = Some(scene);
+    pub fn replace_scene(&mut self, scene: Rc<dyn SceneLike>, transition: Rc<SceneTransition>) {
+        if let Some(prev_scene) = self.scenes.pop() {
+            self.destroy_prev_scene();
+            self.prev_scene = Some(prev_scene);
+        }
+        self.scenes.push(scene);
+        self.scene_transition = transition;
+    }
+
+    pub fn push_scene(&mut self, scene: Rc<dyn SceneLike>, transition: Rc<SceneTransition>) {
+        if let Some(prev_scene) = self.scenes.last().cloned() {
+            self.destroy_prev_scene();
+            self.prev_scene = Some(prev_scene.clone());
+        }
+        self.scenes.push(scene);
+        self.scene_transition = transition;
+    }
+
+    pub fn pop_scene(&mut self, transition: Rc<SceneTransition>) {
+        if let Some(prev_scene) = self.scenes.pop() {
+            self.destroy_prev_scene();
+            self.prev_scene = Some(prev_scene);
+        }
+        self.scene_transition = transition;
     }
 
     pub fn get_scene(&self) -> Rc<dyn SceneLike> {
-        self.scene.clone().unwrap()
+        self.scenes.last().cloned().unwrap()
+    }
+
+    pub fn get_prev_scene(&self) -> Option<Rc<dyn SceneLike>> {
+        self.prev_scene.clone()
+    }
+
+    pub fn get_scene_transition(&self) -> Rc<SceneTransition> {
+        self.scene_transition.clone()
+    }
+
+    pub fn destroy_prev_scene(&mut self) {
+        if let Some(prev_scene) = self.prev_scene.clone() {
+            let mut popable = false;
+            let id = prev_scene.id();
+            for scene in &self.scenes {
+                if scene.id() == id {
+                    popable = true;
+                    break;
+                }
+            }
+            if !popable { prev_scene.destroy(); }
+            self.prev_scene = None;
+        }
     }
 
     pub fn set_application(&mut self, application: Rc<dyn Application>) {

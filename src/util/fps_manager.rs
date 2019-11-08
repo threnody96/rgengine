@@ -29,7 +29,7 @@ impl FpsManager {
     }
 
     pub fn run<P, U, R>(&mut self, prev_sleep_time: i64, prepare: P, update: U, render: R) -> i64
-    where P: FnOnce() -> (), U: Fn() -> bool, R: FnOnce() -> () {
+    where P: FnOnce() -> (), U: Fn() -> (), R: FnOnce() -> () {
         let (total_time, is_sleep) = Self::measure(|| {
             let prev_over_time = if prev_sleep_time > 0 { prev_sleep_time } else { 0 };
             let (render_time, _) = Self::measure(|| {
@@ -39,11 +39,8 @@ impl FpsManager {
             let (prepare_time, _) = Self::measure(|| prepare());
             let mut update_time: i64 = 0;
             for i in 0..self.max_retry {
-                loop {
-                    let (utime, r) = Self::measure(|| update());
-                    update_time += utime;
-                    if r { break; }
-                }
+                let (utime, _) = Self::measure(|| update());
+                update_time += utime;
                 let delay = (self.dt * (i + 1)) - (prev_over_time + prepare_time + render_time + update_time);
                 if delay >= 0 {
                     if delay != 0 && i == 0 {

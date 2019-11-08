@@ -41,9 +41,9 @@ impl <T> Action<T> where T: ActionDelegate + Any {
     }
 
     fn generate_progress(&self, now: Tm) -> f32 {
+        if self.duration == 0.0 { return 1.0; }
         let start = self.start.borrow().clone().unwrap();
         let d = (now - start).num_microseconds().unwrap();
-        if self.duration == 0.0 { return 1.0; }
         let progress = d as f64 / (self.duration * 1_000_000.0);
         if progress > 1.0 { 1.0 } else { progress as f32 }
     }
