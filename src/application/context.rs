@@ -2,10 +2,13 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use ::application::{ Application };
 use ::resource::{ ResourceKey };
+use ::util::parameter::{ Size };
 use sdl2::render::{ Canvas, TextureCreator };
 use sdl2::video::{ WindowContext, Window };
 use sdl2::{ EventPump };
 use sdl2::ttf::{ Sdl2TtfContext };
+use sdl2::render::{ Texture, BlendMode };
+use sdl2::pixels::{ PixelFormatEnum, Color };
 
 pub struct Context {
     pub canvas: Canvas<Window>,
@@ -64,6 +67,20 @@ impl Context {
             let d = (&*data).clone();
             self.font_datas.insert(resource_key.clone(), d.into_boxed_slice());
         }
+    }
+
+    pub fn create_sub_canvas<'a>(&'a mut self, size: Size) -> Texture<'a> {
+        let mut texture = self.texture_creator.create_texture_target(
+            Some(PixelFormatEnum::RGBA8888),
+            size.width(),
+            size.height()
+        ).unwrap();
+        self.canvas.with_texture_canvas(&mut texture, |can| {
+            can.set_blend_mode(BlendMode::None);
+            can.set_draw_color(Color::RGBA(0, 0, 0, 0));
+            can.clear();
+        }).unwrap();
+        texture
     }
 
 }

@@ -3,6 +3,7 @@ use std::cell::RefCell;
 use std::any::Any;
 use ::node::{ NodeLike };
 use ::action::{ ParentActionDelegate, ActionStatus, ActionLike };
+use ::util::easing::{ EasingFunction };
 
 pub struct ParentAction<T> where T: ParentActionDelegate + Any {
     delegate: T,
@@ -11,7 +12,7 @@ pub struct ParentAction<T> where T: ParentActionDelegate + Any {
 
 impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         if self.initialize() {
             let status = self.delegate.run(node, easing);
             if status == ActionStatus::Finish {

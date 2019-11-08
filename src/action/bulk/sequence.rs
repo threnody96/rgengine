@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::node::{ NodeLike };
 use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
+use ::util::easing::{ EasingFunction };
 
 pub struct Sequence {
     actions: Vec<Rc<dyn ActionLike>>
@@ -20,9 +21,9 @@ impl Sequence {
 
 impl ParentActionDelegate for Sequence {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         for action in &self.actions {
-            let status = action.run(node.clone(), easing);
+            let status = action.run(node.clone(), easing.clone());
             if status != ActionStatus::Finish {
                 return ActionStatus::Processing;
             }

@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ NodeLike };
 use ::action::{ ActionDelegate, ActionStatus, ActionLike };
+use ::util::easing::{ EasingFunction };
 use time::{ Tm };
 
 pub struct Action<T> where T: ActionDelegate + Any {
@@ -15,10 +16,10 @@ pub struct Action<T> where T: ActionDelegate + Any {
 
 impl <T> ActionLike for Action<T> where T: ActionDelegate + Any {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         if let Some(now) = self.initialize() {
             let time_progress = self.generate_progress(now);
-            let progress = easing.as_ref().map(|e| e(time_progress)).unwrap_or(time_progress);
+            let progress = easing.map(|e| e.ease(time_progress)).unwrap_or(time_progress);
             let status = self.delegate.run(node, progress);
             if time_progress == 1.0 || (status.is_some() && status.unwrap() == ActionStatus::Finish) {
                 self.status.replace(ActionStatus::Finish);

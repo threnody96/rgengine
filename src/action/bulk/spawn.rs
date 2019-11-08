@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::node::{ NodeLike };
 use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
+use ::util::easing::{ EasingFunction };
 
 pub struct Spawn {
     actions: Vec<Rc<dyn ActionLike>>
@@ -20,9 +21,9 @@ impl Spawn {
 
 impl ParentActionDelegate for Spawn {
 
-    fn run(&self, node: Rc<dyn NodeLike>, easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         let statuses: Vec<ActionStatus> = self.actions.iter().map(|e| {
-            e.run(node.clone(), easing)
+            e.run(node.clone(), easing.clone())
         }).collect();
         for status in &statuses {
             if status != &ActionStatus::Finish {

@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use ::node::{ NodeLike };
 use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
+use ::util::easing::{ EasingFunction };
 
 pub struct CallFunc {
     callback: Rc<Fn(Rc<dyn NodeLike>) -> ()>
@@ -20,7 +21,7 @@ impl CallFunc {
 
 impl ParentActionDelegate for CallFunc {
 
-    fn run(&self, node: Rc<dyn NodeLike>, _easing: &Option<Box<Fn(f32) -> f32>>) -> ActionStatus {
+    fn run(&self, node: Rc<dyn NodeLike>, _easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         (&self.callback)(node);
         ActionStatus::Finish
     }

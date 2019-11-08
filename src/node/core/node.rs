@@ -105,7 +105,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.delegate.update();
         self.restore_next_action();
         for action in self.actions.borrow().iter() {
-            action.run(self.node(), &None);
+            action.run(self.node(), None);
         }
         self.remove_finished_actions();
         self.update_children();

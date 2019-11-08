@@ -169,20 +169,7 @@ impl <'a> RenderDirector<'a> {
     }
 
     fn create_sub_canvas(&self, size: Size) -> Texture<'a> {
-        let mut texture = context(|c| {
-            let mut t = c.texture_creator.create_texture_target(
-                Some(PixelFormatEnum::RGBA8888),
-                size.width(),
-                size.height()
-            ).unwrap();
-            c.canvas.with_texture_canvas(&mut t, |can| {
-                can.set_blend_mode(BlendMode::None);
-                can.set_draw_color(Color::RGBA(0, 0, 0, 0));
-                can.clear();
-            }).unwrap();
-            t
-        });
-        texture
+        context(|c| c.create_sub_canvas(size.clone()))
     }
 
     fn set_alpha_blend_mode(&self, canvas: &mut Texture<'a>) {
@@ -211,6 +198,7 @@ impl <'a> RenderDirector<'a> {
         } else {
             self.render_children(render_tree.clone())
         };
+        if node.is_additive_blend() { sub_canvas.set_blend_mode(BlendMode::Add); }
         let r = Rc::new(sub_canvas);
         if node.use_cache() {
             let key = self.resource.set_render_cache(r.clone());
