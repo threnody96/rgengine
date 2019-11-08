@@ -33,9 +33,16 @@ impl SceneTransition {
             let query = scene.query();
             let mut canvas = context(|c| c.create_sub_canvas(Size::new(query.width, query.height)));
             canvas.set_blend_mode(self.delegate.canvas_blend_mode());
+            let progress = self.generate_progress();
+            let mut status: Option<TransitionStatus> = None;
             context(|c| &mut c.canvas).with_texture_canvas(&mut canvas, |c| {
-                self.status.replace(self.delegate.render(c, &mut scene, &mut prev_scene, self.generate_progress()));
+                status = self.delegate.render(c, &mut scene, &mut prev_scene, self.generate_progress());
             });
+            if let Some(s) = status.clone() {
+                self.status.replace(s);
+            } else if progress == 1.0 {
+                self.status.replace(TransitionStatus::Finish);
+            }
             return canvas;
         }
         scene

@@ -25,9 +25,9 @@ impl SceneTransitionDelegate for TransitionNone {
         BlendMode::None
     }
 
-    fn render<'a>(&self, canvas: &mut Canvas<Window>, scene: &mut Texture<'a>, _prev_scene: &mut Texture<'a>, _progress: f32) -> TransitionStatus {
+    fn render<'a>(&self, canvas: &mut Canvas<Window>, scene: &mut Texture<'a>, _prev_scene: &mut Texture<'a>, _progress: f32) -> Option<TransitionStatus> {
         canvas.copy(scene, None, None);
-        TransitionStatus::Finish
+        None
     }
 
 }

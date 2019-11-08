@@ -7,6 +7,6 @@ pub trait SceneTransitionDelegate {
 
     fn canvas_blend_mode(&self) -> BlendMode;
 
-    fn render<'a>(&self, canvas: &mut Canvas<Window>, scene: &mut Texture<'a>, prev_scene: &mut Texture<'a>, progress: f32) -> TransitionStatus;
+    fn render<'a>(&self, canvas: &mut Canvas<Window>, scene: &mut Texture<'a>, prev_scene: &mut Texture<'a>, progress: f32) -> Option<TransitionStatus>;
 
 }
