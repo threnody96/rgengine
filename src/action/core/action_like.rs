@@ -9,4 +9,12 @@ pub trait ActionLike {
 
     fn get_status(&self) -> ActionStatus;
 
+    fn set_speed(&self, speed: f64);
+
+    fn get_speed(&self) -> f64;
+
+    fn pause(&self);
+
+    fn resume(&self);
+
 }

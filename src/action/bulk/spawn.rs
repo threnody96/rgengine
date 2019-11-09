@@ -33,4 +33,8 @@ impl ParentActionDelegate for Spawn {
         ActionStatus::Finish
     }
 
+    fn children(&self) -> Vec<Rc<dyn ActionLike>> {
+        self.actions.clone()
+    }
+
 }

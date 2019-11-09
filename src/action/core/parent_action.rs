@@ -7,7 +7,8 @@ use ::util::easing::{ EasingFunction };
 
 pub struct ParentAction<T> where T: ParentActionDelegate + Any {
     delegate: T,
-    status: RefCell<ActionStatus>
+    status: RefCell<ActionStatus>,
+    speed: RefCell<f64>
 }
 
 impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
@@ -24,6 +25,25 @@ impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
 
     fn get_status(&self) -> ActionStatus {
         self.status.borrow().clone()
+    }
+
+    fn set_speed(&self, speed: f64) {
+        self.speed.replace(speed);
+        self.delegate.set_speed(speed);
+    }
+
+    fn get_speed(&self) -> f64 {
+        self.speed.borrow().clone()
+    }
+
+    fn pause(&self) {
+        self.status.replace(ActionStatus::Pause);
+        self.delegate.pause_children();
+    }
+
+    fn resume(&self) {
+        self.status.replace(ActionStatus::Processing);
+        self.delegate.resume_children();
     }
 
 }
@@ -45,6 +65,9 @@ impl <T> ParentAction<T> where T: ParentActionDelegate + Any {
             },
             ActionStatus::Finish => {
                 false
+            },
+            ActionStatus::Pause => {
+                false
             }
         }
     }
@@ -53,6 +76,7 @@ impl <T> ParentAction<T> where T: ParentActionDelegate + Any {
         Self {
             delegate: delegate,
             status: RefCell::new(ActionStatus::Wait),
+            speed: RefCell::new(1.0)
         }
     }
 

@@ -26,4 +26,8 @@ impl ParentActionDelegate for CallFunc {
         ActionStatus::Finish
     }
 
+    fn children(&self) -> Vec<Rc<dyn ActionLike>> {
+        Vec::new()
+    }
+
 }

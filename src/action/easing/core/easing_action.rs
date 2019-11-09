@@ -27,4 +27,8 @@ impl ParentActionDelegate for EasingAction {
         self.action.run(node, Some(self.easing.clone()))
     }
 
+    fn children(&self) -> Vec<Rc<dyn ActionLike>> {
+        vec!(self.action.clone())
+    }
+
 }

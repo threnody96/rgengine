@@ -4,7 +4,7 @@ use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
 use ::util::easing::{ EasingFunction };
 
 pub struct Sequence {
-    actions: Vec<Rc<dyn ActionLike>>
+    actions: Vec<Rc<dyn ActionLike>>,
 }
 
 impl Sequence {
@@ -12,7 +12,7 @@ impl Sequence {
     pub fn create(actions: Vec<Rc<dyn ActionLike>>) -> Rc<ParentAction<Sequence>> {
         ParentAction::create(|| {
             Self {
-                actions: actions.clone(),
+                actions: actions.clone()
             }
         })
     }
@@ -29,6 +29,10 @@ impl ParentActionDelegate for Sequence {
             }
         }
         ActionStatus::Finish
+    }
+
+    fn children(&self) -> Vec<Rc<dyn ActionLike>> {
+        self.actions.clone()
     }
 
 }
