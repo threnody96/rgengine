@@ -16,12 +16,22 @@ impl LabelOption {
     pub fn parse(parent_option: &LabelOption, name: String, attrs: HashMap<String, String>) -> Self {
         let mut option = parent_option.clone();
         if &name != "style" { return option; }
+        option = Self::attach_name(&option, attrs.get("name").cloned());
         Self::attach_scale(&mut option, attrs.get("scale").cloned());
         Self::attach_absolute_scale(&mut option, attrs.get("absolute-scale").cloned());
         Self::attach_font(&mut option, attrs.get("font").cloned());
         Self::attach_color(&mut option, attrs.get("color").cloned());
         Self::attach_border(&mut option, attrs.get("border").cloned());
         option
+    }
+
+    fn attach_name(option: &LabelOption, name: Option<String>) -> LabelOption {
+        if let Some(n) = name {
+            if let Some(l) = director(|d| d.get_label_option(n)) {
+                return l;
+            }
+        }
+        option.clone()
     }
 
     fn attach_scale(option: &mut LabelOption, scale: Option<String>) {
@@ -97,6 +107,40 @@ impl Default for LabelOption {
                 }
             }
         }
+    }
+
+}
+
+impl From<String> for LabelOption {
+
+    fn from(f: String) -> LabelOption {
+        match director(|d| d.get_label_option(f.clone())) {
+            None => {
+                LabelOption {
+                    path: f,
+                    ..Default::default()
+                }
+            },
+            Some(l) => {
+                l
+            }
+        }
+    }
+
+}
+
+impl From<&str> for LabelOption {
+
+    fn from(f: &str) -> LabelOption {
+        LabelOption::from(f.to_owned())
+    }
+
+}
+
+impl From<&String> for LabelOption {
+
+    fn from(f: &String) -> LabelOption {
+        LabelOption::from(f.to_string())
     }
 
 }

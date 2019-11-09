@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::collections::HashMap;
 use ::application::{ Application };
 use ::node::scene::{ SceneLike };
 use ::node::scene::transition::{ SceneTransition, TransitionNone };
@@ -13,7 +14,7 @@ pub struct ApplicationDirector {
     prev_scene: Option<Rc<dyn SceneLike>>,
     scene_transition: Rc<SceneTransition>,
     application: Option<Rc<dyn Application>>,
-    default_label_option: Option<LabelOption>,
+    label_option_aliases: HashMap<String, LabelOption>,
     current_fps: usize,
     rand: ThreadRng,
     continuing: bool
@@ -27,7 +28,7 @@ impl ApplicationDirector {
             prev_scene: None,
             scene_transition: TransitionNone::create(),
             application: None,
-            default_label_option: None,
+            label_option_aliases: HashMap::new(),
             current_fps: 0,
             rand: rand::thread_rng(),
             continuing: true
@@ -55,11 +56,20 @@ impl ApplicationDirector {
     }
 
     pub fn default_label_option(&self) -> Option<LabelOption> {
-        self.default_label_option.clone()
+        self.label_option_aliases.get("").cloned()
     }
 
-    pub fn set_default_label_option(&mut self, option: &LabelOption) {
-        self.default_label_option = Some(option.clone());
+    pub fn add_label_option_alias(&mut self, name: &str, option: &LabelOption, default: bool) {
+        if name == "" { panic!("invalid label alias name"); }
+        self.label_option_aliases.insert(name.to_owned(), option.clone());
+        if default {
+            self.label_option_aliases.insert("".to_owned(), option.clone());
+        }
+    }
+
+    pub fn get_label_option(&self, name: &str) -> Option<LabelOption> {
+        if name == "" { panic!("invalid label alias name"); }
+        self.label_option_aliases.get(name).cloned()
     }
 
     pub fn replace_scene(&mut self, scene: Rc<dyn SceneLike>, transition: Rc<SceneTransition>) {

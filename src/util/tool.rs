@@ -127,9 +127,11 @@ pub fn run(application: Rc<dyn Application>) {
             }
         );
         director(|d| d.set_current_fps(fps_manager.fps()));
+        director(|d| d.clean_se());
         if director(|d| d.is_quit()) {
             application.on_quit();
         }
     }
+    sdl2::mixer::close_audio();
 }
 

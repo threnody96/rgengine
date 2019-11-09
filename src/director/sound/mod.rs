@@ -32,24 +32,41 @@ impl <'a> SoundDirector<'a> {
         m.fade_in_from_pos(loops, fade_in, position).unwrap();
     }
 
-    pub fn halt_music(&self) {
-        Music::halt();
+    pub fn stop_music(&self, fade_out: i32) {
+        if fade_out <= 0 {
+            Music::halt();
+        } else {
+            Music::fade_out(fade_out);
+        }
     }
 
-    pub fn play_se(&mut self, path: &str, loops: i32) -> Rc<SE> {
+    pub fn play_se(&mut self, path: &str) -> Rc<SE> {
         let channel_id = self.generate_new_channel();
         let se = self.resource.load_se(path);
         let channel = self.ses.get(&channel_id).unwrap();
-        channel.play(&se, loops);
+        channel.play(&se, 0);
         Rc::new(SE::new(
             ResourceKey::new(path, ResourceType::SE),
             channel_id
         ))
     }
 
+    pub fn stop_se(&self, se: Rc<SE>) {
+        if let Some(channel) = self.ses.get(&se.channel()) {
+            channel.halt();
+        }
+    }
+
+    pub fn stop_all_se(&self) {
+        for (channel, se) in &self.ses {
+            se.halt();
+        }
+    }
+
     pub fn clean_se(&mut self, seed: usize) {
         let key = {
             let channels: Vec<&String> = self.ses.keys().collect();
+            if channels.len() == 0 { return; }
             let index = seed % channels.len();
             channels.get(index).unwrap().to_string()
         };

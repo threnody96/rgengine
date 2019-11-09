@@ -111,8 +111,19 @@ impl <'a> Director<'a> {
         self.application.borrow().default_label_option()
     }
 
-    pub fn set_default_label_option(&self, option: &LabelOption) {
-        self.application.borrow_mut().set_default_label_option(option);
+    pub fn add_label_option_alias<A, B>(&self, name: A, option: B, default: bool)
+    where A: Into<String>, B: Into<LabelOption>
+    {
+        let n = name.into();
+        let o = option.into();
+        self.application.borrow_mut().add_label_option_alias(&n, &o, default);
+    }
+
+    pub fn get_label_option<A>(&self, name: A) -> Option<LabelOption>
+    where A: Into<String>
+    {
+        let n = name.into();
+        self.application.borrow().get_label_option(&n)
     }
 
     pub fn current_fps(&self) -> usize {
@@ -233,15 +244,23 @@ impl <'a> Director<'a> {
         self.sound.borrow_mut().play_music(&p, option.into());
     }
 
-    pub fn halt_music(&self) {
-        self.sound.borrow().halt_music();
+    pub fn stop_music(&self, fade_out: i32) {
+        self.sound.borrow().stop_music(fade_out);
     }
 
-    pub fn play_se<A>(&self, path: A, loops: i32) -> Rc<SE>
+    pub fn stop_se(&self, se: Rc<SE>) {
+        self.sound.borrow().stop_se(se);
+    }
+
+    pub fn stop_all_se(&self) {
+        self.sound.borrow().stop_all_se();
+    }
+
+    pub fn play_se<A>(&self, path: A) -> Rc<SE>
     where A: Into<String>
     {
         let p = path.into();
-        self.sound.borrow_mut().play_se(&p, loops)
+        self.sound.borrow_mut().play_se(&p)
     }
 
     pub fn clean_se(&self) {
