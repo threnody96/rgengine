@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::node::{ NodeId, AddChildOption };
+use ::node::{ NodeId, AddChildOption, ConflictType };
 use ::resource::{ Texture, Font, ResourceKey };
 use ::action::{ ActionLike };
 use ::util::parameter::{ Point, AnchorPoint, Size, Rect };
@@ -88,6 +88,10 @@ pub trait NodeLike {
     fn render_label(&self, text: &str, font: Rc<Font>, color: &Color);
 
     fn is_mouse_hover(&self) -> bool;
+
+    fn set_conflict_type(&self, conflict_type: ConflictType);
+
+    fn get_conflict_type(&self) -> ConflictType;
 
     fn is_conflict(&self, other: Rc<dyn NodeLike>) -> bool;
 

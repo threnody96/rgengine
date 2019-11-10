@@ -13,6 +13,15 @@ impl Point {
         }
     }
 
+    pub fn distance<A>(&self, other: A) -> f32
+    where A: Into<Point>
+    {
+        let o = other.into();
+        let x = (self.x() as f32, o.x() as f32);
+        let y = (self.y() as f32, o.y() as f32);
+        ((x.0 - x.1).powi(2) + (y.0 - y.1).powi(2)).sqrt()
+    }
+
 }
 
 impl Deref for Point {

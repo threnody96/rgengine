@@ -3,10 +3,10 @@ use std::ops::Deref;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::any::Any;
-use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption };
+use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption, ConflictType };
 use ::action::{ ActionLike, ActionStatus };
 use ::util::{ director, get_mouse_position };
-use ::util::parameter::{ Point, AnchorPoint, Size, Rect };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Circle };
 use ::resource::{ Texture, Font, ResourceKey };
 use sdl2::pixels::{ Color };
 
@@ -23,6 +23,7 @@ pub struct Node<T> where T: NodeDelegate + Any {
     render_cache: RefCell<Option<ResourceKey>>,
     parent: RefCell<Option<NodeId>>,
     children: RefCell<Vec<NodeChild>>,
+    conflict_type: RefCell<ConflictType>,
     actions: RefCell<Vec<Rc<dyn ActionLike>>>,
     next_actions: RefCell<Vec<Rc<dyn ActionLike>>>
 }
@@ -279,13 +280,37 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn is_mouse_hover(&self) -> bool {
         let p = get_mouse_position();
         let ap = self.get_absolute_render_rect();
-        ap.x() <= p.x() && ap.x() + (ap.width() as i32) >= p.x() &&
-        ap.y() <= p.y() && ap.y() + (ap.height() as i32) >= p.y()
+        match self.get_conflict_type() {
+            ConflictType::Square => {
+                ap.contains_point(*p)
+            },
+            ConflictType::Circle => {
+                Circle::from(ap).contains_point(p)
+            }
+        }
+    }
+
+    fn set_conflict_type(&self, conflict_type: ConflictType) {
+        self.conflict_type.replace(conflict_type);
+    }
+
+    fn get_conflict_type(&self) -> ConflictType {
+        self.conflict_type.borrow().clone()
     }
 
     fn is_conflict(&self, other: Rc<dyn NodeLike>) -> bool {
+        let ctype = self.get_conflict_type();
+        let other_ctype = self.get_conflict_type();
         let (r1, r2) = (self.get_absolute_render_rect(), other.get_absolute_render_rect());
-        r1.has_intersection(*r2)
+        if ctype == ConflictType::Square && other_ctype == ConflictType::Square {
+            r1.has_intersection(*r2)
+        } else if ctype == ConflictType::Circle && other_ctype == ConflictType::Square {
+            Circle::from(r1).has_rect_intersection(&r2)
+        } else if ctype == ConflictType::Square && other_ctype == ConflictType::Circle {
+            Circle::from(r2).has_rect_intersection(&r1)
+        } else {
+            Circle::from(r1).has_intersection(&Circle::from(r2))
+        }
     }
 
     fn run_action(&self, action: Rc<dyn ActionLike>) {
@@ -348,6 +373,7 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             scale: RefCell::new(1.0),
             render_cache: RefCell::new(None),
             children: RefCell::new(Vec::new()),
+            conflict_type: RefCell::new(ConflictType::Square),
             actions: RefCell::new(Vec::new()),
             next_actions: RefCell::new(Vec::new())
         }
