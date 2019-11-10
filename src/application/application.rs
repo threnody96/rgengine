@@ -16,6 +16,8 @@ pub trait Application {
 
     fn fps(&self) -> u32 { 60 }
 
+    fn version(&self) -> String { "1.0.0".to_owned() }
+
     fn title(&self) -> String;
 
     fn window_size(&self) -> Size {

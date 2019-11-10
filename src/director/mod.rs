@@ -4,6 +4,7 @@ mod resource;
 mod render;
 mod input;
 mod sound;
+mod variable;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -20,6 +21,7 @@ use self::node::NodeDirector;
 use self::render::RenderDirector;
 use self::input::InputDirector;
 use self::sound::SoundDirector;
+use self::variable::VariableDirector;
 use sdl2::{ EventPump };
 use sdl2::pixels::{ Color };
 use rand::distributions::{ Standard, Distribution };
@@ -29,7 +31,8 @@ pub struct Director<'a> {
     node: RefCell<NodeDirector>,
     render: RefCell<RenderDirector<'a>>,
     input: RefCell<InputDirector>,
-    sound: RefCell<SoundDirector<'a>>
+    sound: RefCell<SoundDirector<'a>>,
+    variable: RefCell<VariableDirector>
 }
 
 impl <'a> Director<'a> {
@@ -40,7 +43,8 @@ impl <'a> Director<'a> {
             node: RefCell::new(NodeDirector::new()),
             render: RefCell::new(RenderDirector::new()),
             input: RefCell::new(InputDirector::new()),
-            sound: RefCell::new(SoundDirector::new())
+            sound: RefCell::new(SoundDirector::new()),
+            variable: RefCell::new(VariableDirector::new())
         }
     }
 
@@ -101,6 +105,7 @@ impl <'a> Director<'a> {
     pub fn set_application(&self, application: Rc<dyn Application>) {
         self.application.borrow_mut().set_application(application.clone());
         self.render.borrow_mut().set_application(application.clone());
+        self.variable.borrow_mut().set_application(application.clone());
     }
 
     pub(crate) fn set_current_fps(&self, fps: usize) {

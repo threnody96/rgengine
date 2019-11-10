@@ -4,6 +4,8 @@ extern crate crypto;
 extern crate base64;
 extern crate rusqlite;
 extern crate uuid;
+extern crate serde;
+#[macro_use]
 extern crate serde_json;
 extern crate rand;
 extern crate backtrace;

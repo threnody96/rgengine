@@ -28,7 +28,7 @@ impl <'a> ResourceDirector<'a> {
 
     pub fn new() -> Self {
         Self {
-            storage: Storage::new(),
+            storage: Storage::new_resource(),
             aliases: HashMap::new(),
             plain_datas: HashMap::new(),
             strings: HashMap::new(),

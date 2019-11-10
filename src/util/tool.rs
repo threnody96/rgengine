@@ -8,8 +8,15 @@ use ::application::{ Application, Context };
 use ::node::scene::transition::{ TransitionStatus };
 use ::util::{ FpsManager };
 use sdl2::event::{ Event };
+use base64::{ decode };
+use crypto::{ symmetriccipher, buffer, aes, blockmodes };
+use crypto::buffer::{ WriteBuffer, ReadBuffer, BufferResult };
 use backtrace::Backtrace;
 use chrono::{ Local };
+
+pub const DIR_SEPARATOR: char = '/';
+
+pub const ENCRYPT_KEY: &'static str = env!("RESOURCE_ENCRYPT_KEY");
 
 #[derive(Eq, PartialEq)]
 pub enum BuildMode {
@@ -38,6 +45,59 @@ pub fn load_file(path: &PathBuf) -> Result<Vec<u8>, String> {
     let mut result: Vec<u8> = vec![];
     while let Some(Ok(b)) = bytes.next() { result.push(b); }
     Ok(result)
+}
+
+pub fn encrypt(data: &[u8], key: &str) -> Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {
+    let decoded_key = decode(key).unwrap();
+    if decoded_key.len() != 48 {
+        panic!("encrypt key must be base64 encoded 48 bytes data.");
+    }
+    let mut encryptor = aes::cbc_encryptor(
+        aes::KeySize::KeySize256,
+        &decoded_key[0 .. 32],
+        &decoded_key[32 .. 48],
+        blockmodes::PkcsPadding);
+    let mut final_result = Vec::<u8>::new();
+    let mut read_buffer = buffer::RefReadBuffer::new(data);
+    let mut buffer = [0; 4096];
+    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
+    loop {
+        let result = try!(encryptor.encrypt(&mut read_buffer, &mut write_buffer, true));
+        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+        match result {
+            BufferResult::BufferUnderflow => break,
+            BufferResult::BufferOverflow => { }
+        }
+    }
+    Ok(final_result)
+}
+
+pub fn decrypt(encrypted_data: &[u8], key: &str) -> Result<Vec<u8>, String> {
+    let decoded_key = decode(key).unwrap();
+    if decoded_key.len() != 48 {
+        panic!("encrypt key must be base64 encoded 48 bytes data.");
+    }
+    let mut decryptor = aes::cbc_decryptor(
+        aes::KeySize::KeySize256,
+        &decoded_key[0 .. 32],
+        &decoded_key[32 .. 48],
+        blockmodes::PkcsPadding);
+
+    let mut final_result = Vec::<u8>::new();
+    let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
+    let mut buffer = [0; 4096];
+    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
+
+    loop {
+        let result = try!(decryptor.decrypt(&mut read_buffer, &mut write_buffer, true).map_err(|_| "暗号化の解除に失敗しました"));
+        final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+        match result {
+            BufferResult::BufferUnderflow => break,
+            BufferResult::BufferOverflow => { }
+        }
+    }
+
+    Ok(final_result)
 }
 
 pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
