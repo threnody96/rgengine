@@ -65,7 +65,7 @@ impl VariableDirector {
         map.insert("version".to_owned(), Value::from(version));
         map.insert("variables".to_owned(), serde_json::to_value(&self.variables).unwrap());
         let save_data = Value::from(map).to_string().as_bytes().to_vec();
-        self.storage.save(name, &save_data);
+        self.storage.save(name, &save_data).unwrap();
     }
 
 }

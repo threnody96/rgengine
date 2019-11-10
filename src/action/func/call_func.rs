@@ -4,12 +4,12 @@ use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
 use ::util::easing::{ EasingFunction };
 
 pub struct CallFunc {
-    callback: Rc<Fn(Rc<dyn NodeLike>) -> ()>
+    callback: Rc<dyn Fn(Rc<dyn NodeLike>) -> ()>
 }
 
 impl CallFunc {
 
-    pub fn create(callback: Rc<Fn(Rc<dyn NodeLike>) -> ()>) -> Rc<ParentAction<CallFunc>> {
+    pub fn create(callback: Rc<dyn Fn(Rc<dyn NodeLike>) -> ()>) -> Rc<ParentAction<CallFunc>> {
         ParentAction::create(|| {
             Self {
                 callback: callback.clone()

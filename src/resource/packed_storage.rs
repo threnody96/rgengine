@@ -1,8 +1,6 @@
 use std::fs::{ create_dir_all };
 use rusqlite::{ Connection };
 use base64::{ decode, encode };
-use crypto::{ buffer, aes, blockmodes };
-use crypto::buffer::{ WriteBuffer, ReadBuffer, BufferResult };
 use ::util::{ exe_dir, decrypt, encrypt, DIR_SEPARATOR, ENCRYPT_KEY };
 
 pub struct PackedStorage {

@@ -23,10 +23,12 @@ use self::render::RenderDirector;
 use self::input::InputDirector;
 use self::sound::SoundDirector;
 use self::variable::VariableDirector;
+use self::resource::ResourceDirector;
 use sdl2::{ EventPump };
 use sdl2::pixels::{ Color };
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
+use serde_json::{ Value };
 use rand::distributions::{ Standard, Distribution };
 
 pub struct Director<'a> {
@@ -35,7 +37,8 @@ pub struct Director<'a> {
     render: RefCell<RenderDirector<'a>>,
     input: RefCell<InputDirector>,
     sound: RefCell<SoundDirector<'a>>,
-    variable: RefCell<VariableDirector>
+    variable: RefCell<VariableDirector>,
+    resource: RefCell<ResourceDirector<'a>>
 }
 
 impl <'a> Director<'a> {
@@ -47,7 +50,8 @@ impl <'a> Director<'a> {
             render: RefCell::new(RenderDirector::new()),
             input: RefCell::new(InputDirector::new()),
             sound: RefCell::new(SoundDirector::new()),
-            variable: RefCell::new(VariableDirector::new())
+            variable: RefCell::new(VariableDirector::new()),
+            resource: RefCell::new(ResourceDirector::new())
         }
     }
 
@@ -164,7 +168,15 @@ impl <'a> Director<'a> {
     }
 
     pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
-        self.render.borrow_mut().load_plain_data(path)
+        self.resource.borrow_mut().load_plain_data(path)
+    }
+
+    pub fn load_string(&self, path: &str) -> Rc<String> {
+        self.resource.borrow_mut().load_string(path)
+    }
+
+    pub fn load_json(&self, path: &str) -> Rc<Value> {
+        self.resource.borrow_mut().load_json(path)
     }
 
     pub fn load_texture(&self, path: &str) -> Rc<Texture> {

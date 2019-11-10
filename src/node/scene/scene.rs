@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::any::Any;
 use ::util::{ director };
 use ::util::parameter::{ Size, AnchorPoint };
-use ::node::{ Node, NodeDelegate, AddChildOption, NodeLike };
+use ::node::{ Node, NodeDelegate, NodeLike };
 use ::node::layer::{ Layer };
 
 pub trait Scene: NodeDelegate {

@@ -83,7 +83,7 @@ impl From<&FontStyle> for FontStyle {
 
 impl From<NoOption> for FontStyle {
 
-    fn from(f: NoOption) -> FontStyle {
+    fn from(_: NoOption) -> FontStyle {
         Self::normal()
     }
 

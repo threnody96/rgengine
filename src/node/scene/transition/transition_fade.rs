@@ -29,11 +29,11 @@ impl SceneTransitionDelegate for TransitionFade {
         if progress < 0.5 {
             let alpha = ((1.0 - progress * 2.0) * 255.0) as u8;
             prev_scene.set_alpha_mod(alpha);
-            canvas.copy(prev_scene, None, None);
+            canvas.copy(prev_scene, None, None).unwrap();
         } else {
             let alpha = (((progress - 0.5) * 2.0) * 255.0) as u8;
             scene.set_alpha_mod(alpha);
-            canvas.copy(scene, None, None);
+            canvas.copy(scene, None, None).unwrap();
         }
         None
     }

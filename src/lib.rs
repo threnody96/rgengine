@@ -5,7 +5,6 @@ extern crate base64;
 extern crate rusqlite;
 extern crate uuid;
 extern crate serde;
-#[macro_use]
 extern crate serde_json;
 extern crate rand;
 extern crate backtrace;
@@ -23,7 +22,7 @@ use ::director::Director;
 use ::application::Context;
 
 thread_local! {
-    pub static DIRECTOR: Director<'static> = Director::new();
+    pub(crate) static DIRECTOR: Director<'static> = Director::new();
 }
 
 pub(crate) static mut CONTEXT: Option<Context<'static>> = None;

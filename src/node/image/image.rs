@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::node::{ NodeDelegate, Node, NodeLike };
+use ::node::{ NodeDelegate, Node };
 use ::resource::{ Texture };
 use ::util::{ director };
 use ::util::parameter::{ Size };

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use ::node::label::{ LabelOption };
 use ::util::{ NoOption };
 use ::util::parameter::{ FontStyle, Color };

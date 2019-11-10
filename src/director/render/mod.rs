@@ -7,11 +7,11 @@ use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ OneLineLabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
-use ::util::{with_context};
+use ::util::{ with_context };
 use ::util::parameter::{ Size, Rect, Point };
 use ::director::resource::{ ResourceDirector };
 use sdl2::render::{ Texture, BlendMode };
-use sdl2::pixels::{ PixelFormatEnum, Color };
+use sdl2::pixels::{ Color };
 use std::intrinsics::transmute;
 
 #[derive(Clone)]
@@ -119,10 +119,6 @@ impl <'a> RenderDirector<'a> {
 
     pub fn add_alias(&mut self, name: &str, path: &str) {
         self.resource.add_alias(name, path);
-    }
-
-    pub fn load_plain_data(&mut self, path: &str) -> Rc<Vec<u8>> {
-        self.resource.load_plain_data(path)
     }
 
     pub fn load_texture(&mut self, path: &str) -> Rc<::resource::Texture> {
@@ -252,7 +248,7 @@ impl <'a> RenderDirector<'a> {
                     c.copy_ex(&t, None, Some(rect.into()), angle, None, false, false).unwrap();
                 }
             }
-        });
+        }).unwrap();
         if render_tree.node.get_opacity() == 255 { return ct; }
         self.apply_alpha_mod(&mut ct, render_tree.node.get_opacity())
     }
@@ -263,7 +259,7 @@ impl <'a> RenderDirector<'a> {
         sub_canvas.set_blend_mode(BlendMode::None);
         with_context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();
-        });
+        }).unwrap();
         self.set_alpha_blend_mode(&mut sub_canvas);
         sub_canvas
     }
@@ -275,7 +271,7 @@ impl <'a> RenderDirector<'a> {
         sub_canvas.set_blend_mode(BlendMode::Blend);
         with_context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();
-        });
+        }).unwrap();
         sub_canvas
     }
 
@@ -289,9 +285,9 @@ impl <'a> RenderDirector<'a> {
     }
 
     pub fn render_canvas(&mut self, scene: Rc<dyn SceneLike>, prev_scene: Option<Rc<dyn SceneLike>>, transition: Rc<SceneTransition>) -> TransitionStatus {
-        let mut scene_canvas = self.render_scene(scene.id());
+        let scene_canvas = self.render_scene(scene.id());
         let (canvas, status) = if let Some(prev_scene) = prev_scene.clone() {
-            let mut prev_canvas = self.render_scene(prev_scene.id());
+            let prev_canvas = self.render_scene(prev_scene.id());
             let t = transition.render(scene_canvas, prev_canvas);
             (t, transition.get_status())
         } else {
@@ -301,7 +297,7 @@ impl <'a> RenderDirector<'a> {
             let can = &mut c.canvas;
             can.set_draw_color(Color::RGBA(0, 0, 0, 255));
             can.clear();
-            can.copy(&canvas, None, self.render_canvas_dest.clone().map(|e| e.into()));
+            can.copy(&canvas, None, self.render_canvas_dest.clone().map(|e| e.into())).unwrap();
             can.present();
         });
         self.render_tree_nodes = HashMap::new();

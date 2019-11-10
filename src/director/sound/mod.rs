@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ::director::resource::ResourceDirector;
 use ::resource::{SE, ResourceKey, ResourceType };
 use ::util::parameter::{MusicOption};
-use sdl2::mixer::{ Music, Chunk, Channel };
+use sdl2::mixer::{ Music, Channel };
 use uuid::Uuid;
 
 pub struct SoundDirector<'a> {
@@ -36,7 +36,7 @@ impl <'a> SoundDirector<'a> {
         if fade_out <= 0 {
             Music::halt();
         } else {
-            Music::fade_out(fade_out);
+            Music::fade_out(fade_out).unwrap();
         }
     }
 
@@ -44,7 +44,7 @@ impl <'a> SoundDirector<'a> {
         let channel_id = self.generate_new_channel();
         let se = self.resource.load_se(path);
         let channel = self.ses.get(&channel_id).unwrap();
-        channel.play(&se, 0);
+        channel.play(&se, 0).unwrap();
         Rc::new(SE::new(
             ResourceKey::new(path, ResourceType::SE),
             channel_id
@@ -58,7 +58,7 @@ impl <'a> SoundDirector<'a> {
     }
 
     pub fn stop_all_se(&self) {
-        for (channel, se) in &self.ses {
+        for (_, se) in &self.ses {
             se.halt();
         }
     }
@@ -83,12 +83,12 @@ impl <'a> SoundDirector<'a> {
     }
 
     fn generate_channel_id(&self) -> String {
-        let mut id = "".to_owned();
         loop {
-            id = Uuid::new_v4().to_string();
-            if self.ses.get(&id).is_none() { break; }
+            let id = Uuid::new_v4().to_string();
+            if self.ses.get(&id).is_none() {
+                return id;
+            }
         }
-        id
     }
 
 }

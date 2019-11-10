@@ -13,6 +13,7 @@ use rand::distributions::{ Standard, Distribution };
 use sdl2::{ EventPump };
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
+use serde_json::{ Value };
 
 pub(crate) fn with_director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
     ::DIRECTOR.with(|d| {
@@ -128,6 +129,14 @@ pub fn add_alias(name: &str, path: &str) {
 
 pub fn load_plain_data(path: &str) -> Rc<Vec<u8>> {
     with_director(|d| d.load_plain_data(path))
+}
+
+pub fn load_string(path: &str) -> Rc<String> {
+    with_director(|d| d.load_string(path))
+}
+
+pub fn load_json(path: &str) -> Rc<Value> {
+    with_director(|d| d.load_json(path))
 }
 
 pub fn load_texture(path: &str) -> Rc<Texture> {

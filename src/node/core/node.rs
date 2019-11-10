@@ -341,19 +341,19 @@ impl <T> Node<T> where T: NodeDelegate + Any {
     pub fn add_child<A>(&self, node: Rc<dyn NodeLike>, option: A)
     where A: Into<AddChildOption>
     {
-        (self as &NodeLike).add_child(node, option.into());
+        (self as &dyn NodeLike).add_child(node, option.into());
     }
 
     pub fn set_position<A>(&self, position: A)
     where A: Into<Point>
     {
-        (self as &NodeLike).set_position(&position.into())
+        (self as &dyn NodeLike).set_position(&position.into())
     }
 
     pub fn set_anchor_point<A>(&self, anchor_point: A)
     where A: Into<AnchorPoint>
     {
-        (self as &NodeLike).set_anchor_point(&anchor_point.into())
+        (self as &dyn NodeLike).set_anchor_point(&anchor_point.into())
     }
 
     fn new(delegate: T) -> Self {

@@ -26,7 +26,7 @@ impl SceneTransitionDelegate for TransitionNone {
     }
 
     fn render<'a>(&self, canvas: &mut Canvas<Window>, scene: &mut Texture<'a>, _prev_scene: &mut Texture<'a>, _progress: f32) -> Option<TransitionStatus> {
-        canvas.copy(scene, None, None);
+        canvas.copy(scene, None, None).unwrap();
         None
     }
 

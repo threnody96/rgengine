@@ -4,8 +4,7 @@ use ::node::scene::transition::{ SceneTransitionDelegate, TransitionStatus };
 use ::util::{with_context};
 use ::util::parameter::{ Size };
 use ::util::easing::{ EasingFunction };
-use sdl2::render::{ Texture, BlendMode };
-use sdl2::pixels::{ PixelFormatEnum, Color };
+use sdl2::render::{ Texture };
 use time::{ Tm };
 
 pub struct SceneTransition {
@@ -37,7 +36,7 @@ impl SceneTransition {
             let mut status: Option<TransitionStatus> = None;
             with_context(|c| &mut c.canvas).with_texture_canvas(&mut canvas, |c| {
                 status = self.delegate.render(c, &mut scene, &mut prev_scene, self.generate_progress());
-            });
+            }).unwrap();
             if let Some(s) = status.clone() {
                 self.status.replace(s);
             } else if progress == 1.0 {

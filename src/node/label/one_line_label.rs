@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use ::node::{ Node, NodeLike, NodeDelegate };
+use ::node::{ Node, NodeDelegate };
 use ::node::label::{ OneLineLabelOption };
 use ::util::{ director };
 use ::util::parameter::{ Size };

@@ -6,7 +6,6 @@ use std::io::{BufReader, Read, Write, stdout};
 use ::application::{ Application, Context };
 use ::node::scene::transition::{ TransitionStatus };
 use ::util::{ FpsManager, director };
-use sdl2::event::{ Event };
 use base64::{ decode };
 use crypto::{ symmetriccipher, buffer, aes, blockmodes };
 use crypto::buffer::{ WriteBuffer, ReadBuffer, BufferResult };
