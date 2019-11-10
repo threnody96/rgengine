@@ -20,10 +20,10 @@ pub fn is_click<A>(key: A) -> Option<Point> where A: Into<String> {
 }
 
 pub fn get_mouse_position() -> Point {
-    director(|d| d.get_mouse_position())
+    director::get_mouse_position()
 }
 
 pub fn get_input<A>(key: A) -> InputInfo where A: Into<String> {
-    director(|d| d.get_input_info(key))
+    director::get_input_info(key)
 }
 

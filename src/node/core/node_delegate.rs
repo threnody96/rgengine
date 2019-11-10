@@ -3,8 +3,7 @@ use ::resource::{ Texture, Font };
 use ::node::{ NodeId, NodeLike, AddChildOption };
 use ::action::{ ActionLike };
 use ::util::{ director };
-use ::util::parameter::{ Point, AnchorPoint, Size };
-use sdl2::pixels::{ Color };
+use ::util::parameter::{ Point, AnchorPoint, Size, Color };
 
 pub trait NodeDelegate {
 
@@ -31,7 +30,7 @@ pub trait NodeDelegate {
     }
 
     fn node(&self) -> Rc<dyn NodeLike> {
-        director(|d| d.get_nodelike(&self.id()))
+        director::get_nodelike(&self.id())
     }
 
     fn add_child(&self, node: Rc<dyn NodeLike>, option: AddChildOption) {
@@ -91,15 +90,15 @@ pub trait NodeDelegate {
     }
 
     fn prepare_render_tree(&self) {
-        director(|d| d.prepare_render_tree(self.get_parent(), self.node()));
+        director::prepare_render_tree(self.get_parent(), self.node());
     }
 
     fn render_texture(&self, texture: Rc<Texture>) {
-        director(|d| d.render_texture(self.node(), texture));
+        director::render_texture(self.node(), texture);
     }
 
     fn render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
-        director(|d| d.render_label(self.node(), text, font, color));
+        director::render_label(self.node(), text, font, color);
     }
 
     fn is_mouse_hover(&self) -> bool {

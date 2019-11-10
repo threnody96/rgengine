@@ -27,7 +27,7 @@ impl LabelOption {
 
     fn attach_name(option: &LabelOption, name: Option<String>) -> LabelOption {
         if let Some(n) = name {
-            if let Some(l) = director(|d| d.get_label_option(n)) {
+            if let Some(l) = director::get_label_option(n) {
                 return l;
             }
         }
@@ -95,7 +95,7 @@ impl LabelOption {
 impl Default for LabelOption {
 
     fn default() -> Self {
-        match director(|d| d.default_label_option()) {
+        match director::default_label_option() {
             Some(o) => { o },
             None => {
                 Self {
@@ -114,7 +114,7 @@ impl Default for LabelOption {
 impl From<String> for LabelOption {
 
     fn from(f: String) -> LabelOption {
-        match director(|d| d.get_label_option(f.clone())) {
+        match director::get_label_option(f.clone()) {
             None => {
                 LabelOption {
                     path: f,

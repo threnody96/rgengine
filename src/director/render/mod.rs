@@ -7,7 +7,7 @@ use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ OneLineLabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
-use ::util::{ context };
+use ::util::{with_context};
 use ::util::parameter::{ Size, Rect, Point };
 use ::director::resource::{ ResourceDirector };
 use sdl2::render::{ Texture, BlendMode };
@@ -171,7 +171,7 @@ impl <'a> RenderDirector<'a> {
     }
 
     fn create_sub_canvas(&self, size: Size) -> Texture<'a> {
-        context(|c| c.create_sub_canvas(size.clone()))
+        with_context(|c| c.create_sub_canvas(size.clone()))
     }
 
     fn set_alpha_blend_mode(&self, canvas: &mut Texture<'a>) {
@@ -232,7 +232,7 @@ impl <'a> RenderDirector<'a> {
             RenderOperation::Label(text, font, color) => {
                 let f = self.resource.load_font_from_resource_key(font.clone());
                 let surface = f.render(text.as_str()).blended(*color).unwrap();
-                let texture = context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap();
+                let texture = with_context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap();
                 Rc::new(texture)
             }
         }
@@ -244,7 +244,7 @@ impl <'a> RenderDirector<'a> {
         }).collect();
         let mut ct = self.create_sub_canvas(render_tree.node.get_size());
         self.set_alpha_blend_mode(&mut ct);
-        context(|c| &mut c.canvas).with_texture_canvas(&mut ct, |c| {
+        with_context(|c| &mut c.canvas).with_texture_canvas(&mut ct, |c| {
             for (child_node, child_texture) in children {
                 if let Some(t) = child_texture {
                     let rect = child_node.get_render_rect();
@@ -261,7 +261,7 @@ impl <'a> RenderDirector<'a> {
         let query = texture.query();
         let mut sub_canvas = self.create_sub_canvas(Size::new(query.width, query.height));
         sub_canvas.set_blend_mode(BlendMode::None);
-        context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
+        with_context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();
         });
         self.set_alpha_blend_mode(&mut sub_canvas);
@@ -273,7 +273,7 @@ impl <'a> RenderDirector<'a> {
         let mut sub_canvas = self.create_sub_canvas(Size::new(query.width, query.height));
         texture.set_alpha_mod(alpha);
         sub_canvas.set_blend_mode(BlendMode::Blend);
-        context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
+        with_context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();
         });
         sub_canvas
@@ -297,7 +297,7 @@ impl <'a> RenderDirector<'a> {
         } else {
             (scene_canvas, TransitionStatus::Wait)
         };
-        context(|c| {
+        with_context(|c| {
             let can = &mut c.canvas;
             can.set_draw_color(Color::RGBA(0, 0, 0, 255));
             can.clear();

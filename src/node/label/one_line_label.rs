@@ -23,7 +23,7 @@ impl OneLineLabel {
     {
         let t = text.into();
         let o = option.into();
-        let font = director(|d| d.load_font(&o));
+        let font = director::load_font(&o);
         let n = Node::create(|| {
             Self {
                 size: RefCell::new(None),
@@ -50,7 +50,7 @@ impl OneLineLabel {
         {
             let mut option = self.option.borrow_mut();
             option.point = point.into();
-            self.font.replace(director(|d| d.load_font(&option.clone())));
+            self.font.replace(director::load_font(&option.clone()));
         }
         self.updated();
     }
@@ -58,7 +58,7 @@ impl OneLineLabel {
     fn updated(&self) {
         let text = self.text.borrow().clone();
         let font = self.font.borrow().clone();
-        let size = director(|d| d.measure_label_size(&text, font.clone()));
+        let size = director::measure_label_size(&text, font.clone());
         self.size.replace(Some(size));
         self.clear_cache();
     }

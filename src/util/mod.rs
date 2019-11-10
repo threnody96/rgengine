@@ -2,6 +2,7 @@ mod tool;
 mod fps_manager;
 mod validation;
 mod input;
+pub mod director;
 pub mod parameter;
 pub mod easing;
 pub mod save_migrator;

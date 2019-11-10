@@ -2,8 +2,7 @@ use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption, ConflictType };
 use ::resource::{ Texture, Font, ResourceKey };
 use ::action::{ ActionLike };
-use ::util::parameter::{ Point, AnchorPoint, Size, Rect };
-use sdl2::pixels::{ Color };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Color };
 
 pub trait NodeLike {
 

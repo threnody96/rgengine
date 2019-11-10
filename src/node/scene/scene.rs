@@ -24,7 +24,7 @@ pub trait SceneLike: NodeLike {
 impl <T> NodeDelegate for T where T: Scene {
 
     fn get_size(&self) -> Size {
-        director(|d| d.get_resolution_size())
+        director::get_resolution_size()
     }
 
     fn update(&self) { }
@@ -37,7 +37,7 @@ impl <T> NodeDelegate for T where T: Scene {
 
     fn before_add_child(&self, child: Rc<dyn NodeLike>) {
         let id = child.id();
-        if director(|d| d.get_node::<Layer>(&id)).is_none() {
+        if director::get_node::<Layer>(&id).is_none() {
             panic!("Scene に add_child できるのは Layer Node だけです");
         }
     }

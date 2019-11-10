@@ -30,7 +30,7 @@ impl NodeDelegate for Layer {
     fn get_size(&self) -> Size {
         let option = self.option.borrow();
         if let Some(size) = option.size.clone() { return size; }
-        director(|d| d.get_resolution_size())
+        director::get_resolution_size()
     }
 
     fn before_be_added_child(&self, parent: Rc<dyn NodeLike>) {

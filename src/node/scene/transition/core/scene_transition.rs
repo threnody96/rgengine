@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::scene::transition::{ SceneTransitionDelegate, TransitionStatus };
-use ::util::{ context };
+use ::util::{with_context};
 use ::util::parameter::{ Size };
 use ::util::easing::{ EasingFunction };
 use sdl2::render::{ Texture, BlendMode };
@@ -31,11 +31,11 @@ impl SceneTransition {
     pub fn render<'a>(&self, mut scene: Texture<'a>, mut prev_scene: Texture<'a>) -> Texture<'a> {
         if self.initialize() {
             let query = scene.query();
-            let mut canvas = context(|c| c.create_sub_canvas(Size::new(query.width, query.height)));
+            let mut canvas = with_context(|c| c.create_sub_canvas(Size::new(query.width, query.height)));
             canvas.set_blend_mode(self.delegate.canvas_blend_mode());
             let progress = self.generate_progress();
             let mut status: Option<TransitionStatus> = None;
-            context(|c| &mut c.canvas).with_texture_canvas(&mut canvas, |c| {
+            with_context(|c| &mut c.canvas).with_texture_canvas(&mut canvas, |c| {
                 status = self.delegate.render(c, &mut scene, &mut prev_scene, self.generate_progress());
             });
             if let Some(s) = status.clone() {

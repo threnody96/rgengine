@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use ::node::label::{ LabelOption };
-use ::util::{ director, NoOption };
+use ::util::{ NoOption };
 use ::util::parameter::{ FontStyle, Color };
 
 #[derive(Clone)]

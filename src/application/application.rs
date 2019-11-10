@@ -33,7 +33,7 @@ pub trait Application {
     }
 
     fn on_quit(&self) {
-        director(|d| d.set_continuing(false));
+        director::set_continuing(false);
     }
 
 }

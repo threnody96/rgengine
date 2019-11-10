@@ -111,7 +111,7 @@ impl <'a> Director<'a> {
         self.variable.borrow_mut().set_application(application.clone());
     }
 
-    pub(crate) fn set_current_fps(&self, fps: usize) {
+    pub fn set_current_fps(&self, fps: usize) {
         self.application.borrow_mut().set_current_fps(fps);
     }
 

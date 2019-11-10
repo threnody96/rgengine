@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::collections::HashMap;
 use ::node::label::{ OneLineLabelOption };
 use ::resource::{ Storage, ResourceType, ResourceKey };
-use ::util::{ context };
+use ::util::{with_context};
 use serde_json::Value;
 use sdl2::render::{ Texture };
 use sdl2::ttf::{ Font };
@@ -100,7 +100,7 @@ impl <'a> ResourceDirector<'a> {
             let data = self.load_plain_data(&resource_key.path());
             let rwops = RWops::from_bytes(data.as_slice()).unwrap();
             let surface = rwops.load().unwrap();
-            let texture = Rc::new(context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap());
+            let texture = Rc::new(with_context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap());
             self.textures.insert(resource_key.clone(), texture.clone());
             Rc::new(::resource::Texture::new(&resource_key, texture.query()))
         }
@@ -120,10 +120,10 @@ impl <'a> ResourceDirector<'a> {
             Rc::new(::resource::Font::new(&resource_key))
         } else {
             let font_data = self.load_plain_data(&resource_key.path());
-            context(|c| c.add_static_data(&resource_key, font_data));
-            let data = context(|c| c.get_static_data(&resource_key)).unwrap();
+            with_context(|c| c.add_static_data(&resource_key, font_data));
+            let data = with_context(|c| c.get_static_data(&resource_key)).unwrap();
             let rwops = RWops::from_bytes(data).unwrap();
-            let mut font = context(|c| c.ttf_context.load_font_from_rwops(rwops, option.point)).unwrap();
+            let mut font = with_context(|c| c.ttf_context.load_font_from_rwops(rwops, option.point)).unwrap();
             font.set_style(option.style.into());
             self.fonts.insert(resource_key.clone(), Rc::new(font));
             Rc::new(::resource::Font::new(&resource_key))
@@ -139,11 +139,11 @@ impl <'a> ResourceDirector<'a> {
             music.clone()
         } else {
             let plain_data = self.load_plain_data(&resource_key.path());
-            context(|c| c.add_static_data(&resource_key, plain_data));
-            let data = context(|c| c.get_static_data(&resource_key)).unwrap();
+            with_context(|c| c.add_static_data(&resource_key, plain_data));
+            let data = with_context(|c| c.get_static_data(&resource_key)).unwrap();
             let rwops = RWops::from_bytes(data).unwrap();
-            context(|c| c.add_static_rwops(&resource_key, rwops));
-            let r = context(|c| c.get_static_rwops(&resource_key)).unwrap();
+            with_context(|c| c.add_static_rwops(&resource_key, rwops));
+            let r = with_context(|c| c.get_static_rwops(&resource_key)).unwrap();
             let music = Rc::new(r.load_music().unwrap());
             self.musics.insert(resource_key, music.clone());
             music
@@ -159,8 +159,8 @@ impl <'a> ResourceDirector<'a> {
             se.clone()
         } else {
             let plain_data = self.load_plain_data(&resource_key.path());
-            context(|c| c.add_static_data(&resource_key, plain_data));
-            let data = context(|c| c.get_static_data(&resource_key)).unwrap();
+            with_context(|c| c.add_static_data(&resource_key, plain_data));
+            let data = with_context(|c| c.get_static_data(&resource_key)).unwrap();
             let rwops = RWops::from_bytes(data).unwrap();
             let se = Rc::new(rwops.load_wav().unwrap());
             self.ses.insert(resource_key, se.clone());

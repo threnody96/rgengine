@@ -6,9 +6,8 @@ use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption, ConflictType };
 use ::action::{ ActionLike, ActionStatus };
 use ::util::{ director, get_mouse_position };
-use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Circle };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Circle, Color };
 use ::resource::{ Texture, Font, ResourceKey };
-use sdl2::pixels::{ Color };
 
 pub struct Node<T> where T: NodeDelegate + Any {
     delegate: T,
@@ -70,7 +69,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn clear_cache(&self) {
         if let Some(cache_key) = self.get_cache() {
-            director(|d| d.destroy_render_cache(&cache_key));
+            director::destroy_render_cache(&cache_key);
             self.set_cache(None);
         }
         self.clear_parent_cache();
@@ -144,7 +143,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
     fn get_parent(&self) -> Option<Rc<dyn NodeLike>> {
         if let Some(id) = self.parent.borrow().clone() {
-            Some(director(|d| d.get_nodelike(&id)))
+            Some(director::get_nodelike(&id))
         } else {
             None
         }
@@ -173,7 +172,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         let mut output: Vec<Rc<dyn NodeLike>> = Vec::new();
         let children = self.children.borrow();
         for child in &*children {
-            output.push(director(|d| d.get_nodelike(&child.id)));
+            output.push(director::get_nodelike(&child.id));
         }
         output
     }
@@ -184,7 +183,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             if id != &child.id { next_children.push(child.clone()); }
         }
         self.children.replace(next_children);
-        let node = director(|d| d.get_nodelike(id));
+        let node = director::get_nodelike(id);
         node.remove_parent()
     }
 
@@ -326,7 +325,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         for child in self.get_children() {
             child.destroy();
         }
-        director(|d| d.destroy_node(&id));
+        director::destroy_node(&id);
     }
 
 }
@@ -334,11 +333,9 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 impl <T> Node<T> where T: NodeDelegate + Any {
 
     pub fn create<C>(callback: C) -> Rc<Self> where C: Fn() -> T {
-        director(|d| {
-            let s = Rc::new(Self::new(callback()));
-            d.register_node(s.clone());
-            s
-        })
+        let s = Rc::new(Self::new(callback()));
+        director::register_node(s.clone());
+        s
     }
 
     pub fn add_child<A>(&self, node: Rc<dyn NodeLike>, option: A)

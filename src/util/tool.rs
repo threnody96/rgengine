@@ -3,10 +3,9 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::rc::Rc;
 use std::io::{BufReader, Read, Write, stdout};
-use ::director::{ Director };
 use ::application::{ Application, Context };
 use ::node::scene::transition::{ TransitionStatus };
-use ::util::{ FpsManager };
+use ::util::{ FpsManager, director };
 use sdl2::event::{ Event };
 use base64::{ decode };
 use crypto::{ symmetriccipher, buffer, aes, blockmodes };
@@ -100,13 +99,7 @@ pub fn decrypt(encrypted_data: &[u8], key: &str) -> Result<Vec<u8>, String> {
     Ok(final_result)
 }
 
-pub fn director<T, R>(callback: T) -> R where T: FnOnce(&Director) -> R {
-    ::DIRECTOR.with(|d| {
-        callback(d)
-    })
-}
-
-pub(crate) fn context<T, R>(callback: T) -> R where T: FnOnce(&'static mut Context) -> R {
+pub(crate) fn with_context<T, R>(callback: T) -> R where T: FnOnce(&'static mut Context) -> R {
     unsafe {
         callback(::CONTEXT.as_mut().unwrap())
     }
@@ -147,48 +140,43 @@ fn set_panic_hook() {
 
 pub fn run(application: Rc<dyn Application>) {
     set_panic_hook();
-    director(|d| d.set_application(application.clone()));
+    director::set_application(application.clone());
     initialize_context(application.clone());
-    let event_pump = context(|c| &mut c.event_pump);
+    let event_pump = with_context(|c| &mut c.event_pump);
     let mut fps_manager = FpsManager::new(application.fps());
-    director(|d| {
-        let scene = application.application_did_finish_launching();
-        d.replace_scene(scene, ::NoOption);
-        d.get_scene().start_update();
-    });
+    director::replace_scene(application.application_did_finish_launching(), ::NoOption);
+    director::get_scene().start_update();
     let mut prev_sleep_time: i64 = 0;
-    while director(|d| d.is_continuing()) {
-        let (scene, mut prev_scene, transition) = director(|d| {
-            (d.get_scene(), d.get_prev_scene(), d.get_scene_transition())
-        });
+    while director::is_continuing() {
+        let (scene, mut prev_scene, transition) = (
+            director::get_scene(), director::get_prev_scene(), director::get_scene_transition()
+        );
         prev_sleep_time = fps_manager.run(
             prev_sleep_time,
             || {
-                director(|d| d.update_input_state(event_pump));
+                director::update_input_state(event_pump);
             },
             || {
                 scene.start_update();
-                let next_scene = director(|d| d.get_scene());
+                let next_scene = director::get_scene();
                 if next_scene.id() != scene.id() { next_scene.start_update(); }
             },
             || {
-                director(|d| d.update_resolution_size());
+                director::update_resolution_size();
                 scene.start_render();
                 if let Some(p) = prev_scene.clone() {
                     p.start_render();
                 }
-                director(|d| {
-                    let status = d.render_canvas(scene.clone(), prev_scene.clone(), transition.clone());
-                    if status == TransitionStatus::Finish && prev_scene.is_some() {
-                        d.destroy_prev_scene();
-                        prev_scene = None;
-                    }
-                });
+                let status = director::render_canvas(scene.clone(), prev_scene.clone(), transition.clone());
+                if status == TransitionStatus::Finish && prev_scene.is_some() {
+                    director::destroy_prev_scene();
+                    prev_scene = None;
+                }
             }
         );
-        director(|d| d.set_current_fps(fps_manager.fps()));
-        director(|d| d.clean_se());
-        if director(|d| d.is_quit()) {
+        director::set_current_fps(fps_manager.fps());
+        director::clean_se();
+        if director::is_quit() {
             application.on_quit();
         }
     }

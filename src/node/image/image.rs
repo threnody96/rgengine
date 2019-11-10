@@ -15,7 +15,7 @@ impl Image {
     {
         let p = path.into();
         Node::create(|| {
-            Image { image: director(|d| d.load_texture(&p)) }
+            Image { image: director::load_texture(&p) }
         })
     }
 
