@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
+use ::util::{ SaveMigrator };
 use ::util::parameter::{ Size, InputCode, InputInfo, Point, MusicOption };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
@@ -24,6 +25,8 @@ use self::sound::SoundDirector;
 use self::variable::VariableDirector;
 use sdl2::{ EventPump };
 use sdl2::pixels::{ Color };
+use serde::de::DeserializeOwned;
+use serde::ser::Serialize;
 use rand::distributions::{ Standard, Distribution };
 
 pub struct Director<'a> {
@@ -271,6 +274,32 @@ impl <'a> Director<'a> {
     pub fn clean_se(&self) {
         let seed: usize = self.rand();
         self.sound.borrow_mut().clean_se(seed);
+    }
+
+    pub fn get_variable<T, A>(&self, index: A) -> Option<T>
+    where T: DeserializeOwned, A: Into<String>
+    {
+        let i = index.into();
+        self.variable.borrow().get(&i)
+    }
+
+    pub fn put_variable<T, A>(&self, index: A, value: &T)
+        where T: Serialize, A: Into<String>
+    {
+        let i = index.into();
+        self.variable.borrow_mut().put(&i, value)
+    }
+
+    pub fn load_variable<T, M>(&self, name: T, migrator: M)
+    where T: Into<String>, M: SaveMigrator
+    {
+        let n = name.into();
+        self.variable.borrow_mut().load(&n, migrator)
+    }
+
+    pub fn save_variable<T>(&self, name: T) where T: Into<String> {
+        let n = name.into();
+        self.variable.borrow().save(&n);
     }
 
 }
