@@ -14,9 +14,9 @@ pub use self::resource_type::*;
 pub use self::file_storage::*;
 pub use self::packed_storage::*;
 
-#[cfg(build_mode = "release")]
+#[cfg(not(debug_assertions))]
 pub type Storage = PackedStorage;
 
-#[cfg(not(build_mode = "release"))]
+#[cfg(debug_assertions)]
 pub type Storage = FileStorage;
 
