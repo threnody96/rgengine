@@ -8,7 +8,7 @@ use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ LabelOption, OneLineLabelOption };
 use ::resource::{ ResourceKey, SE, Font, Texture };
 use ::util::{ SaveMigrator };
-use ::util::parameter::{ Size, Color, Point, InputInfo, InputCode, MusicOption };
+use ::util::parameter::{ Size, Color, Point, InputInfo, InputCode, MusicOption, Circle };
 use rand::distributions::{ Standard, Distribution };
 use sdl2::{ EventPump };
 use serde::de::DeserializeOwned;
@@ -157,6 +157,10 @@ pub(crate) fn render_texture(node: Rc<dyn NodeLike>, texture: Rc<Texture>) {
 
 pub(crate) fn render_label(node: Rc<dyn NodeLike>, text: &str, font: Rc<Font>, color: &Color) {
     with_director(|d| d.render_label(node, text, font, color));
+}
+
+pub(crate) fn render_round(node: Rc<dyn NodeLike>, color: &Color) {
+    with_director(|d| d.render_round(node, color));
 }
 
 pub(crate) fn update_resolution_size() {

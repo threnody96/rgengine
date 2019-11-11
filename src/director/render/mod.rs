@@ -8,7 +8,7 @@ use ::node::label::{ OneLineLabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ with_context };
-use ::util::parameter::{ Size, Rect, Point };
+use ::util::parameter::{ Size, Rect, Point, Circle };
 use ::director::resource::{ ResourceDirector };
 use sdl2::render::{ Texture, BlendMode };
 use sdl2::pixels::{ Color };
@@ -17,7 +17,8 @@ use std::intrinsics::transmute;
 #[derive(Clone)]
 pub enum RenderOperation {
     Image(Rc<::resource::Texture>),
-    Label(String, Rc<::resource::Font>, Color)
+    Label(String, Rc<::resource::Font>, Color),
+    Round(Color)
 }
 
 pub struct RenderTree {
@@ -150,6 +151,11 @@ impl <'a> RenderDirector<'a> {
         tree.set_operation(RenderOperation::Label(text.to_owned(), font, color.clone()));
     }
 
+    pub fn render_round(&self, node: Rc<dyn NodeLike>, color: &Color) {
+        let tree = self.render_tree_nodes.get(&node.id()).unwrap();
+        tree.set_operation(RenderOperation::Round(color.clone()));
+    }
+
     pub fn measure_label_size(&self, text: &str, font: Rc<::resource::Font>) -> Size {
         let f = self.resource.load_font_from_resource_key(font);
         let surface = f.render(text).blended(Color::RGBA(255, 255, 255, 255)).unwrap();
@@ -214,13 +220,13 @@ impl <'a> RenderDirector<'a> {
     }
 
     fn render_operation(&mut self, node: Rc<dyn NodeLike>, operation: &RenderOperation) -> Texture<'a> {
-        let texture = self.exec_operation(operation);
+        let texture = self.exec_operation(node.clone(), operation);
         let mut ct = self.clone_texture(&texture);
         if node.get_opacity() == 255 { return ct; }
         self.apply_alpha_mod(&mut ct, node.get_opacity())
     }
 
-    fn exec_operation(&mut self, operation: &RenderOperation) -> Rc<Texture<'a>> {
+    fn exec_operation(&mut self, node: Rc<dyn NodeLike>, operation: &RenderOperation) -> Rc<Texture<'a>> {
         match operation {
             RenderOperation::Image(texture) => {
                 self.resource.load_texture_from_resource_key(texture.clone())
@@ -230,6 +236,25 @@ impl <'a> RenderDirector<'a> {
                 let surface = f.render(text.as_str()).blended(*color).unwrap();
                 let texture = with_context(|c| c.texture_creator.create_texture_from_surface(surface)).unwrap();
                 Rc::new(texture)
+            },
+            RenderOperation::Round(color) => {
+                let mut ct = self.create_sub_canvas(node.get_size());
+                if color.a == 0 { return Rc::new(ct); }
+                with_context(|c| &mut c.canvas).with_texture_canvas(&mut ct, |c| {
+                    c.set_draw_color(color.clone());
+                    let size  = node.get_size();
+                    let radius = size.height() as f32 / 2.0;
+                    let r = radius.powi(2);
+                    for i in 0..size.width() {
+                        let x = i as f32 - size.width() as f32 / 2.0;
+                        let height = (r - x.powi(2)).sqrt().round();
+                        c.draw_line(
+                            *Point::new(i as i32, (radius - height).round() as i32),
+                            *Point::new(i as i32, (radius + height).round() as i32)
+                        ).unwrap();
+                    }
+                });
+                Rc::new(ct)
             }
         }
     }

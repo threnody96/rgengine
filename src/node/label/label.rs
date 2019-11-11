@@ -3,8 +3,7 @@ use std::cell::RefCell;
 use std::cmp::{ min, max };
 use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
 use ::node::label::{ LabelOption, OneLineLabel };
-use ::util::parameter::{ Point, Size, AnchorPoint };
-pub use sdl2::pixels::{ Color };
+use ::util::parameter::{ Point, Size, AnchorPoint, Color };
 
 pub struct Label {
     size: RefCell<Option<Size>>,

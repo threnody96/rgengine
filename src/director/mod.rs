@@ -11,7 +11,7 @@ use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
 use ::util::{ SaveMigrator };
-use ::util::parameter::{ Size, InputCode, InputInfo, Point, MusicOption };
+use ::util::parameter::{ Size, InputCode, InputInfo, Point, MusicOption, Circle };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
 use ::node::scene::transition::{ SceneTransition, TransitionStatus };
@@ -197,6 +197,10 @@ impl <'a> Director<'a> {
 
     pub fn render_label(&self, node: Rc<dyn NodeLike>, text: &str, font: Rc<Font>, color: &Color) {
         self.render.borrow_mut().render_label(node, text, font, color);
+    }
+
+    pub fn render_round(&self, node: Rc<dyn NodeLike>, color: &Color) {
+        self.render.borrow_mut().render_round(node, color);
     }
 
     pub fn update_resolution_size(&self) {

@@ -3,7 +3,7 @@ use ::resource::{ Texture, Font };
 use ::node::{ NodeId, NodeLike, AddChildOption };
 use ::action::{ ActionLike };
 use ::util::{ director };
-use ::util::parameter::{ Point, AnchorPoint, Size, Color };
+use ::util::parameter::{ Point, AnchorPoint, Size, Color, Circle };
 
 pub trait NodeDelegate {
 
@@ -99,6 +99,10 @@ pub trait NodeDelegate {
 
     fn render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
         director::render_label(self.node(), text, font, color);
+    }
+
+    fn render_round(&self, color: &Color) {
+        director::render_round(self.node(), color);
     }
 
     fn is_mouse_hover(&self) -> bool {
