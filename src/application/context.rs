@@ -41,9 +41,6 @@ impl <'a> Context<'a> {
         sdl2::mixer::init(sdl2::mixer::InitFlag::all()).unwrap();
         sdl2::mixer::open_audio(22050, sdl2::mixer::AUDIO_S16SYS, 2, 4096).unwrap();
         let video_subsystem = sdl_context.video().unwrap();
-        let gl_attr = video_subsystem.gl_attr();
-        // gl_attr.set_multisample_buffers(2);
-        // gl_attr.set_multisample_samples(4);
         let window_size = application.window_size();
         let window = video_subsystem
             .window(application.title().as_str(), window_size.width(), window_size.height())
