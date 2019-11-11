@@ -8,7 +8,7 @@ use ::node::label::{ OneLineLabelOption };
 use ::resource::{ ResourceKey };
 use ::application::{ Application, ResolutionPolicy };
 use ::util::{ with_context };
-use ::util::parameter::{ Size, Rect, Point, Circle };
+use ::util::parameter::{ Size, Rect, Point, Opacity };
 use ::director::resource::{ ResourceDirector };
 use sdl2::render::{ Texture, BlendMode };
 use sdl2::pixels::{ Color };
@@ -222,7 +222,7 @@ impl <'a> RenderDirector<'a> {
     fn render_operation(&mut self, node: Rc<dyn NodeLike>, operation: &RenderOperation) -> Texture<'a> {
         let texture = self.exec_operation(node.clone(), operation);
         let mut ct = self.clone_texture(&texture);
-        if node.get_opacity() == 255 { return ct; }
+        if node.get_opacity().is_untransparent() { return ct; }
         self.apply_alpha_mod(&mut ct, node.get_opacity())
     }
 
@@ -253,7 +253,7 @@ impl <'a> RenderDirector<'a> {
                             *Point::new(i as i32, (radius + height).round() as i32)
                         ).unwrap();
                     }
-                });
+                }).unwrap();
                 Rc::new(ct)
             }
         }
@@ -270,11 +270,11 @@ impl <'a> RenderDirector<'a> {
                 if let Some(t) = child_texture {
                     let rect = child_node.get_render_rect();
                     let angle = child_node.get_rotation();
-                    c.copy_ex(&t, None, Some(rect.into()), angle, None, false, false).unwrap();
+                    c.copy_ex(&t, None, Some(rect.into()), *angle, None, false, false).unwrap();
                 }
             }
         }).unwrap();
-        if render_tree.node.get_opacity() == 255 { return ct; }
+        if render_tree.node.get_opacity().is_untransparent() { return ct; }
         self.apply_alpha_mod(&mut ct, render_tree.node.get_opacity())
     }
 
@@ -289,10 +289,10 @@ impl <'a> RenderDirector<'a> {
         sub_canvas
     }
 
-    fn apply_alpha_mod(&self, texture: &mut Texture<'a>, alpha: u8) -> Texture<'a> {
+    fn apply_alpha_mod(&self, texture: &mut Texture<'a>, alpha: Opacity) -> Texture<'a> {
         let query = texture.query();
         let mut sub_canvas = self.create_sub_canvas(Size::new(query.width, query.height));
-        texture.set_alpha_mod(alpha);
+        texture.set_alpha_mod(*alpha);
         sub_canvas.set_blend_mode(BlendMode::Blend);
         with_context(|c| &mut c.canvas).with_texture_canvas(&mut sub_canvas, |c| {
             c.copy(texture, None, None).unwrap();

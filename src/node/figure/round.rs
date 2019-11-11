@@ -15,11 +15,9 @@ impl Round {
     where A: Into<RoundOption>
     {
         let o = option.into();
-        let n = Node::create(|| {
-            Self {
-                diameter: RefCell::new(diameter),
-                option: RefCell::new(o.clone())
-            }
+        let n = Node::create(Self {
+            diameter: RefCell::new(diameter),
+            option: RefCell::new(o.clone())
         });
         n.set_conflict_type(ConflictType::Circle);
         n

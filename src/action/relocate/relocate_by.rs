@@ -15,11 +15,9 @@ impl RelocateBy {
     where A: Into<Point>
     {
         let t = to.into();
-        Action::create(duration, || {
-            Self {
-                to: t.clone(),
-                from: RefCell::new(None)
-            }
+        Action::create(duration, Self {
+            to: t.clone(),
+            from: RefCell::new(None)
         })
     }
 

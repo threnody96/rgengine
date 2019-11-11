@@ -10,24 +10,22 @@ pub struct FileStorage {
 
 impl FileStorage {
 
-    pub fn new(path: &str, encrypt_key: Option<String>) -> Self {
+    pub fn new(path: PathBuf, encrypt_key: Option<String>) -> Self {
         Self {
-            path: Self::resource_path(path),
+            path: path,
             encrypt_key: encrypt_key
         }
     }
 
     pub fn new_resource() -> Self {
-        Self::new("resource", None)
+        Self::from_exe_dir("resource", None)
     }
 
-    fn resource_path(path: &str) -> PathBuf {
-        let mut storage_dir = exe_dir();
+    pub fn from_exe_dir(path: &str, encrypt_key: Option<String>) -> Self {
+        let mut resource_dir = exe_dir();
         let paths: Vec<&str> = path.split(DIR_SEPARATOR).collect();
-        for p in paths {
-            storage_dir.push(p);
-        }
-        storage_dir
+        for p in paths { resource_dir.push(p); }
+        Self::new(resource_dir, encrypt_key)
     }
 
     pub fn load(&self, path: &str) -> Result<Vec<u8>, String> {

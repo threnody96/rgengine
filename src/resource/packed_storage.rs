@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::fs::{ create_dir_all };
 use rusqlite::{ Connection };
 use base64::{ decode, encode };
@@ -10,22 +11,23 @@ pub struct PackedStorage {
 
 impl PackedStorage {
 
-    pub fn new(path: &str, encrypt_key: Option<String>) -> Self {
-        if path == "" { panic!(format!("invalid packed storage path: {}", path)); }
-        let mut source_path = exe_dir();
-        let paths: Vec<&str> = path.split(DIR_SEPARATOR).collect();
-        for p in paths { source_path.push(p); }
-        if let Some(parent) = source_path.parent() {
-            create_dir_all(parent).unwrap();
-        }
+    pub fn new(path: PathBuf, encrypt_key: Option<String>) -> Self {
+        Self::initialize_db(&path);
         Self {
-            con: Connection::open(source_path).unwrap(),
+            con: Connection::open(path).unwrap(),
             encrypt_key: encrypt_key
         }
     }
 
     pub fn new_resource() -> Self {
-        Self::new("resource.dat", Some(ENCRYPT_KEY.to_owned()))
+        Self::from_exe_dir("resource.dat", Some(ENCRYPT_KEY.to_owned()))
+    }
+
+    pub fn from_exe_dir(path: &str, encrypt_key: Option<String>) -> Self {
+        let mut resource_dir = exe_dir();
+        let paths: Vec<&str> = path.split(DIR_SEPARATOR).collect();
+        for p in paths { resource_dir.push(p); }
+        Self::new(resource_dir, encrypt_key)
     }
 
     pub fn load(&self, path: &str) -> Result<Vec<u8>, String> {
@@ -55,6 +57,21 @@ impl PackedStorage {
         }
         self.con.execute("insert into storage (path, data) values (?1, ?2)", &[&path, d.as_str()]).unwrap();
         Ok(())
+    }
+
+    pub fn initialize_db(path: &PathBuf) {
+        if let Some(parent) = path.parent() {
+            create_dir_all(parent).unwrap();
+        }
+        if path.exists() { return; }
+        let conn = Connection::open(path).unwrap();
+        conn.execute("create table storage (
+                      id     INTEGER PRIMARY KEY,
+                      path   TEXT NOT NULL,
+                      data   BLOB
+                      )", params!()).unwrap();
+        conn.execute("create unique index uindex_path on storage(path)", params!()).unwrap();
+        conn.close().unwrap();
     }
 
 }

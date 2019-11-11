@@ -12,9 +12,7 @@ pub struct TransitionNone {
 impl TransitionNone {
 
     pub fn create() -> Rc<SceneTransition> {
-        SceneTransition::create(|| {
-            Rc::new(Self {})
-        }, None, None)
+        SceneTransition::create(Rc::new(Self {}) , None, None)
     }
 
 }

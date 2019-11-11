@@ -7,7 +7,7 @@ pub struct Delay { }
 impl Delay {
 
     pub fn create(duration: f64) -> Rc<Action<Self>> {
-        Action::create(duration, || Self { })
+        Action::create(duration, Self { })
     }
 
 }

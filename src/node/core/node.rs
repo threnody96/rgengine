@@ -6,7 +6,7 @@ use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption, ConflictType };
 use ::action::{ ActionLike, ActionStatus };
 use ::util::{ director, get_mouse_position };
-use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Circle, Color };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Circle, Color, Opacity, Scale, Rotation };
 use ::resource::{ Texture, Font, ResourceKey };
 
 pub struct Node<T> where T: NodeDelegate + Any {
@@ -16,9 +16,9 @@ pub struct Node<T> where T: NodeDelegate + Any {
     position: RefCell<Point>,
     anchor_point: RefCell<AnchorPoint>,
     visible: RefCell<bool>,
-    opacity: RefCell<u8>,
-    rotation: RefCell<f64>,
-    scale: RefCell<f64>,
+    opacity: RefCell<Opacity>,
+    rotation: RefCell<Rotation>,
+    scale: RefCell<Scale>,
     render_cache: RefCell<Option<ResourceKey>>,
     parent: RefCell<Option<NodeId>>,
     children: RefCell<Vec<NodeChild>>,
@@ -82,7 +82,7 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
     fn get_scaled_size(&self) -> Size {
         let size = self.get_size();
         let scale = self.get_scale();
-        Size::new((size.width() as f64 * scale) as u32, (size.height() as f64 * scale) as u32)
+        Size::new((size.width() as f64 * *scale) as u32, (size.height() as f64 * *scale) as u32)
     }
 
     fn get_render_rect(&self) -> Rect {
@@ -230,12 +230,12 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.anchor_point.borrow().clone()
     }
 
-    fn set_opacity(&self, opacity: u8) {
-        self.opacity.replace(opacity);
+    fn set_opacity(&self, opacity: Opacity) {
+        self.opacity.replace(opacity.clone());
         self.clear_cache();
     }
 
-    fn get_opacity(&self) -> u8 {
+    fn get_opacity(&self) -> Opacity {
         self.opacity.borrow().clone()
     }
 
@@ -248,23 +248,20 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.visible.borrow().clone()
     }
 
-    fn set_scale(&self, scale: f64) {
-        let s = if scale > 0.0 { scale } else { 0.0 };
-        self.scale.replace(s);
+    fn set_scale(&self, scale: Scale) {
+        self.scale.replace(scale);
     }
 
-    fn get_scale(&self) -> f64 {
+    fn get_scale(&self) -> Scale {
         self.scale.borrow().clone()
     }
 
-    fn set_rotation(&self, rotation: f64) {
-        let mut r = rotation % 360.0;
-        if r < 0.0 { r += 360.0 }
-        self.rotation.replace(r);
+    fn set_rotation(&self, rotation: Rotation) {
+        self.rotation.replace(rotation);
         self.clear_parent_cache();
     }
 
-    fn get_rotation(&self) -> f64 {
+    fn get_rotation(&self) -> Rotation {
         self.rotation.borrow().clone()
     }
 
@@ -332,8 +329,8 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
 
 impl <T> Node<T> where T: NodeDelegate + Any {
 
-    pub fn create<C>(callback: C) -> Rc<Self> where C: Fn() -> T {
-        let s = Rc::new(Self::new(callback()));
+    pub fn create(delegate: T) -> Rc<Self> {
+        let s = Rc::new(Self::new(delegate));
         director::register_node(s.clone());
         s
     }
@@ -364,10 +361,10 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             position: RefCell::new(Point::new(0, 0)),
             anchor_point: RefCell::new(AnchorPoint::default()),
             parent: RefCell::new(None),
-            opacity: RefCell::new(255),
-            rotation: RefCell::new(0.0),
+            opacity: RefCell::new(Opacity::from(1.0)),
+            rotation: RefCell::new(Rotation::from(0.0)),
             visible: RefCell::new(true),
-            scale: RefCell::new(1.0),
+            scale: RefCell::new(Scale::from(1.0)),
             render_cache: RefCell::new(None),
             children: RefCell::new(Vec::new()),
             conflict_type: RefCell::new(ConflictType::Square),

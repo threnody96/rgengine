@@ -12,9 +12,7 @@ pub struct TransitionFade {
 impl TransitionFade {
 
     pub fn create(duration: f32, easing: Option<Rc<dyn EasingFunction>>) -> Rc<SceneTransition> {
-        SceneTransition::create(|| {
-            Rc::new(Self {})
-        }, Some(duration), easing)
+        SceneTransition::create(Rc::new(Self {}), Some(duration), easing)
     }
 
 }

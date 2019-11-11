@@ -15,7 +15,7 @@ impl Layer {
     where A: Into<LayerOption>
     {
         let o = option.into();
-        let n = Node::create(|| Layer {
+        let n = Node::create(Layer {
             option: RefCell::new(o.clone())
         });
         let size = n.get_size();

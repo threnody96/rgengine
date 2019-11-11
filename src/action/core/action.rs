@@ -74,8 +74,8 @@ impl <T> ActionLike for Action<T> where T: ActionDelegate + Any {
 
 impl <T> Action<T> where T: ActionDelegate + Any {
 
-    pub fn create<C>(duration: f64, callback: C) -> Rc<Self> where C: Fn() -> T {
-        Rc::new(Self::new(duration, callback()))
+    pub fn create(duration: f64, delegate: T) -> Rc<Self> {
+        Rc::new(Self::new(duration, delegate))
     }
 
     fn generate_progress(&self, now: &Tm) -> f32 {

@@ -23,7 +23,7 @@ impl PrettyLabel {
     where A: Into<String>
     {
         let t = text.into();
-        let n= Node::create(|| PrettyLabel {
+        let n = Node::create(PrettyLabel {
             text: RefCell::new(t.clone()),
             size: RefCell::new(None),
             labels: RefCell::new(Vec::new())

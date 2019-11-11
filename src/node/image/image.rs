@@ -14,8 +14,8 @@ impl Image {
     where A: Into<String>
     {
         let p = path.into();
-        Node::create(|| {
-            Image { image: director::load_texture(&p) }
+        Node::create(Image {
+            image: director::load_texture(&p)
         })
     }
 

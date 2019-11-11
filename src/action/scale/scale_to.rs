@@ -2,23 +2,22 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use ::action::{ Action, ActionDelegate, ActionStatus };
 use ::node::{ NodeLike };
+use ::util::parameter::{ Scale };
 
 pub struct ScaleTo {
-    to: f64,
-    from: RefCell<Option<f64>>
+    to: Scale,
+    from: RefCell<Option<Scale>>
 }
 
 impl ScaleTo {
 
     pub fn create<A>(duration: f64, to: A) -> Rc<Action<Self>>
-        where A: Into<f64>
+        where A: Into<Scale>
     {
         let t = to.into();
-        Action::create(duration, || {
-            Self {
-                to: t.clone(),
-                from: RefCell::new(None)
-            }
+        Action::create(duration, Self {
+            to: t.clone(),
+            from: RefCell::new(None)
         })
     }
 
@@ -31,7 +30,7 @@ impl ActionDelegate for ScaleTo {
             self.from.replace(Some(node.get_scale()));
         }
         let from = self.from.borrow().clone().unwrap();
-        let ascale = self.to - from;
+        let ascale = *self.to - *from;
         node.set_scale(from + (ascale * progress as f64));
         None
     }

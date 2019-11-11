@@ -11,11 +11,9 @@ pub struct EasingAction {
 impl EasingAction {
 
     pub fn create(action: Rc<dyn ActionLike>, easing: Rc<dyn EasingFunction>) -> Rc<ParentAction<EasingAction>> {
-        ParentAction::create(|| {
-            Self {
-                action: action.clone(),
-                easing: easing.clone()
-            }
+        ParentAction::create(Self {
+            action: action.clone(),
+            easing: easing.clone()
         })
     }
 

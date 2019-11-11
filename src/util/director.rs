@@ -8,7 +8,7 @@ use ::node::scene::transition::{ SceneTransition, TransitionStatus };
 use ::node::label::{ LabelOption, OneLineLabelOption };
 use ::resource::{ ResourceKey, SE, Font, Texture };
 use ::util::{ SaveMigrator };
-use ::util::parameter::{ Size, Color, Point, InputInfo, InputCode, MusicOption, Circle };
+use ::util::parameter::{ Size, Color, Point, InputInfo, InputCode, MusicOption };
 use rand::distributions::{ Standard, Distribution };
 use sdl2::{ EventPump };
 use serde::de::DeserializeOwned;

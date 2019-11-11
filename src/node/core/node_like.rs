@@ -2,7 +2,7 @@ use std::rc::Rc;
 use ::node::{ NodeId, AddChildOption, ConflictType };
 use ::resource::{ Texture, Font, ResourceKey };
 use ::action::{ ActionLike };
-use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Color };
+use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Color, Opacity, Scale, Rotation };
 
 pub trait NodeLike {
 
@@ -54,9 +54,9 @@ pub trait NodeLike {
 
     fn get_position(&self) -> Point;
 
-    fn set_scale(&self, scale: f64);
+    fn set_scale(&self, scale: Scale);
 
-    fn get_scale(&self) -> f64;
+    fn get_scale(&self) -> Scale;
 
     fn update_absolute_position(&self);
 
@@ -66,17 +66,17 @@ pub trait NodeLike {
 
     fn get_anchor_point(&self) -> AnchorPoint;
 
-    fn set_opacity(&self, opacity: u8);
+    fn set_opacity(&self, opacity: Opacity);
 
-    fn get_opacity(&self) -> u8;
+    fn get_opacity(&self) -> Opacity;
 
     fn set_visible(&self, visible: bool);
 
     fn get_visible(&self) -> bool;
 
-    fn set_rotation(&self, rotation: f64);
+    fn set_rotation(&self, rotation: Rotation);
 
-    fn get_rotation(&self) -> f64;
+    fn get_rotation(&self) -> Rotation;
 
     fn is_additive_blend(&self) -> bool;
 

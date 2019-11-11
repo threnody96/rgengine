@@ -50,8 +50,8 @@ impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
 
 impl <T> ParentAction<T> where T: ParentActionDelegate + Any {
 
-    pub fn create<C>(callback: C) -> Rc<Self> where C: Fn() -> T {
-        Rc::new(Self::new(callback()))
+    pub fn create(delegate: T) -> Rc<Self> {
+        Rc::new(Self::new(delegate))
     }
 
     fn initialize(&self) -> bool {

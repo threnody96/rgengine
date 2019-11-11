@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::cmp::{ min, max };
 use ::node::{ Node, NodeLike, NodeDelegate, AddChildOption };
 use ::node::label::{ LabelOption, OneLineLabel };
-use ::util::parameter::{ Point, Size, AnchorPoint, Color };
+use ::util::parameter::{ Point, Size, AnchorPoint };
 
 pub struct Label {
     size: RefCell<Option<Size>>,
@@ -21,13 +21,11 @@ impl Label {
     {
         let t = text.into();
         let o = option.into();
-        let n = Node::create(|| {
-            Self {
-                size: RefCell::new(None),
-                text: RefCell::new(t.clone()),
-                labels: RefCell::new(Vec::new()),
-                option: RefCell::new(o.clone())
-            }
+        let n = Node::create(Self {
+            size: RefCell::new(None),
+            text: RefCell::new(t.clone()),
+            labels: RefCell::new(Vec::new()),
+            option: RefCell::new(o.clone())
         });
         n.build();
         n

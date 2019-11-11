@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use ::application::{ Application };
 use ::resource::{ FileStorage };
-use ::util::{ ENCRYPT_KEY, SaveMigrator };
+use ::util::{ ENCRYPT_KEY, SaveMigrator, exe_dir };
 use serde_json::{ Value };
 use serde_json::map::Map;
 use serde::de::DeserializeOwned;
@@ -17,10 +17,12 @@ pub struct VariableDirector {
 impl VariableDirector {
 
     pub fn new() -> Self {
+        let mut save_dir = exe_dir();
+        save_dir.push("save");
         Self {
             application: RefCell::new(None),
             variables: Map::new(),
-            storage: FileStorage::new("save", Some(ENCRYPT_KEY.to_owned()))
+            storage: FileStorage::new(save_dir, Some(ENCRYPT_KEY.to_owned()))
         }
     }
 
@@ -53,8 +55,10 @@ impl VariableDirector {
         let mut version = v["version"].as_str().unwrap().to_owned();
         let variables = v["variables"].as_object_mut().unwrap();
         loop {
-            version = migrator.migrate(&version, variables);
             if version == current_version { break; }
+            let old_version = version.clone();
+            version = migrator.migrate(&version, variables);
+            if old_version == version { break; }
         }
         self.variables = variables.clone();
     }

@@ -10,10 +10,8 @@ pub struct CallFunc {
 impl CallFunc {
 
     pub fn create(callback: Rc<dyn Fn(Rc<dyn NodeLike>) -> ()>) -> Rc<ParentAction<CallFunc>> {
-        ParentAction::create(|| {
-            Self {
-                callback: callback.clone()
-            }
+        ParentAction::create(Self {
+            callback: callback.clone()
         })
     }
 

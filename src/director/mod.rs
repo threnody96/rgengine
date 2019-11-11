@@ -11,7 +11,7 @@ use std::rc::Rc;
 use std::any::Any;
 use ::application::{ Application };
 use ::util::{ SaveMigrator };
-use ::util::parameter::{ Size, InputCode, InputInfo, Point, MusicOption, Circle };
+use ::util::parameter::{ Size, InputCode, InputInfo, Point, MusicOption };
 use ::node::{ Node, NodeLike, NodeDelegate, NodeId };
 use ::node::scene::{ SceneLike };
 use ::node::scene::transition::{ SceneTransition, TransitionStatus };

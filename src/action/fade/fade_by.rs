@@ -2,23 +2,22 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use ::action::{ Action, ActionDelegate, ActionStatus };
 use ::node::{ NodeLike };
+use ::util::parameter::{ Opacity };
 
 pub struct FadeBy {
-    to: u8,
-    from: RefCell<Option<u8>>
+    to: Opacity,
+    from: RefCell<Option<Opacity>>
 }
 
 impl FadeBy {
 
     pub fn create<A>(duration: f64, to: A) -> Rc<Action<Self>>
-        where A: Into<u8>
+        where A: Into<Opacity>
     {
         let t = to.into();
-        Action::create(duration, || {
-            Self {
-                to: t.clone(),
-                from: RefCell::new(None)
-            }
+        Action::create(duration, Self {
+            to: t.clone(),
+            from: RefCell::new(None)
         })
     }
 
@@ -30,15 +29,9 @@ impl ActionDelegate for FadeBy {
         if self.from.borrow().is_none() {
             self.from.replace(Some(node.get_opacity()));
         }
-        let from = self.from.borrow().clone().unwrap() as i64;
-        let o = from + (self.to as f32 * progress) as i64;
-        if o < 0 {
-            node.set_opacity(0);
-        } else if o > 255 {
-            node.set_opacity(255);
-        } else {
-            node.set_opacity(o as u8);
-        }
+        let from = self.from.borrow().clone().unwrap().opacity_rate();
+        let o = from + (self.to.opacity_rate() * progress as f64).round();
+        node.set_opacity(Opacity::from(o));
         None
     }
 

@@ -3,7 +3,7 @@ use ::resource::{ Texture, Font };
 use ::node::{ NodeId, NodeLike, AddChildOption };
 use ::action::{ ActionLike };
 use ::util::{ director };
-use ::util::parameter::{ Point, AnchorPoint, Size, Color, Circle };
+use ::util::parameter::{ Point, AnchorPoint, Size, Color, Scale, Opacity, Rotation };
 
 pub trait NodeDelegate {
 
@@ -61,20 +61,28 @@ pub trait NodeDelegate {
         self.node().get_visible()
     }
 
-    fn set_rotation(&self, rotation: f64) {
+    fn set_rotation(&self, rotation: Rotation) {
         self.node().set_rotation(rotation);
     }
 
-    fn get_rotation(&self) -> f64 {
+    fn get_rotation(&self) -> Rotation {
         self.node().get_rotation()
     }
 
-    fn set_scale(&self, scale: f64) {
+    fn set_scale(&self, scale: Scale) {
         self.node().set_scale(scale);
     }
 
-    fn get_scale(&self) -> f64 {
+    fn get_scale(&self) -> Scale {
         self.node().get_scale()
+    }
+
+    fn set_opacity(&self, opacity: Opacity) {
+        self.node().set_opacity(opacity);
+    }
+
+    fn get_opacity(&self) -> Opacity {
+        self.node().get_opacity()
     }
 
     fn set_anchor_point(&self, anchor_point: &AnchorPoint) {

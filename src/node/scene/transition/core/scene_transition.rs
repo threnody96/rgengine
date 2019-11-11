@@ -17,9 +17,9 @@ pub struct SceneTransition {
 
 impl SceneTransition {
 
-    pub fn create<T>(callback: T, duration: Option<f32>, easing: Option<Rc<dyn EasingFunction>>) -> Rc<SceneTransition> where T: Fn() -> Rc<dyn SceneTransitionDelegate> {
+    pub fn create(delegate: Rc<dyn SceneTransitionDelegate>, duration: Option<f32>, easing: Option<Rc<dyn EasingFunction>>) -> Rc<SceneTransition> {
         Rc::new(SceneTransition {
-            delegate: callback(),
+            delegate: delegate,
             status: RefCell::new(TransitionStatus::Wait),
             start: RefCell::new(None),
             duration: duration,

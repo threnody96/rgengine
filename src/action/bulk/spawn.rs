@@ -10,10 +10,8 @@ pub struct Spawn {
 impl Spawn {
 
     pub fn create(actions: Vec<Rc<dyn ActionLike>>) -> Rc<ParentAction<Spawn>> {
-        ParentAction::create(|| {
-            Self {
-                actions: actions.clone(),
-            }
+        ParentAction::create(Self {
+            actions: actions.clone(),
         })
     }
 

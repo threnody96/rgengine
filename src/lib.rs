@@ -2,6 +2,7 @@ extern crate sdl2;
 extern crate time;
 extern crate crypto;
 extern crate base64;
+#[macro_use]
 extern crate rusqlite;
 extern crate uuid;
 extern crate serde;
