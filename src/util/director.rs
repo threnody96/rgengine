@@ -123,7 +123,7 @@ pub(crate) fn measure_label_size(text: &str, font: Rc<Font>) -> Size {
     with_director(|d| d.measure_label_size(text, font))
 }
 
-pub fn add_alias(name: &str, path: &str) {
+pub fn add_alias<A>(name: A, path: &str) where A: Into<String> {
     with_director(|d| d.add_alias(name, path));
 }
 
