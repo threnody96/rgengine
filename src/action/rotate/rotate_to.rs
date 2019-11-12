@@ -27,10 +27,10 @@ impl ActionDelegate for RotateTo {
 
     fn run(&self, node: Rc<dyn NodeLike>, progress: f32) -> Option<ActionStatus> {
         if self.from.borrow().is_none() {
-            self.from.replace(Some(node.get_rotation()));
+            self.from.replace(Some(node.inner_get_rotation()));
         }
         let from = self.from.borrow().clone().unwrap();
-        node.set_rotation(from + ((self.to - from) * progress as f64));
+        node.inner_set_rotation(from + ((self.to - from) * progress as f64));
         None
     }
 

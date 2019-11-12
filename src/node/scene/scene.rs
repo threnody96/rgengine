@@ -36,7 +36,7 @@ impl <T> NodeDelegate for T where T: Scene {
     }
 
     fn before_add_child(&self, child: Rc<dyn NodeLike>) {
-        let id = child.id();
+        let id = child.inner_id();
         if director::get_node::<Layer>(&id).is_none() {
             panic!("Scene に add_child できるのは Layer Node だけです");
         }
@@ -52,13 +52,13 @@ impl <T> SceneLike for Node<T> where T: Scene + Any {
 
     fn start_update(&self) {
         self.update_scene();
-        self.update_children();
+        self.inner_update_children();
     }
 
     fn start_render(&self) {
-        self.prepare_render_tree();
+        self.node().inner_prepare_render_tree();
         self.render_scene();
-        self.render_children();
+        self.inner_render_children();
     }
 
 }

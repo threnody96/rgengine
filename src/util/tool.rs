@@ -158,7 +158,7 @@ pub fn run(application: Rc<dyn Application>) {
             || {
                 scene.start_update();
                 let next_scene = director::get_scene();
-                if next_scene.id() != scene.id() { next_scene.start_update(); }
+                if next_scene.inner_id() != scene.inner_id() { next_scene.start_update(); }
             },
             || {
                 director::update_resolution_size();

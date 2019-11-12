@@ -188,8 +188,8 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().load_font(option)
     }
 
-    pub fn prepare_render_tree(&self, parent: Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
-        self.render.borrow_mut().prepare_render_tree(parent, node);
+    pub fn prepare_render_tree(&self, node: Rc<dyn NodeLike>) {
+        self.render.borrow_mut().prepare_render_tree(node);
     }
 
     pub fn render_texture(&self, node: Rc<dyn NodeLike>, texture: Rc<Texture>) {

@@ -113,14 +113,14 @@ impl ApplicationDirector {
     pub fn destroy_prev_scene(&mut self) {
         if let Some(prev_scene) = self.prev_scene.clone() {
             let mut popable = false;
-            let id = prev_scene.id();
+            let id = prev_scene.inner_id();
             for scene in &self.scenes {
-                if scene.id() == id {
+                if scene.inner_id() == id {
                     popable = true;
                     break;
                 }
             }
-            if !popable { prev_scene.destroy(); }
+            if !popable { prev_scene.inner_destroy(); }
             self.prev_scene = None;
         }
     }

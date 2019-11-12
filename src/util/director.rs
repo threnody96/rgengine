@@ -147,8 +147,8 @@ pub fn load_font(option: &OneLineLabelOption) -> Rc<Font> {
     with_director(|d| d.load_font(option))
 }
 
-pub(crate) fn prepare_render_tree(parent: Option<Rc<dyn NodeLike>>, node: Rc<dyn NodeLike>) {
-    with_director(|d| d.prepare_render_tree(parent, node));
+pub(crate) fn prepare_render_tree(node: Rc<dyn NodeLike>) {
+    with_director(|d| d.prepare_render_tree(node));
 }
 
 pub(crate) fn render_texture(node: Rc<dyn NodeLike>, texture: Rc<Texture>) {

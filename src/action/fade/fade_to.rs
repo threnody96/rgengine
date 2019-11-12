@@ -27,12 +27,12 @@ impl ActionDelegate for FadeTo {
 
     fn run(&self, node: Rc<dyn NodeLike>, progress: f32) -> Option<ActionStatus> {
         if self.from.borrow().is_none() {
-            self.from.replace(Some(node.get_opacity()));
+            self.from.replace(Some(node.inner_get_opacity()));
         }
         let from = self.from.borrow().clone().unwrap().opacity_rate();
         let ao = self.to.opacity_rate() - from;
         let o = from + (ao * progress as f64);
-        node.set_opacity(Opacity::from(o));
+        node.inner_set_opacity(Opacity::from(o));
         None
     }
 

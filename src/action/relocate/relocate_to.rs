@@ -27,11 +27,11 @@ impl ActionDelegate for RelocateTo {
 
     fn run(&self, node: Rc<dyn NodeLike>, progress: f32) -> Option<ActionStatus> {
         if self.from.borrow().is_none() {
-            self.from.replace(Some(node.get_position()));
+            self.from.replace(Some(node.inner_get_position()));
         }
         let from = self.from.borrow().clone().unwrap();
         let (ax, ay) = (self.to.x() - from.x(), self.to.y() - from.y());
-        node.set_position(&Point::new(
+        node.inner_set_position(Point::new(
             from.x() + (ax as f32 * progress) as i32,
             from.y() + (ay as f32 * progress) as i32
         ));

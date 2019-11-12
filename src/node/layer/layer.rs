@@ -36,7 +36,7 @@ impl NodeDelegate for Layer {
     fn before_be_added_child(&self, parent: Rc<dyn NodeLike>) {
         let mut option = self.option.borrow_mut();
         if option.size.is_none() {
-            option.size = Some(parent.get_size());
+            option.size = Some(parent.inner_get_size());
         }
     }
 

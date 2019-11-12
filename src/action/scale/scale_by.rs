@@ -27,11 +27,11 @@ impl ActionDelegate for ScaleBy {
 
     fn run(&self, node: Rc<dyn NodeLike>, progress: f32) -> Option<ActionStatus> {
         if self.from.borrow().is_none() {
-            self.from.replace(Some(node.get_scale()));
+            self.from.replace(Some(node.inner_get_scale()));
         }
         let from = self.from.borrow().clone().unwrap();
         let ascale = *from * (*self.to - 1.0);
-        node.set_scale(from + (ascale * progress as f64));
+        node.inner_set_scale(from + (ascale * progress as f64));
         None
     }
 
