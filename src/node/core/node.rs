@@ -2,6 +2,7 @@ use std::rc::Rc;
 use std::ops::Deref;
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::any::Any;
 use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption, ConflictType };
 use ::action::{ ActionLike, ActionStatus };
@@ -22,6 +23,7 @@ pub struct Node<T> where T: NodeDelegate + Any {
     render_cache: RefCell<Option<ResourceKey>>,
     parent: RefCell<Option<NodeId>>,
     children: RefCell<Vec<NodeChild>>,
+    child_map: RefCell<HashMap<String, NodeId>>,
     conflict_type: RefCell<ConflictType>,
     actions: RefCell<Vec<Rc<dyn ActionLike>>>,
     next_actions: RefCell<Vec<Rc<dyn ActionLike>>>
@@ -85,14 +87,6 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.generate_render_rect(&self.inner_get_absolute_position())
     }
 
-    fn inner_render_texture(&self, texture: Rc<Texture>) {
-        self.delegate.render_texture(texture);
-    }
-
-    fn inner_render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
-        self.delegate.render_label(text, font, color);
-    }
-
     fn inner_update(&self) {
         self.delegate.update();
         self.restore_next_action();
@@ -137,8 +131,12 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         self.absolute_position.replace(self.get_position());
     }
 
+    fn inner_get_parent_id(&self) -> Option<NodeId> {
+        self.parent.borrow().clone()
+    }
+
     fn inner_get_parent(&self) -> Option<Rc<dyn NodeLike>> {
-        if let Some(id) = self.parent.borrow().clone() {
+        if let Some(id) = self.inner_get_parent_id() {
             Some(director::get_nodelike(&id))
         } else {
             None
@@ -168,15 +166,29 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             if t != Ordering::Equal { return t; }
             a.inner_z_index.partial_cmp(&b.inner_z_index).unwrap()
         });
+        if let Some(name) = option.name.clone() {
+            self.child_map.borrow_mut().insert(name, node.inner_id());
+        }
         node.inner_set_parent(self.id());
         node.inner_update_absolute_position();
     }
 
+    fn inner_get_children_ids(&self) -> Vec<NodeId> {
+        let mut output: Vec<NodeId> = Vec::new();
+        for child in self.children.borrow().iter() {
+            output.push(child.id.clone());
+        }
+        output
+    }
+
+    fn inner_get_child_id(&self, name: &str) -> Option<NodeId> {
+        self.child_map.borrow().get(name).cloned()
+    }
+
     fn inner_get_children(&self) -> Vec<Rc<dyn NodeLike>> {
         let mut output: Vec<Rc<dyn NodeLike>> = Vec::new();
-        let children = self.children.borrow();
-        for child in &*children {
-            output.push(director::get_nodelike(&child.id));
+        for child_id in self.inner_get_children_ids() {
+            output.push(director::get_nodelike(&child_id));
         }
         output
     }
@@ -187,8 +199,14 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
             if id != child.id { next_children.push(child.clone()); }
         }
         self.children.replace(next_children);
+        let mut next_child_map: HashMap<String, NodeId> = HashMap::new();
+        for (name, child_id) in self.child_map.borrow().iter() {
+            if &id != child_id { next_child_map.insert(name.to_string(), child_id.clone()); }
+        }
+        self.child_map.replace(next_child_map);
         let node = director::get_nodelike(&id);
-        node.inner_remove_parent()
+        node.inner_remove_parent();
+
     }
 
     fn inner_set_position(&self, point: Point) {
@@ -353,6 +371,7 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             scale: RefCell::new(Scale::from(1.0)),
             render_cache: RefCell::new(None),
             children: RefCell::new(Vec::new()),
+            child_map: RefCell::new(HashMap::new()),
             conflict_type: RefCell::new(ConflictType::Square),
             actions: RefCell::new(Vec::new()),
             next_actions: RefCell::new(Vec::new())

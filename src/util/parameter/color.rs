@@ -54,6 +54,14 @@ impl From<&sdl2::pixels::Color> for Color {
 
 }
 
+impl From<&Color> for Color {
+
+    fn from(f: &Color) -> Self {
+        f.clone()
+    }
+
+}
+
 impl <A, B, C> From<(A, B, C)> for Color
 where
     A: Into<u8>,

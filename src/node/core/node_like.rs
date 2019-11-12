@@ -38,9 +38,15 @@ pub trait NodeLike {
 
     fn inner_remove_parent(&self);
 
+    fn inner_get_parent_id(&self) -> Option<NodeId>;
+
     fn inner_get_parent(&self) -> Option<Rc<dyn NodeLike>>;
 
     fn inner_get_children(&self) -> Vec<Rc<dyn NodeLike>>;
+
+    fn inner_get_children_ids(&self) -> Vec<NodeId>;
+
+    fn inner_get_child_id(&self, name: &str) -> Option<NodeId>;
 
     fn inner_before_add_child(&self, child: Rc<dyn NodeLike>);
 
@@ -83,10 +89,6 @@ pub trait NodeLike {
     fn inner_set_additive_blend(&self, additive_blend: bool);
 
     fn inner_prepare_render_tree(&self);
-
-    fn inner_render_texture(&self, texture: Rc<Texture>);
-
-    fn inner_render_label(&self, text: &str, font: Rc<Font>, color: &Color);
 
     fn inner_is_mouse_hover(&self) -> bool;
 

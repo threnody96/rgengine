@@ -42,13 +42,30 @@ pub trait NodeDelegate: Any {
         self.node().inner_add_child(node, option.into());
     }
 
-    // fn get_parent(&self) -> Option<Rc<dyn NodeLike>> {
-    //     self.node().get_parent()
-    // }
+    fn get_parent<A>(&self) -> Option<Rc<Node<A>>> where A: NodeDelegate {
+        if let Some(parent_id) = self.node().inner_get_parent_id() {
+            return director::get_node::<A>(&parent_id);
+        }
+        None
+    }
 
-    // fn get_children(&self) -> Vec<Rc<dyn NodeLike>> {
-    //     self.node().get_children()
-    // }
+    fn get_child<A, B>(&self, name: A) -> Option<Rc<Node<B>>> where A: Into<String>, B: NodeDelegate {
+        let n = name.into();
+        if let Some(child_id) = self.node().inner_get_child_id(&n) {
+            return director::get_node::<B>(&child_id);
+        }
+        None
+    }
+
+    fn get_children<A>(&self) -> Vec<Rc<Node<A>>> where A: NodeDelegate {
+        let mut output: Vec<Rc<Node<A>>> = Vec::new();
+        for child_id in self.node().inner_get_children_ids() {
+            if let Some(child) = director::get_node::<A>(&child_id) {
+                output.push(child);
+            }
+        }
+        output
+    }
 
     fn set_position<A>(&self, position: A) where A: Into<Point> {
         self.node().inner_set_position(position.into());
@@ -106,12 +123,15 @@ pub trait NodeDelegate: Any {
         director::render_texture(self.node(), texture);
     }
 
-    fn render_label(&self, text: &str, font: Rc<Font>, color: &Color) {
-        director::render_label(self.node(), text, font, color);
+    fn render_label<A, B>(&self, text: A, font: Rc<Font>, color: B) where A: Into<String>, B: Into<Color> {
+        let t = text.into();
+        let c = color.into();
+        director::render_label(self.node(), &t, font, &c);
     }
 
-    fn render_round(&self, color: &Color) {
-        director::render_round(self.node(), color);
+    fn render_round<A>(&self, color: A) where A: Into<Color> {
+        let c = color.into();
+        director::render_round(self.node(), &c);
     }
 
     fn is_mouse_hover(&self) -> bool {
