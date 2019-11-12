@@ -36,6 +36,10 @@ impl <T> ActionLike for Action<T> where T: ActionDelegate + Any {
         self.status.borrow().clone()
     }
 
+    fn is_finish(&self) -> bool {
+        self.get_status() == ActionStatus::Finish
+    }
+
     fn set_speed(&self, speed: f64) {
         if speed <= 0.0 { panic!(format!("invalid action speed: {}", speed)); }
         self.speed.replace(speed);

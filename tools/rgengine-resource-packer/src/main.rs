@@ -44,6 +44,7 @@ fn prepare_encrypt_key(encrypt_key: Option<String>) -> String {
     if let Some(k) = encrypt_key {
         k
     } else if let Some(k) = option_env!("RESOURCE_ENCRYPT_KEY") {
+        println!("use RESOURCE_ENCRYPT_KEY: {}", k);
         k.to_owned()
     } else {
         let key = generate_encrypt_key();

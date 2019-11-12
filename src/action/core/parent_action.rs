@@ -27,6 +27,10 @@ impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
         self.status.borrow().clone()
     }
 
+    fn is_finish(&self) -> bool {
+        self.get_status() == ActionStatus::Finish
+    }
+
     fn set_speed(&self, speed: f64) {
         self.speed.replace(speed);
         self.delegate.set_speed(speed);

@@ -17,4 +17,6 @@ pub trait ActionLike {
 
     fn resume(&self);
 
+    fn is_finish(&self) -> bool;
+
 }

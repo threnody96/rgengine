@@ -162,9 +162,10 @@ impl <'a> Director<'a> {
         self.render.borrow().measure_label_size(text, font)
     }
 
-    pub fn add_alias(&self, name: &str, path: &str) {
-        self.render.borrow_mut().add_alias(name, path);
-        self.sound.borrow_mut().add_alias(name, path);
+    pub fn add_alias<A>(&self, name: A, path: &str) where A: Into<String> {
+        let n = name.into();
+        self.render.borrow_mut().add_alias(&n, path);
+        self.sound.borrow_mut().add_alias(&n, path);
     }
 
     pub fn load_plain_data(&self, path: &str) -> Rc<Vec<u8>> {
