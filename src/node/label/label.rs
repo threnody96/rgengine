@@ -8,7 +8,6 @@ use ::util::parameter::{ Point, Size, AnchorPoint };
 pub struct Label {
     size: RefCell<Option<Size>>,
     text: RefCell<String>,
-    labels: RefCell<Vec<Rc<Node<OneLineLabel>>>>,
     option: RefCell<LabelOption>,
 }
 
@@ -19,13 +18,10 @@ impl Label {
         A: Into<String>,
         B: Into<LabelOption>
     {
-        let t = text.into();
-        let o = option.into();
         let n = Node::create(Self {
             size: RefCell::new(None),
-            text: RefCell::new(t.clone()),
-            labels: RefCell::new(Vec::new()),
-            option: RefCell::new(o.clone())
+            text: RefCell::new(text.into()),
+            option: RefCell::new(option.into())
         });
         n.build();
         n
@@ -61,7 +57,6 @@ impl Label {
             labels.push(label);
         }
         self.size.replace(Some(Size::new(max_width, prev_height)));
-        self.labels.replace(labels.clone());
         for label in labels {
             self.add_child(label, AddChildOption::default())
         }
@@ -91,12 +86,9 @@ impl Label {
     }
 
     fn clear_labels(&self) {
-        {
-            for label in self.labels.borrow().iter() {
-                label.destroy();
-            }
+        for label in self.get_children::<OneLineLabel>() {
+            label.destroy();
         }
-        self.labels.replace(Vec::new());
     }
 
     fn updated(&self) {

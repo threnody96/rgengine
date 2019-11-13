@@ -115,6 +115,14 @@ pub trait NodeDelegate: Any {
         self.node().inner_get_anchor_point()
     }
 
+    fn is_additive_blend(&self) -> bool {
+        self.node().inner_is_additive_blend()
+    }
+
+    fn set_additive_blend(&self, additive_blend: bool) {
+        self.node().inner_set_additive_blend(additive_blend);
+    }
+
     fn get_fixed_anchor_point(&self) -> Option<AnchorPoint> {
         None
     }

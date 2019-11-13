@@ -1,15 +1,16 @@
 use std::rc::Rc;
-use ::node::{ NodeLike };
+use ::node::{ Node, NodeLike, NodeDelegate };
 use ::action::{ ParentActionDelegate, ActionLike, ParentAction, ActionStatus };
+use ::util::{ director };
 use ::util::easing::{ EasingFunction };
 
-pub struct CallFunc {
-    callback: Rc<dyn Fn(Rc<dyn NodeLike>) -> ()>
+pub struct CallFunc<T> where T: NodeDelegate {
+    callback: Rc<dyn Fn(Rc<Node<T>>) -> ()>
 }
 
-impl CallFunc {
+impl <T> CallFunc<T> where T: NodeDelegate {
 
-    pub fn create(callback: Rc<dyn Fn(Rc<dyn NodeLike>) -> ()>) -> Rc<ParentAction<CallFunc>> {
+    pub fn create(callback: Rc<dyn Fn(Rc<Node<T>>) -> ()>) -> Rc<ParentAction<CallFunc<T>>> {
         ParentAction::create(Self {
             callback: callback.clone()
         })
@@ -17,10 +18,12 @@ impl CallFunc {
 
 }
 
-impl ParentActionDelegate for CallFunc {
+impl <T> ParentActionDelegate for CallFunc<T> where T: NodeDelegate {
 
     fn run(&self, node: Rc<dyn NodeLike>, _easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
-        (&self.callback)(node);
+        if let Some(n) = director::get_node::<T>(&node.inner_id()) {
+            (&self.callback)(n);
+        }
         ActionStatus::Finish
     }
 

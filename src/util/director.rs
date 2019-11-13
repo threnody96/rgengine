@@ -107,8 +107,12 @@ pub(crate) fn register_node<T>(node: Rc<Node<T>>) where T: NodeDelegate + Any {
     with_director(|d| d.register_node(node));
 }
 
-pub fn get_node<T>(id: &NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
+pub(crate) fn get_node<T>(id: &NodeId) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
     with_director(|d| d.get_node(id))
+}
+
+pub fn node<T>(node: &T) -> Option<Rc<Node<T>>> where T: NodeDelegate + Any {
+    with_director(|d| d.get_node(&node.id()))
 }
 
 pub fn get_nodelike(id: &NodeId) -> Rc<dyn NodeLike> {

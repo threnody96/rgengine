@@ -14,7 +14,6 @@ use html5ever::interface::{ Attribute };
 pub struct PrettyLabel {
     text: RefCell<String>,
     size: RefCell<Option<Size>>,
-    labels: RefCell<Vec<Rc<Node<Label>>>>
 }
 
 impl PrettyLabel {
@@ -26,7 +25,6 @@ impl PrettyLabel {
         let n = Node::create(PrettyLabel {
             text: RefCell::new(t.clone()),
             size: RefCell::new(None),
-            labels: RefCell::new(Vec::new())
         });
         n.build();
         n
@@ -45,10 +43,9 @@ impl PrettyLabel {
         let dom = parser.one(text);
         let mut info: (i32, i32, u32) = (0, 0, 0);
         let labels = Self::parse(&dom.document, &LabelOption::default(), &mut info);
-        self.labels.replace(labels.clone());
         self.size.replace(Some(Self::measure_labels(&labels)));
         for label in &labels {
-            self.add_child(label.clone(), AddChildOption::default());
+            self.add_child(label.clone(), ::NoOption);
         }
     }
 
@@ -119,12 +116,9 @@ impl PrettyLabel {
     }
 
     fn clear_labels(&self) {
-        {
-            for label in self.labels.borrow().iter() {
-                label.destroy();
-            }
+        for child in self.get_children::<Label>() {
+            child.destroy();
         }
-        self.labels.replace(Vec::new());
     }
 
     fn updated(&self) {

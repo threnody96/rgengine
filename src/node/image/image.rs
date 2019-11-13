@@ -13,9 +13,8 @@ impl Image {
     pub fn create<A>(path: A) -> Rc<Node<Image>>
     where A: Into<String>
     {
-        let p = path.into();
         Node::create(Image {
-            image: director::load_texture(&p)
+            image: director::load_texture(&path.into())
         })
     }
 

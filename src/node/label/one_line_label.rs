@@ -21,14 +21,13 @@ impl OneLineLabel {
         A: Into<String>,
         B: Into<OneLineLabelOption>
     {
-        let t = text.into();
         let o = option.into();
         let font = director::load_font(&o);
         let n = Node::create(Self {
             size: RefCell::new(None),
-            text: RefCell::new(Self::normalize_text(&t)),
+            text: RefCell::new(Self::normalize_text(&text.into())),
             font: RefCell::new(font.clone()),
-            option: RefCell::new(o.clone())
+            option: RefCell::new(o)
         });
         n.updated();
         n
