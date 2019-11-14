@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::any::Any;
 use ::resource::{ Texture, Font };
-use ::node::{ Node, NodeId, NodeLike, AddChildOption, ConflictType };
+use ::node::{ Node, NodeId, NodeLike, AddChildOption, ConflictType, RunActionOption };
 use ::action::{ ActionLike };
 use ::util::{ director };
 use ::util::parameter::{ Point, AnchorPoint, Size, Color, Scale, Opacity, Rotation };
@@ -142,6 +142,11 @@ pub trait NodeDelegate: Any {
         director::render_round(self.node(), &c);
     }
 
+    fn render_square<A>(&self, color: A) where A: Into<Color> {
+        let c = color.into();
+        director::render_square(self.node(), &c);
+    }
+
     fn is_mouse_hover(&self) -> bool {
         self.node().inner_is_mouse_hover()
     }
@@ -150,8 +155,12 @@ pub trait NodeDelegate: Any {
         self.node().inner_is_conflict(other)
     }
 
-    fn run_action(&self, action: Rc<dyn ActionLike>) {
-        self.node().inner_run_action(action);
+    fn run_action<A>(&self, action: Rc<dyn ActionLike>, option: A) where A: Into<RunActionOption> {
+        self.node().inner_run_action(action, option.into());
+    }
+
+    fn get_action<A>(&self, name: A) -> Option<Rc<dyn ActionLike>> where A: Into<String> {
+        self.node().inner_get_action(name.into())
     }
 
     fn destroy(&self) {

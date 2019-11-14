@@ -204,6 +204,10 @@ impl <'a> Director<'a> {
         self.render.borrow_mut().render_round(node, color);
     }
 
+    pub fn render_square(&self, node: Rc<dyn NodeLike>, color: &Color) {
+        self.render.borrow_mut().render_square(node, color);
+    }
+
     pub fn update_resolution_size(&self) {
         self.render.borrow_mut().update_resolution_size();
     }

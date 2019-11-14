@@ -50,7 +50,7 @@ impl From<&str> for AddChildOption {
 impl From<String> for AddChildOption {
 
     fn from(f: String) -> AddChildOption {
-        Self::from(&f)
+        Self::from(f.as_str())
     }
 
 }

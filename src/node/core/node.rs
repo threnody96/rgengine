@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::any::Any;
-use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption, ConflictType };
+use ::node::{ NodeChild, NodeDelegate, NodeId, NodeLike, AddChildOption, ConflictType, RunActionOption };
 use ::action::{ ActionLike, ActionStatus };
 use ::util::{ director, get_mouse_position };
 use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Circle, Color, Opacity, Scale, Rotation };
@@ -26,6 +26,7 @@ pub struct Node<T> where T: NodeDelegate + Any {
     child_map: RefCell<HashMap<String, NodeId>>,
     conflict_type: RefCell<ConflictType>,
     actions: RefCell<Vec<Rc<dyn ActionLike>>>,
+    action_map: RefCell<HashMap<String, Rc<dyn ActionLike>>>,
     next_actions: RefCell<Vec<Rc<dyn ActionLike>>>
 }
 
@@ -331,8 +332,15 @@ impl <T> NodeLike for Node<T> where T: NodeDelegate + Any {
         }
     }
 
-    fn inner_run_action(&self, action: Rc<dyn ActionLike>) {
-        self.next_actions.borrow_mut().push(action);
+    fn inner_run_action(&self, action: Rc<dyn ActionLike>, option: RunActionOption) {
+        self.next_actions.borrow_mut().push(action.clone());
+        if let Some(n) = option.name.clone() {
+            self.action_map.borrow_mut().insert(n, action);
+        }
+    }
+
+    fn inner_get_action(&self, name: String) -> Option<Rc<dyn ActionLike>> {
+        self.action_map.borrow().get(&name).cloned()
     }
 
     fn inner_destroy(&self) {
@@ -374,6 +382,7 @@ impl <T> Node<T> where T: NodeDelegate + Any {
             child_map: RefCell::new(HashMap::new()),
             conflict_type: RefCell::new(ConflictType::Square),
             actions: RefCell::new(Vec::new()),
+            action_map: RefCell::new(HashMap::new()),
             next_actions: RefCell::new(Vec::new())
         }
     }
@@ -407,12 +416,19 @@ impl <T> Node<T> where T: NodeDelegate + Any {
 
     fn remove_finished_actions(&self) {
         let mut next_actions: Vec<Rc<dyn ActionLike>> = Vec::new();
+        let mut next_action_map: HashMap<String, Rc<dyn ActionLike>> = HashMap::new();
         for action in self.actions.borrow().iter() {
             if action.get_status() != ActionStatus::Finish {
                 next_actions.push(action.clone());
             }
         }
+        for (key, action) in self.action_map.borrow().iter() {
+            if action.get_status() != ActionStatus::Finish {
+                next_action_map.insert(key.to_string(), action.clone());
+            }
+        }
         self.actions.replace(next_actions);
+        self.action_map.replace(next_action_map);
     }
 
     fn restore_next_action(&self) {

@@ -1,9 +1,11 @@
 use std::rc::Rc;
 use ::node::{ NodeLike };
-use ::action::{ ActionStatus };
+use ::action::{ ActionStatus, ActionId };
 use ::util::easing::{ EasingFunction };
 
 pub trait ActionLike {
+
+    fn id(&self) -> ActionId;
 
     fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus;
 

@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use ::node::{ NodeId, AddChildOption, ConflictType };
+use ::node::{ NodeId, AddChildOption, ConflictType, RunActionOption };
 use ::resource::{ Texture, Font, ResourceKey };
 use ::action::{ ActionLike };
 use ::util::parameter::{ Point, AnchorPoint, Size, Rect, Color, Opacity, Scale, Rotation };
@@ -98,7 +98,9 @@ pub trait NodeLike {
 
     fn inner_is_conflict(&self, other: Rc<dyn NodeLike>) -> bool;
 
-    fn inner_run_action(&self, action: Rc<dyn ActionLike>);
+    fn inner_run_action(&self, action: Rc<dyn ActionLike>, option: RunActionOption);
+
+    fn inner_get_action(&self, name: String) -> Option<Rc<dyn ActionLike>>;
 
     fn inner_destroy(&self);
 

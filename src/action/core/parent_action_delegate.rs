@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use ::node::{ NodeLike };
-use ::action::{ ActionStatus, ActionLike };
+use ::action::{ ActionStatus, ActionLike, ActionId };
 use ::util::easing::{ EasingFunction };
 
 pub trait ParentActionDelegate {
@@ -25,6 +25,10 @@ pub trait ParentActionDelegate {
         for child in &self.children() {
             child.resume();
         }
+    }
+
+    fn id(&self) -> ActionId {
+        ActionId::new(format!("{:p}", self))
     }
 
 }

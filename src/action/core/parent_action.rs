@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::any::Any;
 use ::node::{ NodeLike };
-use ::action::{ ParentActionDelegate, ActionStatus, ActionLike };
+use ::action::{ ParentActionDelegate, ActionStatus, ActionLike, ActionId };
 use ::util::easing::{ EasingFunction };
 
 pub struct ParentAction<T> where T: ParentActionDelegate + Any {
@@ -12,6 +12,10 @@ pub struct ParentAction<T> where T: ParentActionDelegate + Any {
 }
 
 impl <T> ActionLike for ParentAction<T> where T: ParentActionDelegate + Any {
+
+    fn id(&self) -> ActionId {
+        self.delegate.id()
+    }
 
     fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         if self.initialize() {

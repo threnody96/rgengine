@@ -18,7 +18,8 @@ use std::intrinsics::transmute;
 pub enum RenderOperation {
     Image(Rc<::resource::Texture>),
     Label(String, Rc<::resource::Font>, Color),
-    Round(Color)
+    Round(Color),
+    Square(Color)
 }
 
 pub struct RenderTree {
@@ -156,6 +157,11 @@ impl <'a> RenderDirector<'a> {
         tree.set_operation(RenderOperation::Round(color.clone()));
     }
 
+    pub fn render_square(&self, node: Rc<dyn NodeLike>, color: &Color) {
+        let tree = self.render_tree_nodes.get(&node.inner_id()).unwrap();
+        tree.set_operation(RenderOperation::Square(color.clone()));
+    }
+
     pub fn measure_label_size(&self, text: &str, font: Rc<::resource::Font>) -> Size {
         let f = self.resource.load_font_from_resource_key(font);
         let surface = f.render(text).blended(Color::RGBA(255, 255, 255, 255)).unwrap();
@@ -253,6 +259,15 @@ impl <'a> RenderDirector<'a> {
                             *Point::new(i as i32, (radius + height).round() as i32)
                         ).unwrap();
                     }
+                }).unwrap();
+                Rc::new(ct)
+            },
+            RenderOperation::Square(color) => {
+                let mut ct = self.create_sub_canvas(node.inner_get_size());
+                if color.a == 0 { return Rc::new(ct); }
+                with_context(|c| &mut c.canvas).with_texture_canvas(&mut ct, |c| {
+                    c.set_draw_color(color.clone());
+                    c.clear();
                 }).unwrap();
                 Rc::new(ct)
             }

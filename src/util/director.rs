@@ -167,6 +167,10 @@ pub(crate) fn render_round(node: Rc<dyn NodeLike>, color: &Color) {
     with_director(|d| d.render_round(node, color));
 }
 
+pub(crate) fn render_square(node: Rc<dyn NodeLike>, color: &Color) {
+    with_director(|d| d.render_square(node, color));
+}
+
 pub(crate) fn update_resolution_size() {
     with_director(|d| d.update_resolution_size());
 }

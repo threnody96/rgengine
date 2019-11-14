@@ -2,7 +2,7 @@ use std::any::Any;
 use std::rc::Rc;
 use std::cell::RefCell;
 use ::node::{ NodeLike };
-use ::action::{ ActionDelegate, ActionStatus, ActionLike };
+use ::action::{ ActionDelegate, ActionStatus, ActionLike, ActionId };
 use ::util::easing::{ EasingFunction };
 use time::{ Tm };
 
@@ -16,6 +16,10 @@ pub struct Action<T> where T: ActionDelegate + Any {
 }
 
 impl <T> ActionLike for Action<T> where T: ActionDelegate + Any {
+
+    fn id(&self) -> ActionId {
+        self.delegate.id()
+    }
 
     fn run(&self, node: Rc<dyn NodeLike>, easing: Option<Rc<dyn EasingFunction>>) -> ActionStatus {
         if self.initialize() {
