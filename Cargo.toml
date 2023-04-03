@@ -5,7 +5,7 @@ authors = ["Imota Eru <threnody96@gmail.com>"]
 build = "build.rs"
 
 [dependencies]
-time = "^0.1"
+time = "^0.2"
 image = "^0.21"
 rust-crypto = "^0.2"
 base64 = "0.9.2"
